@@ -1,0 +1,171 @@
+# from https://cloud.google.com/solutions/jenkins-on-kubernetes-engine
+# and https://github.com/GoogleCloudPlatform/continuous-deployment-on-kubernetes/tree/v1/jenkins/k8s
+
+---
+apiVersion: v1
+kind: Namespace
+metadata: 
+  name: jenkins
+  labels: 
+    name: jenkins
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: default
+  namespace: jenkins
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: jenkins-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: jenkins
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: jenkins-home
+  labels:
+    failure-domain.beta.kubernetes.io/zone: us-central1-a
+spec:
+  capacity:
+    storage: 20Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  gcePersistentDisk:
+    pdName: jenkins-home
+    fsType: ext4
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: jenkins
+  namespace: jenkins
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: master
+    spec:
+      hostname: jenkins-master
+      containers:
+      - name: master
+        image: gcr.io/llvm-windows-development/jenkins-master
+        ports:
+        - containerPort: 8080
+        - containerPort: 50000
+        readinessProbe:
+          httpGet:
+            path: /login
+            port: 8080
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 2
+          failureThreshold: 5
+        env:
+        - name: JAVA_OPTS
+          value: '-Xmx1400m'
+        volumeMounts:
+        - mountPath: /var/jenkins_home
+          name: jenkins-home
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1500Mi
+          requests:
+            cpu: 500m
+            memory: 1500Mi
+      volumes:
+      - name: jenkins-home
+        gcePersistentDisk:
+          pdName: jenkins-home
+          fsType: ext4
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: jenkins-ui
+  namespace: jenkins
+spec:
+  type: NodePort
+  selector:
+    app: master
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      name: ui
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: jenkins-discovery
+  namespace: jenkins
+spec:
+  selector:
+    app: master
+  ports:
+    - protocol: TCP
+      port: 50000
+      targetPort: 50000
+      name: agent
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: jenkins
+  namespace: jenkins
+spec:
+#  tls:
+#  - secretName: tls
+  backend:
+    serviceName: jenkins-ui
+    servicePort: 8080
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: agent-debian-testing-clang8
+  namespace: jenkins
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: agent-debian-testing-clang8
+    spec:
+      containers:
+      - name: agent-debian-testing-clang8
+        image: gcr.io/llvm-windows-development/agent-debian-testing-clang8    
+        ports:
+        - containerPort: 22
+        resources:
+          limits:
+            cpu: 30
+            memory: 100Gi
+          requests:
+            cpu: 30
+            memory: 100Gi
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: agent-debian-testing-clang8-ssh
+  namespace: jenkins
+spec:
+  selector:
+    app: agent-debian-testing-clang8
+  ports:
+    - protocol: TCP
+      port: 22
+      name: ssh
+  type: NodePort
