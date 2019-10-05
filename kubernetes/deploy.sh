@@ -15,4 +15,6 @@
 
 set -eux
 
+# results needs to be deployed first, as it creates the shared storage
+kubectl apply -f results.yaml
 kubectl apply -f jenkins.yaml

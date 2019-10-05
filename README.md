@@ -6,7 +6,12 @@ This repository contains the configuration files for the merge guards for the LL
 TODO(@christiankuehnel): describe objective of merge guards
 
 # Cluster overview
-TODO(@christiankuehnel): describe how the cluster is set up
+
+The cluster consists of these services:
+* Jenkins build server: [http://jenkins.llvm-merge-guard.org]
+* a set of Jenkins agents running the builds
+* an nginx server with the build results/logs [http://jenkins.llvm-merge-guard.org]
+
 
 # Phabricator integration
 TODO(@christiankuehnel): describe how this is integrated with Phabricator
