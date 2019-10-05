@@ -14,18 +14,10 @@
 # limitations under the License.
 
 set -eux
-
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-ROOT_DIR="$(dirname $(dirname ${DIR}))"
 
-# get config options
-source "${ROOT_DIR}/k8s_config"
+IMAGE_NAME="$1"
 
-IMAGE_NAME="jenkins-master"
-QUALIFIED_NAME="${GCR_HOSTNAME}/${GCP_PROJECT}/${IMAGE_NAME}"
-
+cd "${DIR}/${IMAGE_NAME}"
 docker build -t ${IMAGE_NAME} .
-docker tag ${IMAGE_NAME} ${QUALIFIED_NAME}
-docker push ${QUALIFIED_NAME}
-
-echo "Deployed as ${QUALIFIED_NAME}."
+docker run -i -t ${IMAGE_NAME}
