@@ -54,6 +54,8 @@ spec:
       - name: nfs-pvc
         persistentVolumeClaim:
           claimName: nfs
+      nodeSelector:
+        cloud.google.com/gke-nodepool: services
 ---
 kind: Service
 apiVersion: v1

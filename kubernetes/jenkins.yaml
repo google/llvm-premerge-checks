@@ -100,6 +100,8 @@ spec:
         gcePersistentDisk:
           pdName: jenkins-home
           fsType: ext4
+      nodeSelector:
+        cloud.google.com/gke-nodepool: services
 ---
 kind: Service
 apiVersion: v1
@@ -142,6 +144,32 @@ spec:
     serviceName: jenkins-ui
     servicePort: 8080
 ---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-jenkins
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+  - ReadWriteMany
+  nfs:
+    server: nfs-service.results.svc.cluster.local
+    path: "/exports"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nfs-jenkins
+  namespace: jenkins
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  resources:
+    requests:
+      storage: 10Gi  
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -161,11 +189,20 @@ spec:
         - containerPort: 22
         resources:
           limits:
-            cpu: 31
+            cpu: 30
             memory: 100Gi
           requests:
-            cpu: 31
+            cpu: 30
             memory: 100Gi
+        volumeMounts:
+        - mountPath: /mnt/nfs
+          name: nfs-pvc
+      volumes:
+      - name: nfs-pvc
+        persistentVolumeClaim:
+          claimName: nfs-jenkins
+      nodeSelector:
+        cloud.google.com/gke-nodepool: default-pool
 ---
 kind: Service
 apiVersion: v1
