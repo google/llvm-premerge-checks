@@ -161,10 +161,10 @@ spec:
         - containerPort: 22
         resources:
           limits:
-            cpu: 30
+            cpu: 31
             memory: 100Gi
           requests:
-            cpu: 30
+            cpu: 31
             memory: 100Gi
 ---
 kind: Service

@@ -24,3 +24,7 @@ source "${ROOT_DIR}/k8s_config"
 # create the cluster
 gcloud container clusters create $GCP_CLUSTER --zone $GCP_ZONE \
     --machine-type=n1-standard-32 --num-nodes=1
+
+# add a node pool for interfaces and other services
+gcloud container node-pools create services --cluster $GCP_CLUSTER --zone $GCP_ZONE \
+    --machine-type=n1-standard-4 --num-nodes 1
