@@ -15,6 +15,7 @@
 
 set -eux
 
-# results needs to be deployed first, as it creates the shared storage
+# nfs needs to be deployed first, as it creates the presistent volumes
+kubectl apply -f nfs.yaml
 kubectl apply -f results.yaml
 kubectl apply -f jenkins.yaml

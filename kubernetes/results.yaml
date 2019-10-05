@@ -12,14 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
----
-apiVersion: v1
-kind: Namespace
-metadata: 
-  name: results
-  labels: 
-    name: results
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -48,9 +40,9 @@ spec:
           timeoutSeconds: 5
           successThreshold: 2
           failureThreshold: 5
-#        volumeMounts:
-#        - mountPath: /var/jenkins_home
-#          name: jenkins-home
+        volumeMounts:
+        - mountPath: /mnt/nfs
+          name: nfs-pvc
         resources:
           limits:
             cpu: 500m
@@ -58,6 +50,10 @@ spec:
           requests:
             cpu: 500m
             memory: 1500Mi
+      volumes:
+      - name: nfs-pvc
+        persistentVolumeClaim:
+          claimName: nfs
 ---
 kind: Service
 apiVersion: v1

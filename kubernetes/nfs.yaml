@@ -1,0 +1,107 @@
+# Copyright 2019 Google LLC
+#
+# Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://llvm.org/LICENSE.txt
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+apiVersion: v1
+kind: Namespace
+metadata: 
+  name: results
+  labels: 
+    name: results
+--- 
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: nfs-server
+  namespace: results
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      role: nfs-server
+  template:
+    metadata:
+      labels:
+        role: nfs-server
+    spec:
+      containers:
+      - name: nfs-server
+        image: gcr.io/google_containers/volume-nfs
+        ports:
+          - name: nfs
+            containerPort: 2049
+          - name: mountd
+            containerPort: 20048
+          - name: rpcbind
+            containerPort: 111
+        securityContext:
+          privileged: true
+        volumeMounts:
+          - mountPath: /exports
+            name: result-pvc
+        resources:
+          limits:
+            cpu: 500m
+            memory: 500Mi
+          requests:
+            cpu: 500m
+            memory: 500Mi
+      volumes:
+        - name: result-pvc
+          gcePersistentDisk:
+            pdName: results
+            fsType: ext4
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nfs-service
+  namespace: results
+spec:
+  ports:
+    - name: nfs
+      port: 2049
+    - name: mountd
+      port: 20048
+    - name: rpcbind
+      port: 111
+  selector:
+    role: nfs-server
+---
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+# name: nfs
+# namespace: results
+# spec:
+#   capacity:
+#     storage: 20Gi
+#   accessModes:
+#   - ReadWriteMany
+#   nfs:
+#     server: nfs-service.results.svc.cluster.local
+#     path: "/exports"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nfs
+  namespace: results
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  resources:
+    requests:
+      storage: 20Gi    
