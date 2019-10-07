@@ -36,5 +36,5 @@ for folder in [f for f in os.listdir(ROOT_DIR)]:
         print("Deleting all results: {}".format(fullpath))
         shutil.rmtree(fullpath)
     elif os.path.exists(binpath) and created + MAX_AGE_BIN < now:
-        print("Deleting binaries: {}".format(binaries))
+        print("Deleting binaries: {}".format(binpath))
         shutil.rmtree(binpath)
