@@ -13,8 +13,18 @@ The cluster consists of these services:
 * an nginx server with the build results/logs [http://jenkins.llvm-merge-guard.org]
 
 
-# Phabricator integration
-TODO(@christiankuehnel): describe how this is integrated with Phabricator
+# Jenkins-Phabricator integration
+The Jenkins-Phabricator is based on the instructions provided with the [Phabricator-Jenkins Plugin](https://github.com/uber/phabricator-jenkins-plugin).
+
+On the Phabricator side these things were configured:
+* the Harbormaster [build plan](https://reviews.llvm.org/harbormaster/plan/3/)
+* the Herald [rule](https://reviews.llvm.org/H511)
+
+On the Jenkins side:
+* in the Jenkins configuration page as explained in the instrucitons
+* in the build [job](http://jenkins.llvm-merge-guard.org/job/Phabricator/)
+
+There is no backup of the credentials. If you need to change it, generate a new one and update it in Jenkins and Phabricator.
 
 # Playbooks
 
