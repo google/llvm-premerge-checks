@@ -19,7 +19,7 @@ ARG gid=1000
 ARG AGENT_WORKDIR=/home/${user}/agent
 
 RUN mkdir -p /scripts
-COPY start_agent.sh /scripts/
+COPY start_agent.sh report_results.sh /scripts/
 
 # TODO(kuhnel): move ccache to SDD
 RUN groupadd -g ${gid} ${group} ;\
