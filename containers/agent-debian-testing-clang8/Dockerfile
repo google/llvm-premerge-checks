@@ -3,7 +3,7 @@ VOLUME ["/ccache"]
 
 RUN apt-get update ;\
     apt-get install -y --no-install-recommends \
-        cmake ninja-build git ca-certificates clang-8 lld-8 ccache python python3 build-essential \
+        cmake ninja-build git ca-certificates clang-8 lld-8 clang ccache python python3 build-essential \
         clang-tidy-8 clang-format-8 \
         python-psutil arcanist zip \
         openjdk-11-jdk \

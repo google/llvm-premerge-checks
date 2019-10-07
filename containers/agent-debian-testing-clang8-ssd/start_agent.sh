@@ -20,8 +20,11 @@ AGENT_ROOT="${SSD_ROOT}/agent"
 mkdir -p "${AGENT_ROOT}"
 chown -R jenkins:jenkins "${AGENT_ROOT}"
 
+# prepare folder for ccache
+mkdir -p "${CCACHE_PATH}"
+chown -R jenkins:jenkins "${CCACHE_PATH}"
+
 # TODO(kuhnel): wipe the disk on startup
-# TODO(kuhnel): move ccache to SDD
 
 # start ssh server
 /usr/sbin/sshd -D
