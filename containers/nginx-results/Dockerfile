@@ -6,7 +6,7 @@ RUN set -e ;\
     apt-get clean
 
 RUN mkdir -p /scripts
-COPY index.html run_nginx.sh clean_results.py /scripts/
+COPY run_nginx.sh clean_results.py /scripts/
 COPY default.conf /etc/nginx/conf.d/
 
 COPY crontab /etc/cron.d/clean_results
