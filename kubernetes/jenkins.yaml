@@ -217,3 +217,58 @@ spec:
       port: 22
       name: ssh
   type: NodePort
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: agent-debian-testing-clang8-ssd
+  namespace: jenkins
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: agent-debian-testing-clang8-ssd
+    spec:
+      containers:
+      - name: agent-debian-testing-clang8
+        image: gcr.io/llvm-windows-development/agent-debian-testing-clang8-ssd    
+        ports:
+        - containerPort: 22
+        resources:
+          limits:
+            cpu: 30
+            memory: 100Gi
+          requests:
+            cpu: 30
+            memory: 100Gi
+        volumeMounts:
+        - name: nfs-pvc
+          mountPath: /mnt/nfs          
+        - name: ssd 
+          mountPath: /mnt/disks/ssd0
+      volumes:
+      - name: nfs-pvc
+        persistentVolumeClaim:
+          claimName: nfs-jenkins
+      - name: ssd
+        hostPath:
+          # directory location on host
+          path: /mnt/disks/ssd0
+          type: Directory          
+      nodeSelector:
+        cloud.google.com/gke-nodepool: ssd
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: agent-debian-testing-clang8-ssh-2
+  namespace: jenkins
+spec:
+  selector:
+    app: agent-debian-testing-clang8-ssd
+  ports:
+    - protocol: TCP
+      port: 22
+      name: ssh
+  type: NodePort
