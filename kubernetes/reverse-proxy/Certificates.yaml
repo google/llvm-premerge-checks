@@ -1,0 +1,49 @@
+# -- staging ---------------
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: results-staging-tls-cert
+  namespace: cert-manager
+spec:
+  commonName: results.staging.llvm-merge-guard.org
+  secretName: results-staging-tls
+  issuerRef:
+    name: letsencrypt-staging
+
+---
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: jenkins-staging-tls-cert
+  namespace: cert-manager
+spec:
+  commonName: jenkins.staging.llvm-merge-guard.org
+  secretName: jenkins-staging-tls
+  issuerRef:
+    name: letsencrypt-staging
+
+---
+# -- prod ---------------
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: results-prod-tls-cert
+  namespace: cert-manager
+spec:
+  commonName: results.llvm-merge-guard.org
+  secretName: results-prod-tls
+  issuerRef:
+    name: letsencrypt-prod
+
+---
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: jenkins-prod-tls-cert
+  namespace: cert-manager
+spec:
+  commonName: jenkins.llvm-merge-guard.org
+  secretName: jenkins-prod-tls
+  issuerRef:
+    name: letsencrypt-prod
+---
