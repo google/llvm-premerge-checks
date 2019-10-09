@@ -23,10 +23,10 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/mast
 # install certmanager based on
 # http://docs.cert-manager.io/en/latest/getting-started/install/kubernetes.html
 
-# kubectl create namespace cert-manager
-# kubectl label namespace kube-system certmanager.k8s.io/disable-validation="true"
-# kubectl create clusterrolebinding cluster-admin-binding \
-#   --clusterrole=cluster-admin \
-#   --user=$(gcloud config get-value core/account)
+kubectl create namespace cert-manager
+kubectl label namespace kube-system certmanager.k8s.io/disable-validation="true"
+kubectl create clusterrolebinding cluster-admin-binding \
+  --clusterrole=cluster-admin \
+  --user=$(gcloud config get-value core/account)
 kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v0.10.1/cert-manager.yaml
 
