@@ -15,7 +15,7 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: nginx-ingress
+  name: nginx-ingress-prod
   namespace: jenkins
   annotations:
     # static IP assignment not working. Not sure why.
@@ -24,15 +24,6 @@ metadata:
     cert-manager.io/issuer: "letsencrypt-prod"
 spec:
   tls:
-  # -- staging ------------------  
-  # - secretName: results-staging-tls
-  #   hosts:
-  #   - results.staging.llvm-merge-guard.org
-  # - secretName: results-staging-tls
-  #   hosts:
-  #   - jenkins.staging.llvm-merge-guard.org
-
-  # -- prod ------------------  
   - secretName: results-prod-tls
     hosts:
     - results.llvm-merge-guard.org
@@ -41,7 +32,6 @@ spec:
     - jenkins.llvm-merge-guard.org
 
   rules:
-  # -- prod ------------------  
   - host: results.llvm-merge-guard.org
     http:
       paths:
@@ -55,16 +45,38 @@ spec:
           serviceName: jenkins-ui
           servicePort: 8080
 
-  # -- staging ------------------  
-  # - host: jenkins.staging.llvm-merge-guard.org
-  #   http:
-  #     paths:
-  #     - backend:
-  #         serviceName: jenkins-ui
-  #         servicePort: 8080
-  # - host: results.staging.llvm-merge-guard.org
-  #   http:
-  #     paths:
-  #     - backend:
-  #         serviceName: nginx-results
-  #         servicePort: 80
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: nginx-ingress-staging
+  namespace: jenkins
+  annotations:
+    # static IP assignment not working. Not sure why.
+    kubernetes.io/ingress.global-static-ip-name: "web-static-ip"
+    kubernetes.io/ingress.class: "nginx"    
+    cert-manager.io/issuer: "letsencrypt-staging"
+spec:
+  tls:
+  - secretName: results-staging-tls
+    hosts:
+    - results.staging.llvm-merge-guard.org
+  - secretName: results-staging-tls
+    hosts:
+    - jenkins.staging.llvm-merge-guard.org
+
+  rules:
+  - host: jenkins.staging.llvm-merge-guard.org
+    http:
+      paths:
+      - backend:
+          serviceName: jenkins-ui
+          servicePort: 8080
+  - host: results.staging.llvm-merge-guard.org
+    http:
+      paths:
+      - backend:
+          serviceName: nginx-results
+          servicePort: 80
+
+---
