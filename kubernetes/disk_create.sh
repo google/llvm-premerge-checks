@@ -27,6 +27,12 @@ gcloud compute disks create jenkins-home \
     --type=pd-standard \
     --zone=${GCP_ZONE} \
 
+gcloud compute disks create jenkins-home-staging \
+    --description="storage for jenkins master (staging)" \
+    --size=20GB \
+    --type=pd-standard \
+    --zone=${GCP_ZONE} \
+
 gcloud compute disks create results \
     --description="storage build results" \
     --size=20GB \

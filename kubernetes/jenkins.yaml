@@ -132,18 +132,6 @@ spec:
       targetPort: 50000
       name: agent
 ---
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: jenkins
-  namespace: jenkins
-spec:
-#  tls:
-#  - secretName: tls
-  backend:
-    serviceName: jenkins-ui
-    servicePort: 8080
----
 apiVersion: v1
 kind: PersistentVolume
 metadata:

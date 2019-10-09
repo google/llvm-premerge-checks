@@ -85,5 +85,16 @@ The Jenkins server SSHs into the agents to start the agent application. Thus the
 
 While this works, it does not fell like the perfect solution. I'm happy to get better ideas on this. 
 
+## creating basic authentication for reverse proxy
+
+1. create auth file, based on [ingress-nginx documentation](https://github.com/kubernetes/ingress-nginx/tree/master/docs/examples/auth/basic)
+    ```bash
+    cd kubernetes/reverse-proxy
+    htpasswd -c auth <username>
+    # enter password at prompt
+    # add more users as required
+    kubectl create secret generic proxy-auth --from-file=auth --namespace=jenkins
+    ```
+
 # License
 This project is licensed unter the "Apache 2.0 with LLVM Exception" license. See [LICENSE](LICENSE) for details.
