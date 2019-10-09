@@ -16,7 +16,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-results
-  namespace: results
+  namespace: jenkins
 spec:
   selector:
     matchLabels:
@@ -53,21 +53,6 @@ spec:
       volumes:
       - name: nfs-pvc
         persistentVolumeClaim:
-          claimName: nfs
+          claimName: nfs-jenkins
       nodeSelector:
         cloud.google.com/gke-nodepool: services
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: nginx-results
-  namespace: results
-spec:
-  type: LoadBalancer
-#  externalTrafficPolicy: Cluster
-  selector:
-    app: nginx-results
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 80
