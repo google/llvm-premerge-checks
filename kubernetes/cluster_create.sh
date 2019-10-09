@@ -35,3 +35,8 @@ gcloud container node-pools create services --cluster $GCP_CLUSTER --zone $GCP_Z
 # https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/local-ssd
 gcloud container node-pools create ssd --cluster $GCP_CLUSTER --zone $GCP_ZONE \
     --machine-type=n1-standard-32 --num-nodes=1 --local-ssd-count=1 
+
+
+# create static IP address
+# IP can be created, but not used in Ingress. Not sure why
+# gcloud compute addresses create web-static-ip --global
