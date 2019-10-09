@@ -18,7 +18,7 @@ metadata:
   name: nginx-results
   namespace: jenkins
 spec:
-  type: LoadBalancer
+#  type: LoadBalancer
 #  externalTrafficPolicy: Cluster
   selector:
     app: nginx-results

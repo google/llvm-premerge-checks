@@ -39,4 +39,4 @@ gcloud container node-pools create ssd --cluster $GCP_CLUSTER --zone $GCP_ZONE \
 
 # create static IP address
 # IP can be created, but not used in Ingress. Not sure why
-# gcloud compute addresses create web-static-ip --global
+gcloud compute addresses create web-static-ip --region=$GCP_ZONE
