@@ -15,7 +15,37 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: nginx-ingress-prod
+  name: nginx-ingress-prod-jenkins
+  namespace: jenkins
+  annotations:
+    # static IP assignment not working. Not sure why.
+    kubernetes.io/ingress.global-static-ip-name: "web-static-ip"
+    kubernetes.io/ingress.class: "nginx"    
+    cert-manager.io/issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: proxy-auth
+    nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - LLVM pre-merge checks"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+        proxy_set_header Authorization $remote_user;
+spec:
+  tls:
+  - secretName: jenkins-prod-tls
+    hosts:
+    - jenkins.llvm-merge-guard.org
+
+  rules:
+  - host: jenkins.llvm-merge-guard.org
+    http:
+      paths:
+      - backend:
+          serviceName: jenkins-ui
+          servicePort: 8080
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: nginx-ingress-prod-results
   namespace: jenkins
   annotations:
     # static IP assignment not working. Not sure why.
@@ -27,10 +57,6 @@ spec:
   - secretName: results-prod-tls
     hosts:
     - results.llvm-merge-guard.org
-  - secretName: jenkins-prod-tls
-    hosts:
-    - jenkins.llvm-merge-guard.org
-
   rules:
   - host: results.llvm-merge-guard.org
     http:
@@ -38,13 +64,6 @@ spec:
       - backend:
           serviceName: nginx-results
           servicePort: 80
-  - host: jenkins.llvm-merge-guard.org
-    http:
-      paths:
-      - backend:
-          serviceName: jenkins-ui
-          servicePort: 8080
-
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
