@@ -8,12 +8,13 @@ TODO(@christiankuehnel): describe objective of merge guards
 # Cluster overview
 
 The cluster consists of these services:
-* Jenkins build server: [http://jenkins.llvm-merge-guard.org]
+* Jenkins build server: http://jenkins.llvm-merge-guard.org
 * a set of Jenkins agents running the builds
-* an nginx server with the build results/logs [http://jenkins.llvm-merge-guard.org]
+* an nginx server with the build results/logs http://jenkins.llvm-merge-guard.org
 
 
 # Jenkins-Phabricator integration
+
 The Jenkins-Phabricator is based on the instructions provided with the [Phabricator-Jenkins Plugin](https://github.com/uber/phabricator-jenkins-plugin).
 
 On the Phabricator side these things were configured:
@@ -29,15 +30,16 @@ There is no backup of the credentials. If you need to change it, generate a new 
 # Playbooks
 
 ## deployment to a clean infrastructure
+
 General remarks:
-* GCP does not route any traffic to your services unless the service is "helthy". It might take a few minutes after startup before the services is classified as healthy. Until then you will only see some generic error message.
+* GCP does not route any traffic to your services unless the service is "healthy". It might take a few minutes after startup before the services is classified as healthy. Until then you will only see some generic error message.
 
 These are the steps to set up the build server on a clean infrastructure:
-1. Configure the tools on your local machine: 
+1. Configure the tools on your local machine:
     ```bash
-    ./setup.sh
+    ./local_setup.sh
     ```
-1. Delete the old cluster, if it still exists: 
+1. Delete the old cluster, if it still exists:
     ```bash
     cd kubernetes/cluster
     ./cluster_delete.sh
@@ -52,27 +54,27 @@ These are the steps to set up the build server on a clean infrastructure:
     cd kubernetes/cluster
     ./disk_create.sh
     ```
-1. ssh into the VM instance mounting the volume, find the mount point and then set
+1. SSH into the VM instance mounting the volume, find the mount point and then set
     ```bash
     # go to the mount point of the volume
     cd  /var/lib/kubelet/plugins/kubernetes.io/gce-pd/mounts/jenkins-home
     # change the permissions
-    sudo chmod a+rwx 
+    sudo chmod a+rwx
     ```
-1. push the docker images to gcr.io:
-```bash
+1. Push the docker images to gcr.io:
+    ```bash
     cd containers/debian-testing-clang8
     ./build_deploy.sh
-    
+
     cd ../jenkins-master
     ./build_deploy.sh
-```
-1. Deploy the stack: ``
+    ```
+1. Deploy the stack:
     ```bash
     cd kubernetes
     ./deploy.sh
     ```
-1. configure it
+1. Configure it
 
 ## handling SSH keys
 The Jenkins server SSHs into the agents to start the agent application. Thus the master needs SSH access to the agent. To set this up:
@@ -83,7 +85,7 @@ The Jenkins server SSHs into the agents to start the agent application. Thus the
 1. Copy the contents of `id_rsa.pub` to `containers/<agent dir>/authorized keys`.
 1. Rebuild and deploy the agents.
 
-While this works, it does not fell like the perfect solution. I'm happy to get better ideas on this. 
+While this works, it does not fell like the perfect solution. I'm happy to get better ideas on this.
 
 ## creating basic authentication for reverse proxy
 
