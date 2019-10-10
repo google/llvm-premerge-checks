@@ -10,7 +10,7 @@ TODO(@christiankuehnel): describe objective of merge guards
 The cluster consists of these services:
 * Jenkins build server: http://jenkins.llvm-merge-guard.org
 * a set of Jenkins agents running the builds
-* an nginx server with the build results/logs http://jenkins.llvm-merge-guard.org
+* an nginx server with the build results/logs http://results.llvm-merge-guard.org
 
 
 # Jenkins-Phabricator integration
