@@ -24,7 +24,7 @@ chown -R jenkins:jenkins "${AGENT_ROOT}"
 mkdir -p "${CCACHE_PATH}"
 chown -R jenkins:jenkins "${CCACHE_PATH}"
 
-# TODO(kuhnel): wipe the disk on startup
+# TODO(kuhnel): wipe the disk(s) on startup
 
 # start ssh server
 /usr/sbin/sshd -D

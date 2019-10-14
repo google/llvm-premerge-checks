@@ -12,10 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 set -eux
 
-# nfs needs to be deployed first, as it creates the presistent volumes
-kubectl apply -f nfs.yaml
-kubectl apply -k results-nginx
-kubectl apply -f jenkins.yaml
+#delete the old secret
+kubectl delete secret proxy-auth --namespace=jenkins
+# upload the new secret
+kubectl create secret generic proxy-auth --from-file=auth --namespace=jenkins
