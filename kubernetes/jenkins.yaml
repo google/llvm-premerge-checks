@@ -15,9 +15,9 @@
 ---
 apiVersion: v1
 kind: Namespace
-metadata:
+metadata: 
   name: jenkins
-  labels:
+  labels: 
     name: jenkins
 ---
 apiVersion: v1
@@ -117,16 +117,6 @@ spec:
       port: 8080
       targetPort: 8080
       name: ui
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: jenkins-discovery
-  namespace: jenkins
-spec:
-  selector:
-    app: master
-  ports:
     - protocol: TCP
       port: 50000
       targetPort: 50000
@@ -156,7 +146,7 @@ spec:
   storageClassName: ""
   resources:
     requests:
-      storage: 10Gi
+      storage: 10Gi  
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -171,31 +161,31 @@ spec:
         app: agent-debian-testing-clang8-ssd
     spec:
       containers:
-        - name: agent-debian-testing-clang8
-          image: gcr.io/llvm-windows-development/agent-debian-testing-clang8-ssd
-          ports:
-            - containerPort: 22
-          resources:
-            limits:
-              cpu: 15
-              memory: 45Gi
-            requests:
-              cpu: 15
-              memory: 45Gi
-          volumeMounts:
-            - name: nfs-pvc
-              mountPath: /mnt/nfs
-            - name: ssd
-              mountPath: /mnt/disks/ssd0
-      volumes:
+      - name: agent-debian-testing-clang8
+        image: gcr.io/llvm-windows-development/agent-debian-testing-clang8-ssd    
+        ports:
+        - containerPort: 22
+        resources:
+          limits:
+            cpu: 15
+            memory: 45Gi
+          requests:
+            cpu: 15
+            memory: 45Gi
+        volumeMounts:
         - name: nfs-pvc
-          persistentVolumeClaim:
-            claimName: nfs-jenkins
-        - name: ssd
-          hostPath:
-            # directory location on host
-            path: /mnt/disks/ssd0
-            type: Directory
+          mountPath: /mnt/nfs          
+        - name: ssd 
+          mountPath: /mnt/disks/ssd0
+      volumes:
+      - name: nfs-pvc
+        persistentVolumeClaim:
+          claimName: nfs-jenkins
+      - name: ssd
+        hostPath:
+          # directory location on host
+          path: /mnt/disks/ssd0
+          type: Directory          
       nodeSelector:
         cloud.google.com/gke-nodepool: jenkins-agents
 ---

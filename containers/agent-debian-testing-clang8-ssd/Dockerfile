@@ -4,9 +4,8 @@ RUN apt-get update ;\
     apt-get install -y --no-install-recommends \
         cmake ninja-build git ca-certificates clang-8 lld-8 clang ccache python python3 build-essential \
         clang-tidy-8 clang-format-8 \
-        python-psutil arcanist zip \
-        openjdk-11-jdk \
-        openssh-server ;\
+        python-psutil arcanist zip wget \
+        openjdk-11-jdk ;\
         apt-get clean
 
 # required for openssh server
@@ -34,6 +33,9 @@ RUN chown -R ${user}:${user} /home/${user} ;\
 WORKDIR /home/${user}
 ENV CCACHE_PATH=/mnt/disks/ssd0/ccache
 
-EXPOSE 22
+RUN cd /scripts ;\
+    wget https://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/swarm-client/3.17/swarm-client-3.17.jar ;\
+    mv swarm-client-3.17.jar swarm-client.jar 
+
 CMD ["/scripts/start_agent.sh"]
 

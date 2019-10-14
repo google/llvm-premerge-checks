@@ -27,4 +27,4 @@ chown -R jenkins:jenkins "${CCACHE_PATH}"
 # TODO(kuhnel): wipe the disk(s) on startup
 
 # start ssh server
-/usr/sbin/sshd -D
+java -jar /scripts/swarm-client.jar -master http://jenkins-ui.jenkins.svc.cluster.local:8080 -executors 1
