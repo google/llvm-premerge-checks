@@ -33,8 +33,8 @@ gcloud container node-pools create services --cluster $GCP_CLUSTER --zone $GCP_Z
 # test with a machine with ssd
 # as per instructions
 # https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/local-ssd
-gcloud container node-pools create ssd --cluster $GCP_CLUSTER --zone $GCP_ZONE \
-    --machine-type=n1-standard-32 --num-nodes=1 --local-ssd-count=1 
+gcloud container node-pools create jenkins-agents --cluster $GCP_CLUSTER --zone $GCP_ZONE \
+    --machine-type=n1-standard-16 --num-nodes=3 --local-ssd-count=1
 
 
 # create static IP address

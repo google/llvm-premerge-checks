@@ -15,9 +15,9 @@
 ---
 apiVersion: v1
 kind: Namespace
-metadata: 
+metadata:
   name: jenkins
-  labels: 
+  labels:
     name: jenkins
 ---
 apiVersion: v1
@@ -156,55 +156,7 @@ spec:
   storageClassName: ""
   resources:
     requests:
-      storage: 10Gi  
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: agent-debian-testing-clang8
-  namespace: jenkins
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: agent-debian-testing-clang8
-    spec:
-      containers:
-      - name: agent-debian-testing-clang8
-        image: gcr.io/llvm-windows-development/agent-debian-testing-clang8    
-        ports:
-        - containerPort: 22
-        resources:
-          limits:
-            cpu: 30
-            memory: 100Gi
-          requests:
-            cpu: 30
-            memory: 100Gi
-        volumeMounts:
-        - mountPath: /mnt/nfs
-          name: nfs-pvc
-      volumes:
-      - name: nfs-pvc
-        persistentVolumeClaim:
-          claimName: nfs-jenkins
-      nodeSelector:
-        cloud.google.com/gke-nodepool: default-pool
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: agent-debian-testing-clang8-ssh
-  namespace: jenkins
-spec:
-  selector:
-    app: agent-debian-testing-clang8
-  ports:
-    - protocol: TCP
-      port: 22
-      name: ssh
-  type: NodePort
+      storage: 10Gi
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -212,45 +164,45 @@ metadata:
   name: agent-debian-testing-clang8-ssd
   namespace: jenkins
 spec:
-  replicas: 1
+  replicas: 3
   template:
     metadata:
       labels:
         app: agent-debian-testing-clang8-ssd
     spec:
       containers:
-      - name: agent-debian-testing-clang8
-        image: gcr.io/llvm-windows-development/agent-debian-testing-clang8-ssd    
-        ports:
-        - containerPort: 22
-        resources:
-          limits:
-            cpu: 30
-            memory: 100Gi
-          requests:
-            cpu: 30
-            memory: 100Gi
-        volumeMounts:
-        - name: nfs-pvc
-          mountPath: /mnt/nfs          
-        - name: ssd 
-          mountPath: /mnt/disks/ssd0
+        - name: agent-debian-testing-clang8
+          image: gcr.io/llvm-windows-development/agent-debian-testing-clang8-ssd
+          ports:
+            - containerPort: 22
+          resources:
+            limits:
+              cpu: 15
+              memory: 55Gi
+            requests:
+              cpu: 15
+              memory: 55Gi
+          volumeMounts:
+            - name: nfs-pvc
+              mountPath: /mnt/nfs
+            - name: ssd
+              mountPath: /mnt/disks/ssd0
       volumes:
-      - name: nfs-pvc
-        persistentVolumeClaim:
-          claimName: nfs-jenkins
-      - name: ssd
-        hostPath:
-          # directory location on host
-          path: /mnt/disks/ssd0
-          type: Directory          
+        - name: nfs-pvc
+          persistentVolumeClaim:
+            claimName: nfs-jenkins
+        - name: ssd
+          hostPath:
+            # directory location on host
+            path: /mnt/disks/ssd0
+            type: Directory
       nodeSelector:
-        cloud.google.com/gke-nodepool: ssd
+        cloud.google.com/gke-nodepool: jenkins-agents
 ---
 kind: Service
 apiVersion: v1
 metadata:
-  name: agent-debian-testing-clang8-ssh-2
+  name: agent-debian-testing-clang8-ssh
   namespace: jenkins
 spec:
   selector:

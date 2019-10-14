@@ -29,3 +29,4 @@ gcloud config set compute/zone ${GCP_ZONE}
 
 # setup docker for pushing containers
 gcloud auth configure-docker
+gcloud container clusters get-credentials $GCP_CLUSTER
