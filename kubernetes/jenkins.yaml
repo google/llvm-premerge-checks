@@ -178,10 +178,10 @@ spec:
           resources:
             limits:
               cpu: 15
-              memory: 55Gi
+              memory: 45Gi
             requests:
               cpu: 15
-              memory: 55Gi
+              memory: 45Gi
           volumeMounts:
             - name: nfs-pvc
               mountPath: /mnt/nfs
