@@ -188,17 +188,3 @@ spec:
           type: Directory          
       nodeSelector:
         cloud.google.com/gke-nodepool: jenkins-agents
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: agent-debian-testing-clang8-ssh
-  namespace: jenkins
-spec:
-  selector:
-    app: agent-debian-testing-clang8-ssd
-  ports:
-    - protocol: TCP
-      port: 22
-      name: ssh
-  type: NodePort
