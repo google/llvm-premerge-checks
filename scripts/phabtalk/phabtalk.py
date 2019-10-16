@@ -26,8 +26,8 @@ from lxml import etree
 class PhabTalk:
     """Talk to Phabricator to upload build results."""
 
-    def __init__(self, token: Optional[str]):
-        self._phab = Phabricator(token=token)
+    def __init__(self, token: Optional[str], host: Optional[str]):
+        self._phab = Phabricator(token=token, host=host)
         self._phab.update_interfaces()
 
     def get_revision_id(self, diff: str):
@@ -111,9 +111,10 @@ def main():
     parser.add_argument('--test-result-file', type=str, dest='test_result_file',
         default=os.path.join(os.path.curdir,'test-results.xml'))
     parser.add_argument('--conduit-token', type=str, dest='conduit_token', default=None)
+    parser.add_argument('--host', type=str, dest='host', default="None")
     args = parser.parse_args()    
 
-    p = PhabTalk(args.conduit_token)
+    p = PhabTalk(args.conduit_token, args.host)
     p.comment_on_diff_from_file(args.diff_id, args.comment_file)
     p.report_test_results(args.ph_id, args.test_result_file)
 
