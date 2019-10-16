@@ -21,7 +21,7 @@ ROOT_DIR="$(dirname ${DIR})"
 # get config options
 source "${ROOT_DIR}/k8s_config"
 
-IMAGE_NAME="$1"
+IMAGE_NAME="${1%/}"
 QUALIFIED_NAME="${GCR_HOSTNAME}/${GCP_PROJECT}/${IMAGE_NAME}"
 
 cd "${DIR}/${IMAGE_NAME}"

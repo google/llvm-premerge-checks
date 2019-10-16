@@ -16,7 +16,7 @@
 set -eux
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-IMAGE_NAME="$1"
+IMAGE_NAME="${1%/}"
 
 cd "${DIR}/${IMAGE_NAME}"
 docker build -t ${IMAGE_NAME} .
