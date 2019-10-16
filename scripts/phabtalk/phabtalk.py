@@ -111,7 +111,8 @@ def main():
     parser.add_argument('--test-result-file', type=str, dest='test_result_file',
         default=os.path.join(os.path.curdir,'test-results.xml'))
     parser.add_argument('--conduit-token', type=str, dest='conduit_token', default=None)
-    parser.add_argument('--host', type=str, dest='host', default="None")
+    parser.add_argument('--host', type=str, dest='host', default="None", 
+        help="full URL to API with trailing slash, e.g. https://reviews.llvm.org/api/")
     args = parser.parse_args()    
 
     p = PhabTalk(args.conduit_token, args.host)
