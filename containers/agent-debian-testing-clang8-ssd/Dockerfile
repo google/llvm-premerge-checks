@@ -5,7 +5,8 @@ RUN apt-get update ;\
         cmake ninja-build git ca-certificates clang-8 lld-8 clang ccache python python3 build-essential \
         clang-tidy-8 clang-format-8 \
         python-psutil arcanist zip wget \
-        openjdk-11-jdk ;\
+        openjdk-11-jdk \
+        python3-pip python3-setuptools ;\
         apt-get clean
 
 # required for openssh server
@@ -26,7 +27,9 @@ RUN cd /scripts ;\
 
 COPY start_agent.sh report_results.sh /scripts/
 
-# TODO(kuhnel): move ccache to SDD
+# for the phabtalk script
+RUN pip3 install -r https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/phabtalk/requirements.txt
+
 RUN groupadd -g ${gid} ${group} ;\
     useradd -c "Jenkins user" -d /home/${user} -u ${uid} -g ${gid} -m ${user} ;\
     mkdir /home/${user}/ccache
