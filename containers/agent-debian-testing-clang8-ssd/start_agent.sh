@@ -27,4 +27,5 @@ chown -R jenkins:jenkins "${CCACHE_PATH}"
 # TODO(kuhnel): wipe the disk(s) on startup
 
 # start swarm agent as user jenkins
-su jenkins -c "java -jar /scripts/swarm-client.jar -master http://jenkins-ui.jenkins.svc.cluster.local:8080 -executors 1"
+# description of arguments: https://wiki.jenkins.io/display/JENKINS/Swarm+Plugin
+su jenkins -c "java -jar /scripts/swarm-client.jar -master http://jenkins-ui.jenkins.svc.cluster.local:8080 -executors 1 -fsroot ${AGENT_ROOT}"
