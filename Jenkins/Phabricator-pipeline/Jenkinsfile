@@ -21,7 +21,6 @@ pipeline {
     stages {
         stage("git checkout"){
             git url: 'https://github.com/llvm/llvm-project.git'
-            )
             // https://github.com/google/llvm-premerge-checks.git
         }
         stage('Build') {
