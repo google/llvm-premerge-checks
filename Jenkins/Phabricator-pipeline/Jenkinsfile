@@ -25,8 +25,7 @@ pipeline {
                 sh 'mkdir -p llvm-premerge-checks'
                 dir("llvm-premerge-checks")
                 {
-                    git branch: "develop",
-                    url: 'https://github.com/google/llvm-premerge-checks.git'
+                    git url: 'https://github.com/google/llvm-premerge-checks.git'
                 }
             }            
         }
