@@ -23,23 +23,44 @@ from typing import Optional
 from phabricator import Phabricator
 from lxml import etree
 
+class TestResults:
+
+    def __init__(self):
+        self.result_type = None  # type: str
+        self.unit = []  #type: List
+        self.test_stats = {
+            'pass':0,
+            'fail':0, 
+            'skip':0
+        }  # type: Dict[str, int]
+
+
 class PhabTalk:
     """Talk to Phabricator to upload build results."""
 
-    def __init__(self, token: Optional[str], host: Optional[str]):
-        self._phab = Phabricator(token=token, host=host)
-        self._phab.update_interfaces()
+    def __init__(self, token: Optional[str], host: Optional[str], dryrun: bool):
+        self._phab = None  # type: Optional[Phabricator]
+        if not dryrun:
+            self._phab = Phabricator(token=token, host=host)
+            self._phab.update_interfaces()
+    
+    @property
+    def dryrun(self):
+        return self._phab is None
 
-    def get_revision_id(self, diff: str):
+    def _get_revision_id(self, diff: str):
         """Get the revision ID for a diff from Phabricator."""
+        if self.dryrun:
+            return None
+
         result = self._phab.differential.querydiffs(ids=[diff])
         return 'D' + result[diff]['revisionID']
 
-    def comment_on_diff(self, diff: str, text: str):
+    def _comment_on_diff(self, diff: str, text: str):
         """Add a comment to a differential based on the diff_id"""
-        self.comment_on_revision(self.get_revision_id(diff), text)
+        self._comment_on_revision(self._get_revision_id(diff), text)
 
-    def comment_on_revision(self, revision: str, text: str):
+    def _comment_on_revision(self, revision: str, text: str):
         """Add comment on a differential based on the revision id."""
 
         transactions = [{
@@ -47,36 +68,67 @@ class PhabTalk:
             'value' : text
         }]
 
+        if self.dryrun:
+            print('differential.revision.edit =================')
+            print('Transactions: {}'.format(transactions))
+            return
+        
         # API details at
         # https://secure.phabricator.com/conduit/method/differential.revision.edit/
         self._phab.differential.revision.edit(objectIdentifier=revision, transactions=transactions)
 
-    def comment_on_diff_from_file(self, diff: str, text_file_path: str):
+    def _comment_on_diff_from_file(self, diff: str, text_file_path: str, test_results: TestResults):
         """Comment on a diff, read text from file."""
-        if text_file_path is None:
-            return
-        if not os.path.exists(text_file_path):
-            raise FileNotFoundError('Could not find file with comments: {}'.format(text_file_path))
-        
-        with open(text_file_path) as input_file:
-            text = input_file.read()
-        self.comment_on_diff(diff, text)
+        header = 'Build result: {} - '.format(test_results.result_type)
+        header += '{} tests passed, {} failed and {} were skipped.\n'.format(
+            test_results.test_stats['pass'],
+            test_results.test_stats['fail'],
+            test_results.test_stats['skip'],
+        )
+        for test_case in test_results.unit:
+            if test_case['result'] == 'fail':
+                header += '    failed: {}/{}\n'.format(test_case['namespace'], test_case['name'])
+        text = ''
+        if text_file_path is not None:
+            if not os.path.exists(text_file_path):
+                raise FileNotFoundError('Could not find file with comments: {}'.format(text_file_path))
+            
+            with open(text_file_path) as input_file:
+                text = input_file.read()
+        self._comment_on_diff(diff, header + text)
 
-    def report_test_results(self, phid: str, build_result_file: str):
+    def _report_test_results(self, phid: str, test_results: TestResults):
         """Report failed tests to phabricator.
 
         Only reporting failed tests as the full test suite is too large to upload.
         """
+
+        if self.dryrun:
+            print('harbormaster.sendmessage =================')
+            print('type: {}'.format(test_results.result_type))
+            print('unit: {}'.format(test_results.unit))
+            return
+
+        # API details at
+        # https://secure.phabricator.com/conduit/method/harbormaster.sendmessage/  
+        self._phab.harbormaster.sendmessage(buildTargetPHID=phid, type=test_results.result_type, 
+            unit=test_results.unit)
+
+    def _compute_test_results(self, build_result_file: str) -> TestResults:
         if build_result_file is None:
             return
         if not os.path.exists(build_result_file):
             raise FileNotFoundError('Could not find file with build results: {}'.format(build_result_file))
         
+        result = TestResults()
+
         root_node = etree.parse(build_result_file)
-        unit_test_results = []
-        build_result_type = 'pass'
+        result.result_type = 'pass'
+        
         for test_case in root_node.xpath('//testcase'):
             test_result = self._test_case_status(test_case)
+            result.test_stats[test_result] += 1
+
             if test_result == 'fail':
                 failure = test_case.find('failure')
                 test_result = {
@@ -86,13 +138,9 @@ class PhabTalk:
                     'duration' : float(test_case.attrib['time']),
                     'details' : failure.text
                 }
-                build_result_type = 'fail'
-                unit_test_results.append(test_result)
-
-        # API details at
-        # https://secure.phabricator.com/conduit/method/harbormaster.sendmessage/  
-        self._phab.harbormaster.sendmessage(buildTargetPHID=phid, type=build_result_type, 
-            unit=unit_test_results)
+                result.result_type = 'fail'
+                result.unit.append(test_result)        
+        return result
 
     @staticmethod
     def _test_case_status(test_case) -> str:
@@ -103,7 +151,19 @@ class PhabTalk:
             return 'skip'
         return 'pass'
 
+    def report_all(self, diff_id: str, ph_id: str, test_result_file: str, comment_file: str):
+        test_results = self._compute_test_results(test_result_file)
+        self._report_test_results(ph_id, test_results)
+        self._comment_on_diff_from_file(diff_id, comment_file, test_results)
+
+
 def main():
+    args = _parse_args()
+    p = PhabTalk(args.conduit_token, args.host, args.dryrun)
+    p.report_all(args.diff_id, args.ph_id, args.test_result_file, args.comment_file)
+
+
+def _parse_args():
     parser = argparse.ArgumentParser(description='Write build status back to Phabricator.')
     parser.add_argument('ph_id', type=str)
     parser.add_argument('diff_id', type=str)   
@@ -113,11 +173,10 @@ def main():
     parser.add_argument('--conduit-token', type=str, dest='conduit_token', default=None)
     parser.add_argument('--host', type=str, dest='host', default="None", 
         help="full URL to API with trailing slash, e.g. https://reviews.llvm.org/api/")
-    args = parser.parse_args()    
+    parser.add_argument('--dryrun', action='store_true',help="output results to the console, do not report back to the server")
+    
+    return parser.parse_args()    
 
-    p = PhabTalk(args.conduit_token, args.host)
-    p.comment_on_diff_from_file(args.diff_id, args.comment_file)
-    p.report_test_results(args.ph_id, args.test_result_file)
 
 if __name__ == '__main__':
     main()
