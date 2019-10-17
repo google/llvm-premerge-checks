@@ -27,7 +27,8 @@ pipeline {
                 {
                     git branch: "develop",
                     url: 'https://github.com/google/llvm-premerge-checks.git'
-                }            
+                }
+            }            
         }
         stage('CMake') {
             steps {
