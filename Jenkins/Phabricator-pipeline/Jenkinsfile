@@ -22,22 +22,26 @@ pipeline {
         stage("git checkout"){
             steps {
                 git url: 'https://github.com/llvm/llvm-project.git'
-                // https://github.com/google/llvm-premerge-checks.git
+                sh 'mkdir -p llvm-premerge-checks'
+                dir("llvm-premerge-checks")
+                {
+                    git branch: "develop",
+                    url: 'https://github.com/google/llvm-premerge-checks.git'
+                }            
+        }
+        stage('CMake') {
+            steps {
+                echo 'Running CMake...'
             }
         }
-        stage('Build') {
+        stage('ninja all') {
             steps {
-                echo 'Building..'
+                echo 'Running ninja all..'
             }
         }
-        stage('Test') {
+        stage('ninja check-all') {
             steps {
-                echo 'Testing..'
-            }
-        }
-        stage('Deploy') {
-            steps {
-                echo 'Deploying....'
+                echo 'Running ninja check-all....'
             }
         }
     }
