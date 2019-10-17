@@ -28,5 +28,10 @@ RETURN_CODE="${PIPESTATUS[0]}"
 set -e
 
 echo "check-all completed ======================================"
-cp  ninja_check_all-log.txt ${TARGET_DIR}
+cp  ninja_check_all-log.txt test-results.xml ${TARGET_DIR}
+
+# if a test report exists building must have worked
+if test -f "${WORKSPACE}/build/test-results.xml"; then
+	exit 0
+fi
 exit ${RETURN_CODE}
