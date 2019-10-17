@@ -29,6 +29,11 @@ pipeline {
                 }
             }            
         }
+        stage('arc patch') {
+            steps {
+                echo 'TODO: arc patch'
+            }
+        }
         stage('CMake') {
             steps {
                 sh 'llvm-premerge-checks/scripts/run_cmake.sh'
@@ -37,7 +42,6 @@ pipeline {
         stage('ninja check-all') {
             steps {
                 sh 'llvm-premerge-checks/scripts/run_ninja_check-all.sh'
-            }
             }
         }
     }
