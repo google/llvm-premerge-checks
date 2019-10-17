@@ -31,17 +31,13 @@ pipeline {
         }
         stage('CMake') {
             steps {
-                echo 'Running CMake...'
-            }
-        }
-        stage('ninja all') {
-            steps {
-                echo 'Running ninja all..'
+                sh 'llvm-premerge-checks/scripts/run_cmake.sh'
             }
         }
         stage('ninja check-all') {
             steps {
-                echo 'Running ninja check-all....'
+                sh 'llvm-premerge-checks/scripts/run_ninja_check-all.sh'
+            }
             }
         }
     }
