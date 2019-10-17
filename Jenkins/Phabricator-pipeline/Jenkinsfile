@@ -14,8 +14,16 @@
 
 pipeline {
     agent any
-
+    parameters {
+        string(name: 'DIFF_ID')
+        string(name: 'PHID')
+    }
     stages {
+        stage("git checkout"){
+            git url: 'https://github.com/llvm/llvm-project.git'
+            )
+            // https://github.com/google/llvm-premerge-checks.git
+        }
         stage('Build') {
             steps {
                 echo 'Building..'
