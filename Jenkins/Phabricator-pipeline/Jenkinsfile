@@ -35,11 +35,7 @@ pipeline {
         }
         stage('arc patch') {
             steps {
-                sh """
-                   ls -l
-                   ls -l llvm-premerge-checks
-                   llvm-premerge-checks/scripts/phabtalk/apply_patch.py
-                   """
+                sh 'python3 ${WORKSPACE}/llvm-premerge-checks/scripts/phabtalk/apply_patch.py'
             }
         }
         stage('CMake') {
