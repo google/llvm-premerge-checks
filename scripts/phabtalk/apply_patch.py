@@ -19,15 +19,16 @@ from phabricator import Phabricator
 
 
 def main():
-    args = _parse_args()
     diff_id = os.environ['DIFF_ID']
     phid = os.environ['PHID']
+    conduit_token = os.environ['CONDUIT_TOKEN']
+    host = os.environ['PHABRICATOR_HOST']
 
-    phab = Phabricator(token=args.conduit_token, host=args.host+'/api/')
+    phab = Phabricator(token=conduit_token, host=host+'/api/')
     phab.update_interfaces()
 
     _git_checkout(_get_parent_hash(diff_id, phab))
-    _apply_patch(diff_id, args.conduit_token, args.host)
+    _apply_patch(diff_id, conduit_token, host)
 
 
 def _get_parent_hash(diff_id: str, phab:Phabricator) -> str:
@@ -45,16 +46,6 @@ def _apply_patch(diff_id: str, conduit_token: str, host: str):
             '--conduit-token "{}" --conduit-uri "{}"'.format(
         diff_id, conduit_token, host )
     subprocess.call(cmd, shell=True)
-
-
-def _parse_args():
-    parser = argparse.ArgumentParser(description='Apply a phabricator patch.')
-    parser.add_argument('--conduit-token', type=str, dest='conduit_token', default=None)
-    parser.add_argument('--host', type=str, dest='host', default="None", 
-        help="full URL to API without trailing slash, e.g. https://reviews.llvm.org")
-    
-    return parser.parse_args()    
-
 
 if __name__ == "__main__":
     main()

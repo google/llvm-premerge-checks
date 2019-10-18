@@ -20,6 +20,7 @@ pipeline {
     }
     environment {
             CONDUIT_TOKEN = credentials('phabricator-conduit-token')
+            PHABRICATOR_HOST = 'https://reviews.llvm.org'
     }
     stages {
         stage("git checkout"){
@@ -34,7 +35,7 @@ pipeline {
         }
         stage('arc patch') {
             steps {
-                sh '${WORKSPACE}/llvm-premerge-checks/scripts/phabtalk/apply_patch.py --host="https://reviews.llvm.org" --conduit-token="${CONDUIT_TOKEN}"'
+                sh 'lvm-premerge-checks/scripts/phabtalk/apply_patch.py'
             }
         }
         stage('CMake') {
