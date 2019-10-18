@@ -44,5 +44,10 @@ pipeline {
                 sh 'llvm-premerge-checks/scripts/run_ninja_check-all.sh'
             }
         }
+        stage('clang-format') {
+            steps {
+                sh 'llvm-premerge-checks/scripts/check-clang-format.sh'
+            }
+        }
     }
 }
