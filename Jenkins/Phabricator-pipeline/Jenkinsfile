@@ -36,12 +36,10 @@ pipeline {
         stage('arc patch') {
             steps {
                 sh """
-                pwd
-                ls -l
-                ls -l ..
-                ls -l lvm-premerge-checks
-                lvm-premerge-checks/scripts/phabtalk/apply_patch.py
-                """
+                   ls -l
+                   ls -l llvm-premerge-checks
+                   llvm-premerge-checks/scripts/phabtalk/apply_patch.py
+                   """
             }
         }
         stage('CMake') {
