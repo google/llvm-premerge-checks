@@ -61,7 +61,7 @@ These are the steps to set up the build server on a clean infrastructure:
     # change the permissions
     sudo chmod a+rwx
     ```
-1. Push the docker images to gcr.io. f
+1. Push the docker images to gcr.io:
     ```bash
     cd containers
     #for each subfolder:
