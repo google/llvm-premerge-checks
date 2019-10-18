@@ -34,9 +34,7 @@ pipeline {
         }
         stage('arc patch') {
             steps {
-                dir("llvm-premerge-checks/scripts/phabtalk"){
-                    sh 'apply_patch.py --host="https://reviews.llvm.org" --conduit-token="${CONDUIT_TOKEN}"'
-                }                
+                sh '${WORKSPACE}/llvm-premerge-checks/scripts/phabtalk/apply_patch.py --host="https://reviews.llvm.org" --conduit-token="${CONDUIT_TOKEN}"'
             }
         }
         stage('CMake') {
