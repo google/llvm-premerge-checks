@@ -58,5 +58,5 @@ spec:
           pdName: jenkins-home-staging
           fsType: ext4
       nodeSelector:
-        cloud.google.com/gke-nodepool: services
+        cloud.google.com/gke-nodepool: default-pool
 ---

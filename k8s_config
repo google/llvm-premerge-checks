@@ -1,5 +1,5 @@
 # config options
 GCP_ZONE="us-central1-a"
-GCP_CLUSTER="llvm-merge-guards"
-GCP_PROJECT="llvm-windows-development"
+GCP_CLUSTER="llvm-premerge-checks"
+GCP_PROJECT="llvm-premerge-checks"
 GCR_HOSTNAME="gcr.io"

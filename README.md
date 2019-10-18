@@ -61,13 +61,11 @@ These are the steps to set up the build server on a clean infrastructure:
     # change the permissions
     sudo chmod a+rwx
     ```
-1. Push the docker images to gcr.io:
+1. Push the docker images to gcr.io. f
     ```bash
-    cd containers/debian-testing-clang8
-    ./build_deploy.sh
-
-    cd ../jenkins-master
-    ./build_deploy.sh
+    cd containers
+    #for each subfolder:
+    ./build_deploy.sh <foldername>
     ```
 1. Deploy the stack:
     ```bash
@@ -75,17 +73,6 @@ These are the steps to set up the build server on a clean infrastructure:
     ./deploy.sh
     ```
 1. Configure it
-
-## handling SSH keys
-The Jenkins server SSHs into the agents to start the agent application. Thus the master needs SSH access to the agent. To set this up:
-
-1. Create an SSH key pair locally with `ssh-keygen`.
-1. Copy the contents of `id_rsa` to the credentials section of the Jenkins UI.
-1. Configure the agent in the Jenkins UI to use the new SSH keys you just uploaded.
-1. Copy the contents of `id_rsa.pub` to `containers/<agent dir>/authorized keys`.
-1. Rebuild and deploy the agents.
-
-While this works, it does not fell like the perfect solution. I'm happy to get better ideas on this.
 
 ## creating basic authentication for reverse proxy
 
