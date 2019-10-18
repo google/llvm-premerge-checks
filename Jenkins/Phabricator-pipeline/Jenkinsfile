@@ -37,8 +37,9 @@ pipeline {
             steps {
                 sh """
                 pwd
-                python --version
-                ls -l lvm-premerge-checks/scripts/phabtalk
+                ls -l
+                ls -l ..
+                ls -l lvm-premerge-checks
                 lvm-premerge-checks/scripts/phabtalk/apply_patch.py
                 """
             }
