@@ -44,7 +44,7 @@ metadata:
   name: results-prod-tls-cert
   namespace: cert-manager
 spec:
-  commonName: results.llvm-merge-guard.org
+  commonName: results.new.llvm-merge-guard.org
   secretName: results-prod-tls
   issuerRef:
     name: letsencrypt-prod
@@ -56,7 +56,7 @@ metadata:
   name: jenkins-prod-tls-cert
   namespace: cert-manager
 spec:
-  commonName: jenkins.llvm-merge-guard.org
+  commonName: jenkins.new.llvm-merge-guard.org
   secretName: jenkins-prod-tls
   issuerRef:
     name: letsencrypt-prod
