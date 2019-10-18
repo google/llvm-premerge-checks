@@ -29,7 +29,7 @@ spec:
     spec:
       containers:
       - name: nginx-results
-        image: gcr.io/llvm-windows-development/nginx-results
+        image: gcr.io/llvm-premerge-checks/nginx-results
         ports:
         - containerPort: 80
         readinessProbe:

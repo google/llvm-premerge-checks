@@ -70,7 +70,7 @@ spec:
       hostname: jenkins-master
       containers:
       - name: master
-        image: gcr.io/llvm-windows-development/jenkins-master
+        image: gcr.io/llvm-premerge-checks/jenkins-master
         ports:
         - containerPort: 8080
         - containerPort: 50000
@@ -162,7 +162,7 @@ spec:
     spec:
       containers:
       - name: agent-debian-testing-clang8
-        image: gcr.io/llvm-windows-development/agent-debian-testing-clang8-ssd    
+        image: gcr.io/llvm-premerge-checks/agent-debian-testing-clang8-ssd    
         ports:
         - containerPort: 22
         resources:
