@@ -18,6 +18,9 @@ pipeline {
         string(name: 'DIFF_ID')
         string(name: 'PHID')
     }
+    environment {
+            CONDUIT_TOKEN = credentials('phabricator-conduit-token')
+    }
     stages {
         stage("git checkout"){
             steps {
@@ -31,7 +34,7 @@ pipeline {
         }
         stage('arc patch') {
             steps {
-                echo 'TODO: arc patch'
+                sh 'llvm-premerge-checks/scripts/phabtalk/apply_patch.py --host="https://reviews.llvm.org" --conduit-token="${CONDUIT_TOKEN}"'
             }
         }
         stage('CMake') {
