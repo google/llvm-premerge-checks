@@ -23,6 +23,9 @@ pipeline {
             PHABRICATOR_HOST = 'https://reviews.llvm.org'
     }
     stages {
+        stage("build info"){
+            echo 'Building diff ${DIFF_ID} with PHID ${PHID}'
+        }
         stage("git checkout"){
             steps {
                 git url: 'https://github.com/llvm/llvm-project.git'
