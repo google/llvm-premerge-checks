@@ -21,6 +21,7 @@ pipeline {
         stage("git checkout"){
             steps {
                 git url: 'https://github.com/llvm/llvm-project.git'
+                sh 'git clean -fdx'
                 sh 'mkdir -p llvm-premerge-checks'
                 dir("llvm-premerge-checks")
                 {

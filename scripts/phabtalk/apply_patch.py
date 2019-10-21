@@ -38,7 +38,6 @@ def _get_parent_hash(diff_id: str, phab:Phabricator) -> str:
 
 def _git_checkout(git_hash:str):
     subprocess.check_call('git reset --hard {}'.format(git_hash), shell=True)
-    subprocess.check_call('git clean -fdx', shell=True)
 
 
 def _apply_patch(diff_id: str, conduit_token: str, host: str):
