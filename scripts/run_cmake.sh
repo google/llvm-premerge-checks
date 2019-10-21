@@ -28,6 +28,7 @@ mkdir -p ${TARGET_DIR}
 
 set +e
 cmake -GNinja ../llvm -DCMAKE_BUILD_TYPE=Release -D LLVM_ENABLE_LLD=ON \
+    -D LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;libcxx;libcxxabi;lld" \
 	-D LLVM_CCACHE_BUILD=ON -D LLVM_CCACHE_DIR="${CCACHE_PATH}" -D LLVM_CCACHE_MAXSIZE=20G \
     -D LLVM_ENABLE_ASSERTIONS=ON -DCMAKE_CXX_FLAGS=-gmlt \
     -DLLVM_LIT_ARGS="--xunit-xml-output ${WORKSPACE}/build/test-results.xml" 2>&1 | tee -a cmake-log.txt
