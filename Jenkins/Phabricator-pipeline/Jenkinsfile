@@ -24,7 +24,9 @@ pipeline {
     }
     stages {
         stage("build info"){
-            echo 'Building diff ${DIFF_ID} with PHID ${PHID}'
+            steps {
+                echo 'Building diff ${DIFF_ID} with PHID ${PHID}'
+            }
         }
         stage("git checkout"){
             steps {
