@@ -18,7 +18,7 @@ pipeline {
         pollSCM 'H H/2 * * *'
     }
     environment {
-        BUILD_ID='${JOB_BASE_NAME}-${BUILD_NUMBER}'
+        BUILD_ID='${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}'
         TARGET_DIR='/mnt/nfs/results/${BUILD_ID}'
     }
     stages {
@@ -56,18 +56,11 @@ pipeline {
     }
     post { 
         always { 
-            echo 'Postprocessing...'
-            // log console log to file
-            script {
-                def logContent = Jenkins.getInstance()
-                    .getItemByFullName(env.JOB_NAME)
-                    .getBuildByNumber(
-                        Integer.parseInt(env.BUILD_NUMBER))
-                    .logFile.text
-                writeFile file: "console-log.txt", text: logContent
-            }
-            sh 'cp console-log.txt ${env.TARGET_DIR}'
             echo 'Console log is available at https://results.new.llvm-mgerge-guards/${env.BUILD_ID}'
+            dir('${env.TARGET_DIR}') {
+                // copy console log to result folder
+                sh 'wget -qO console-log.txt http://jenkins-ui.jenkins.svc.cluster.local:8080/job/${env.JOB_BASE_NAME}/${env.BUILD_NUMBER}/consoleText'
+            }
         }
     }
 }
