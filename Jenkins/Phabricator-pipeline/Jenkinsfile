@@ -44,15 +44,34 @@ pipeline {
                 sh 'python3 ${WORKSPACE}/llvm-premerge-checks/scripts/phabtalk/apply_patch.py'
             }
         }
-        stage('CMake') {
+       stage('CMake') {
             steps {
                 sh 'llvm-premerge-checks/scripts/run_cmake.sh'
             }
         }
+        stage('ninja all') {
+            steps {
+                sh 'llvm-premerge-checks/scripts/run_ninja.sh all'
+            }
+        }
+        stage('ninja check') {
+            steps {
+                sh 'llvm-premerge-checks/scripts/run_ninja.sh check'
+            }
+        }
         stage('ninja check-all') {
             steps {
-                sh 'llvm-premerge-checks/scripts/run_ninja_check-all.sh'
+                sh 'llvm-premerge-checks/scripts/run_ninja.sh check-all'
             }
         }
     }
+    post { 
+        always { 
+            echo "Console log is available at https://results.new.llvm-merge-guard.org/${BUILD_ID}"
+            dir("${env.TARGET_DIR}") {
+                // copy console log to result folder
+                sh "wget -qO console-log.txt http://jenkins-ui.jenkins.svc.cluster.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText"
+            }
+        }
+    }    
 }
