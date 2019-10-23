@@ -18,8 +18,8 @@ pipeline {
         pollSCM 'H H/2 * * *'
     }
     environment {
-        BUILD_ID='${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}'
-        TARGET_DIR='/mnt/nfs/results/${BUILD_ID}'
+        BUILD_ID="${JOB_BASE_NAME}-${BUILD_NUMBER}"
+        TARGET_DIR="/mnt/nfs/results/${BUILD_ID}"
     }
     stages {
         stage("git checkout"){
@@ -56,10 +56,10 @@ pipeline {
     }
     post { 
         always { 
-            echo "Console log is available at https://results.new.llvm-mgerge-guards/${env.BUILD_ID}"
+            echo "Console log is available at https://results.new.llvm-mgerge-guards/${BUILD_ID}"
             dir("${env.TARGET_DIR}") {
                 // copy console log to result folder
-                sh "wget -qO console-log.txt http://jenkins-ui.jenkins.svc.cluster.local:8080/job/${env.JOB_BASE_NAME}/${env.BUILD_NUMBER}/consoleText"
+                sh "wget -qO console-log.txt http://jenkins-ui.jenkins.svc.cluster.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText"
             }
         }
     }
