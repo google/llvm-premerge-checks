@@ -56,10 +56,10 @@ pipeline {
     }
     post { 
         always { 
-            sh 'echo "Console log is available at https://results.new.llvm-mgerge-guards/${BUILD_ID}"'
-            dir('${env.TARGET_DIR}') {
+            sh "echo Console log is available at https://results.new.llvm-mgerge-guards/${env.BUILD_ID}"
+            dir("${env.TARGET_DIR}") {
                 // copy console log to result folder
-                sh 'wget -qO console-log.txt http://jenkins-ui.jenkins.svc.cluster.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText'
+                sh "wget -qO console-log.txt http://jenkins-ui.jenkins.svc.cluster.local:8080/job/${env.JOB_BASE_NAME}/${env.BUILD_NUMBER}/consoleText"
             }
         }
     }
