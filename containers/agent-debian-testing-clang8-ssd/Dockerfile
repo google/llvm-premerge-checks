@@ -1,7 +1,7 @@
 FROM debian:testing
 
 RUN apt-get update ;\
-    apt-get install -y --no-install-recommends \
+    apt-get install -y --no-install-recommends locales \
         cmake ninja-build git ca-certificates clang-8 lld-8 clang ccache python python3 build-essential \
         clang-tidy-8 clang-format-8 \
         python-psutil arcanist zip wget \
@@ -38,6 +38,13 @@ RUN chown -R ${user}:${user} /home/${user}
 
 WORKDIR /home/${user}
 ENV CCACHE_PATH=/mnt/disks/ssd0/ccache
+
+# configure locale
+RUN sed --in-place '/en_US.UTF-8/s/^#//' /etc/locale.gen ;\
+    locale-gen
+ENV LANG en_US.UTF-8  
+ENV LANGUAGE en_US:en  
+ENV LC_ALL en_US.UTF-8  
 
 CMD ["/scripts/start_agent.sh"]
 
