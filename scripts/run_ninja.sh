@@ -34,8 +34,4 @@ if test -f "test-results.xml" ; then
 	cp test-results.xml ${TARGET_DIR}
 fi
 
-# if a test report exists building must have worked
-if test -f "${WORKSPACE}/build/test-results.xml"; then
-	exit 0
-fi
 exit ${RETURN_CODE}
