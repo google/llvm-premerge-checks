@@ -34,9 +34,19 @@ pipeline {
                 sh 'llvm-premerge-checks/scripts/run_cmake.sh'
             }
         }
+        stage('ninja all') {
+            steps {
+                sh 'llvm-premerge-checks/scripts/run_ninja.sh all'
+            }
+        }
+        stage('ninja check') {
+            steps {
+                sh 'llvm-premerge-checks/scripts/run_ninja.sh check'
+            }
+        }
         stage('ninja check-all') {
             steps {
-                sh 'llvm-premerge-checks/scripts/run_ninja_check-all.sh'
+                sh 'llvm-premerge-checks/scripts/run_ninja.sh check-all'
             }
         }
     }

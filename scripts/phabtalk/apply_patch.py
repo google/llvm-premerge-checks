@@ -37,10 +37,16 @@ def _get_parent_hash(diff_id: str, phab:Phabricator) -> str:
 
 
 def _git_checkout(git_hash:str):
-    subprocess.check_call('git reset --hard {}'.format(git_hash), shell=True)
+    try:
+        print('Checking out git hash {}'.format(hash))
+        subprocess.check_call('git reset --hard {}'.format(git_hash), shell=True)
+    except subprocess.CalledProcessError:
+        print('ERROR: checkout failed, using master instead.')
+        subprocess.check_call('git checkout master')
 
 
 def _apply_patch(diff_id: str, conduit_token: str, host: str):
+    print('running arc path...')
     cmd = 'arc  patch --nobranch --no-ansi --diff "{}" --nocommit '\
             '--conduit-token "{}" --conduit-uri "{}"'.format(
         diff_id, conduit_token, host )
