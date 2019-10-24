@@ -115,13 +115,17 @@ class PhabTalk:
             unit=test_results.unit)
 
     def _compute_test_results(self, build_result_file: str) -> TestResults:
-        if build_result_file is None:
-            return
-        if not os.path.exists(build_result_file):
-            raise FileNotFoundError('Could not find file with build results: {}'.format(build_result_file))
-        
         result = TestResults()
 
+        if build_result_file is None:
+            # If no result file is specified: assume this is intentional
+            result.result_type = 'pass'
+            return result
+        if not os.path.exists(build_result_file):
+            print('Could not find build results, assuming build failed: {}'.format(build_result_file))
+            result.result_type = 'fail'
+            return result
+        
         root_node = etree.parse(build_result_file)
         result.result_type = 'pass'
         
