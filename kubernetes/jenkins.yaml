@@ -154,7 +154,7 @@ metadata:
   name: agent-debian-testing-clang8-ssd
   namespace: jenkins
 spec:
-  replicas: 3
+  replicas: 2
   template:
     metadata:
       labels:
@@ -167,10 +167,10 @@ spec:
         - containerPort: 22
         resources:
           limits:
-            cpu: 15
+            cpu: 30
             memory: 45Gi
           requests:
-            cpu: 15
+            cpu: 30
             memory: 45Gi
         volumeMounts:
         - name: nfs-pvc
