@@ -78,7 +78,7 @@ pipeline {
                 sh "wget -qO console-log.txt http://jenkins-ui.jenkins.svc.cluster.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText"
             }
             sh "echo Log files: [[${RESULT_URL}/console-log.txt | console-log.txt]], [[${RESULT_URL}/CMakeCache.txt | CMakeCache.txt]] > ${PHAB_LOG}"
-            sh "${SCRIPT_DIR}/phabtalk/phabtalk.py ${PHID} ${DIFF_ID}
+            sh "${SCRIPT_DIR}/phabtalk/phabtalk.py ${PHID} ${DIFF_ID} \
                 --conduit-token ${CONDUIT_TOKEN} \
                 --test-result-file ${TEST_REPORT} \
                 --comment-file ${PHAB_LOG} \
