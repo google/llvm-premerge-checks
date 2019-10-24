@@ -20,6 +20,8 @@ pipeline {
     environment {
         BUILD_ID="${JOB_BASE_NAME}-${BUILD_NUMBER}"
         TARGET_DIR="/mnt/nfs/results/${BUILD_ID}"
+        SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
+
     }
     stages {
         stage("git checkout"){
@@ -35,22 +37,22 @@ pipeline {
         }
         stage('CMake') {
             steps {
-                sh 'llvm-premerge-checks/scripts/run_cmake.sh'
+                sh "${SCRIPT_DIR}/run_cmake.sh"
             }
         }
         stage('ninja all') {
             steps {
-                sh 'llvm-premerge-checks/scripts/run_ninja.sh all'
+                sh "${SCRIPT_DIR}/run_ninja.sh all"
             }
         }
         stage('ninja check') {
             steps {
-                sh 'llvm-premerge-checks/scripts/run_ninja.sh check'
+                sh "${SCRIPT_DIR}/run_ninja.sh check"
             }
         }
         stage('ninja check-all') {
             steps {
-                sh 'llvm-premerge-checks/scripts/run_ninja.sh check-all'
+                sh "${SCRIPT_DIR}/run_ninja.sh check-all"
             }
         }
     }
