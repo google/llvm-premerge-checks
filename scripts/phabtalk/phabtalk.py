@@ -58,6 +58,8 @@ class PhabTalk:
 
     def _comment_on_diff(self, diff: str, text: str):
         """Add a comment to a differential based on the diff_id"""
+        print('Sending comment to diff {}:'.format(diff))
+        print(text)
         self._comment_on_revision(self._get_revision_id(diff), text)
 
     def _comment_on_revision(self, revision: str, text: str):
@@ -159,6 +161,7 @@ class PhabTalk:
         test_results = self._compute_test_results(test_result_file)
         self._report_test_results(ph_id, test_results)
         self._comment_on_diff_from_file(diff_id, comment_file, test_results)
+        print('reporting completed.')
 
 
 def main():
