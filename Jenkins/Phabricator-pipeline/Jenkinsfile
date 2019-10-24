@@ -23,9 +23,8 @@ pipeline {
             PHABRICATOR_HOST = 'https://reviews.llvm.org'
             PHAB_LOG = "${WORKSPACE}/build/.phabricator-comment"
             SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
-            RESULT_URL = "http://results.llvm-merge-guard.org/${BUILD_ID}"
+            RESULT_URL = "http://results.llvm-merge-guard.org/${JOB_BASE_NAME}-${BUILD_NUMBER}"
             TEST_REPORT = "${WORKSPACE}/build/test-results.xml"
-
     }
     stages {
         stage("build info"){
@@ -88,7 +87,7 @@ EOF
                 --conduit-token "${CONDUIT_TOKEN}" \
                 --test-result-file "${TEST_REPORT}" \
                 --comment-file "${PHAB_LOG}" \
-                --host "https://reviews.llvm.org/api/"
+                --host "${PHABRICATOR_HOST}/api/"
                 '''
         }
     }    
