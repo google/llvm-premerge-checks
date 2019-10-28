@@ -29,7 +29,7 @@ spec:
     spec:
       containers:
       - name: nginx-results
-        image: gcr.io/llvm-windows-development/nginx-results
+        image: gcr.io/llvm-premerge-checks/nginx-results
         ports:
         - containerPort: 80
         readinessProbe:
@@ -55,4 +55,4 @@ spec:
         persistentVolumeClaim:
           claimName: nfs-jenkins
       nodeSelector:
-        cloud.google.com/gke-nodepool: services
+        cloud.google.com/gke-nodepool: default-pool

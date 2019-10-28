@@ -23,20 +23,14 @@ source "${ROOT_DIR}/k8s_config"
 
 # create the cluster
 gcloud container clusters create $GCP_CLUSTER --zone $GCP_ZONE \
-    --machine-type=n1-standard-32 --num-nodes=1
+    --machine-type=n1-standard-4 --num-nodes=1
 
-# add a node pool for interfaces and other services
-# this is separate from the heavily loaded agents
-gcloud container node-pools create services --cluster $GCP_CLUSTER --zone $GCP_ZONE \
-    --machine-type=n1-standard-4 --num-nodes 1
-
-# test with a machine with ssd
+# Jenkins agents with local ssd
 # as per instructions
 # https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/local-ssd
 gcloud container node-pools create jenkins-agents --cluster $GCP_CLUSTER --zone $GCP_ZONE \
     --machine-type=n1-standard-32 --num-nodes=2 --local-ssd-count=1
 
-
 # create static IP address
 # IP can be created, but not used in Ingress. Not sure why
-gcloud compute addresses create web-static-ip --region=$GCP_ZONE
+gcloud compute addresses create web-static-ip --zone=$GCP_ZONE
