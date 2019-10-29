@@ -12,6 +12,7 @@ The cluster consists of these services:
 * a set of Jenkins agents running the builds
 * an nginx server with the build results/logs http://results.llvm-merge-guard.org
 
+![deployment diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/google/llvm-premerge-checks/master/docs/deployment.plantuml)
 
 # Jenkins-Phabricator integration
 
