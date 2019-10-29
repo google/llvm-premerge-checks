@@ -21,10 +21,12 @@ The Jenkins-Phabricator is based on the instructions provided with the [Phabrica
 On the Phabricator side these things were configured:
 * the Harbormaster [build plan](https://reviews.llvm.org/harbormaster/plan/3/)
 * the Herald [rule](https://reviews.llvm.org/H511)
+* the [merge_guards_bot user](https://reviews.llvm.org/p/merge_guards_bot/) writing the comments
 
 On the Jenkins side:
 * in the Jenkins configuration page as explained in the instrucitons
 * in the build [job](http://jenkins.llvm-merge-guard.org/job/Phabricator/)
+* The Phabricator pluging is *not* used, as it's not flexible enough. Rather Phabricator just triggers the build via an HTTP request. The `arc patch` operations by scripts. The build feedback is also uploaded by scripts via the [harbormaster.sendmessage](https://secure.phabricator.com/conduit/method/harbormaster.sendmessage/) and [differential.revision.edit](https://secure.phabricator.com/conduit/method/differential.revision.edit/) APIs.
 
 There is no backup of the credentials. If you need to change it, generate a new one and update it in Jenkins and Phabricator.
 
