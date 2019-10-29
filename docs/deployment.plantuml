@@ -1,0 +1,31 @@
+@startuml
+node Phabricator
+
+node github {
+component LLVM_monorepo
+}
+
+cloud "premerge-test cluster" {
+
+
+node "reverse proxy" {
+component nginx
+}
+
+node "Jenkins" {
+component "Jenkins_master"
+}
+node "Jenkins_agent" {
+component "swarm_plugin"
+component "LLVM build tools"
+}
+
+}
+
+
+Jenkins_master -- swarm_plugin
+nginx -- Jenkins_master
+Phabricator -- nginx
+Phabricator --> LLVM_monorepo
+Jenkins_master --> LLVM_monorepo
+@enduml
