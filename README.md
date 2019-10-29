@@ -2,8 +2,33 @@
 
 This repository contains the configuration files for the merge guards for the LLVM project. It configures a cluster of build machines that are used to check all incoming commits to the LLVM project.
 
-# Merge guards
-TODO(@christiankuehnel): describe objective of merge guards
+# Pre-merge check vision for end of 2019
+Maria is a developer working on a new idea for the LLVM project. When she submits a new diff to Phabricator (or updates an existing diff), the pre-merge checks are triggered automatically in the cloud. The pre-merge checks run in one configuration (amd64, Debian Testing, clang8) and comprise these steps:
+
+* run CMake
+* compile and link
+* run check-all
+* run clang-format and clang-tidy
+
+Once a check is completed, the results are are attached to the Diff in Phabricator so that Maria is notified automatically with the results. Now she can check if the pre-merge checks passed and fix things as required. This way she does not have to run all checks on her local machine by hand. The first results are available within 2 hours of a change, but typically within 30 minutes.
+
+As the pre-merge check cover the easy parts, a human reviewer can focus on the parts that the machine cannot cover. The pre-merge checks are optional, so a reviewer can also decide to ignore them if they do not work, take too long, or do not make sense. 
+The build bots are still in place as they cover a much wider range of checks on the different platforms. So after Maria’s change has landed, the build bots might still find more bugs that were not found in the pre-merge checks. The number should be lower than what we have today though.
+
+# Roadmap
+
+During the LLVM developer meeting in Octover 2019, this was the raodmap we discussed:
+* Until mid of November: preparation of the infrastructure for the beta testing
+* Mid of November:
+  * Announcement of the public beta testing phase on the LLVM mailing list.
+  * Interested users are white-listed on the Herald rule.
+* Until Januar: Beta testing for interested users.
+* In January: 
+  * Based on the feedback so far: enable pre-merge tests for all users.
+  * Users can opt-out via a black-list in the Herald rule.
+  * Start discussion with LLVM foundation on a permanent setup/maintenance for the pre-merge tests.
+
+This roadmap is also reflected in the [Milestones](https://github.com/google/llvm-premerge-checks/milestones?direction=asc&sort=due_date&state=open).
 
 # Cluster overview
 
