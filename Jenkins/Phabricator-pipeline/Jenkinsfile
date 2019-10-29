@@ -23,7 +23,9 @@ pipeline {
             PHABRICATOR_HOST = 'https://reviews.llvm.org'
             PHAB_LOG = "${WORKSPACE}/build/.phabricator-comment"
             SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
-            RESULT_URL = "http://results.llvm-merge-guard.org/${JOB_BASE_NAME}-${BUILD_NUMBER}"
+            MY_BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
+            TARGET_DIR = "/mnt/nfs/results/${MY_BUILD_ID}"
+            RESULT_URL = "http://results.llvm-merge-guard.org/${MY_BUILD_ID}"
             TEST_REPORT = "${WORKSPACE}/build/test-results.xml"
     }
     stages {
@@ -72,7 +74,7 @@ pipeline {
     post { 
         always { 
             echo "Console log is available at ${RESULT_URL}"
-            dir("${env.TARGET_DIR}") {
+            dir("${TARGET_DIR}") {
                 // copy console log to result folder
                 sh "wget -qO console-log.txt http://jenkins-ui.jenkins.svc.cluster.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText"
             }
