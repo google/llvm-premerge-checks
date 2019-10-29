@@ -31,10 +31,10 @@ spec:
   tls:
   - secretName: jenkins-prod-tls
     hosts:
-    - jenkins.new.llvm-merge-guard.org
+    - jenkins.llvm-merge-guard.org
 
   rules:
-  - host: jenkins.new.llvm-merge-guard.org
+  - host: jenkins.llvm-merge-guard.org
     http:
       paths:
       - backend:
@@ -56,9 +56,9 @@ spec:
   tls:
   - secretName: results-prod-tls
     hosts:
-    - results.new.llvm-merge-guard.org
+    - results.llvm-merge-guard.org
   rules:
-  - host: results.new.llvm-merge-guard.org
+  - host: results.llvm-merge-guard.org
     http:
       paths:
       - backend:
