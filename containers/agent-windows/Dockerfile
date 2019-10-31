@@ -10,29 +10,30 @@ RUN powershell -Command `
     choco feature disable --name showDownloadProgress
 
 # install Visual Studio build tools
-RUN choco install -y --ignoredetectedreboot visualstudio2017buildtools --version 15.9.17.0  & exit 0
-
-# TODO(ChristianKuehnel): 
-# workaround used here: ignore errors of choco as it wants a reboot after the installation
-# task: find out if there is a better way to handle the reboot request from choco than 
-# ignoring the error code of the command
-
-# TODO(ChristianKuehnel): 
-# check if we can strip down the VS installation to speed up the installation 
-# and reduce image size
+RUN powershell -NoProfile -InputFormat None -Command `
+    choco install visualcpp-build-tools `
+        --version 15.0.26228.20170424 -y; `
+    Write-Host 'Waiting for Visual C++ Build Tools to finish'; `
+    Wait-Process -Name vs_installer
 
 # install other tools as described in https://llvm.org/docs/GettingStartedVS.html
 RUN choco install -y git & `
     choco install -y cmake --version 3.15.4 & `
     choco install -y python2 & `
-    choco install -y gnuwin32-coreutils.install
+    choco install -y gnuwin32-coreutils.install & `
+    choco install -y ninja
 
-# clone llvm-project for testing
-RUN md build & `
-    cd build & `
-    git clone --depth 1 https://github.com/llvm/llvm-project.git
+# Install Java and Jenkins swarm plugin
+#RUN choco install -y choco install jre8
+RUN powershell -NoProfile -InputFormat None -Command `
+   mkdir c:\jenkins ; `
+   cd \jenkins ; `
+   Invoke-WebRequest -OutFile swarm-client.jar -Uri https://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/swarm-client/3.17/swarm-client-3.17.jar
+
+# use this drive to store the worksapce
+VOLUME W:
 
 # Start developer command prompt with any other commands specified.
-#ENTRYPOINT C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat &&
+#ENTRYPOINT "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat" &
 # Default to PowerShell if no other command specified.
-CMD ["powershell.exe", "-NoLogo", "-ExecutionPolicy", "Bypass"]
+CMD ["cmd"]

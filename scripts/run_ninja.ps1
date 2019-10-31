@@ -11,23 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# define command line arguments
 param(
-    [Parameter(Mandatory=$true)][string]$IMAGE_NAME
+    [Parameter(Mandatory=$true)][string]$Target
 )
 
-# set script to stop on first error
-$ErrorActionPreference = "Stop"
+Set-Location build
 
-# some docs recommend setting 2GB memory limit
-# docker build --memory 2GB -t $IMAGE_NAME "$PSScriptRoot\$IMAGE_NAME"
-# If ($LastExitCode -ne 0) {
-#     exit
-# }
+& "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat"
 
-# mount a persistent workspace for experiments
-docker run -it -v C:\Users\kuhnel\workspace:w: $IMAGE_NAME
-If ($LastExitCode -ne 0) {
-    exit
-}
+ninja $Target
