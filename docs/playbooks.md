@@ -56,3 +56,27 @@ These are the steps to set up the build server on a clean infrastructure:
     # add more users as required
     kubectl create secret generic proxy-auth --from-file=auth --namespace=jenkins
     ```
+
+## Creating docker containers on Windows
+
+If you want to build/update/test docker container for Windows, you need to do this on a Windows machine. Here are the instructions to set up such a machine on GCP.
+
+General hints:
+* Do *not ever ever* use paths with white spaces in them.
+* You need to [configure Internet Explorer to allow downloads](https://improveandrepeat.com/2018/03/internet-explorer-on-windows-server-enable-file-downloads/).
+* Install Chrome, as Internet Explorer is a bit outdated. 
+* Install a nice IDE to edit Dockerfiles and scripts. [VS Code](https://code.visualstudio.com/Download) is a good option.
+
+1. Pick a GCP Windows image with Desktop Support.
+2. Use the "Server Manager" application to install the "features":
+    * Containers
+    * HyperV
+3. Install git with the default options: https://git-scm.com/download/win
+4. git clone https://github.com/google/llvm-premerge-checks.git
+    * Register your ssh keys on the windows machine on github if you intend to push changes.
+5. Install docker: https://hub.docker.com/editions/community/docker-ce-desktop-windows
+    * You will need a DockerHub account to download the installer.
+    * Select "use Windows containers" during installation.
+    * Start the "Docker Desktop" application, it will set up the required services for you.
+
+Check your installation by running "docker build ." in the `containers/agent_windows` folder.
