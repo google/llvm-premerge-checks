@@ -13,7 +13,5 @@ rem See the License for the specific language governing permissions and
 rem limitations under the License.
 
 cd build
-
 "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat"
-
 ninja %1
