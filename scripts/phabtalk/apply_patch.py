@@ -42,7 +42,7 @@ def _git_checkout(git_hash:str):
         subprocess.check_call('git reset --hard {}'.format(git_hash), shell=True)
     except subprocess.CalledProcessError:
         print('ERROR: checkout failed, using master instead.')
-        subprocess.check_call('git checkout master')
+        subprocess.check_call('git checkout master', shell=True)
 
 
 def _apply_patch(diff_id: str, conduit_token: str, host: str):
