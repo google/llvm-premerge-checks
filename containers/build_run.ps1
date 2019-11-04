@@ -21,10 +21,10 @@ param(
 $ErrorActionPreference = "Stop"
 
 # some docs recommend setting 2GB memory limit
-# docker build --memory 2GB -t $IMAGE_NAME "$PSScriptRoot\$IMAGE_NAME"
-# If ($LastExitCode -ne 0) {
-#     exit
-# }
+ docker build --memory 2GB -t $IMAGE_NAME "$PSScriptRoot\$IMAGE_NAME"
+If ($LastExitCode -ne 0) {
+    exit
+}
 
 # mount a persistent workspace for experiments
 docker run -it -v C:\Users\kuhnel\workspace:w: $IMAGE_NAME

@@ -24,16 +24,18 @@ RUN choco install -y git & `
     choco install -y ninja
 
 # Install Java and Jenkins swarm plugin
-#RUN choco install -y choco install jre8
+RUN choco install -y openjdk
 RUN powershell -NoProfile -InputFormat None -Command `
-   mkdir c:\jenkins ; `
-   cd \jenkins ; `
-   Invoke-WebRequest -OutFile swarm-client.jar -Uri https://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/swarm-client/3.17/swarm-client-3.17.jar
+    mkdir c:\jenkins ; `
+    cd \jenkins ; `
+    Invoke-WebRequest -OutFile swarm-client.jar -Uri https://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/swarm-client/3.17/swarm-client-3.17.jar
 
 # use this drive to store the worksapce
 VOLUME W:
+RUN powershell -NoProfile -InputFormat None -Command `
+    mkdir W:\jenkins 
 
 # Start developer command prompt with any other commands specified.
 #ENTRYPOINT "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat" &
 # Default to PowerShell if no other command specified.
-CMD ["cmd"]
+CMD java -jar C:\jenkins\swarm-client.jar -master http://jenkins-ui.jenkins.svc.cluster.local:8080 -executors 1 -fsroot W:\jenkins  -labels windows
