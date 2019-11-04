@@ -28,4 +28,4 @@ chown -R jenkins:jenkins "${CCACHE_PATH}"
 
 # start swarm agent as user jenkins
 # description of arguments: https://wiki.jenkins.io/display/JENKINS/Swarm+Plugin
-su jenkins -c "java -jar /scripts/swarm-client.jar -master http://jenkins-ui.jenkins.svc.cluster.local:8080 -executors 1 -fsroot ${AGENT_ROOT}"
+su jenkins -c "java -jar /scripts/swarm-client.jar -master http://jenkins-ui.jenkins.svc.cluster.local:8080 -executors 1 -fsroot ${AGENT_ROOT} -labels linux"
