@@ -2,6 +2,9 @@
 
 This repository contains the configuration files for the pre-merge checks for the LLVM project. This github project contains the documentation and the server configuration cluster of build machines that are used to check all incoming commits to the LLVM project.
 
+# User documentation
+see [docs/user_doc.md](docs/user_doc.md)
+
 # Pre-merge check vision for end of 2019
 Maria is a developer working on a new idea for the LLVM project. When she submits a new diff to Phabricator (or updates an existing diff), the pre-merge checks are triggered automatically in the cloud. The pre-merge checks run in one configuration (amd64, Debian Testing, clang8) and comprise these steps:
 
