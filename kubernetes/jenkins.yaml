@@ -188,3 +188,42 @@ spec:
           type: Directory          
       nodeSelector:
         cloud.google.com/gke-nodepool: jenkins-agents
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: agent-windows-visualstudio2017-ssd
+  namespace: jenkins
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: agent-windows-visualstudio2017-ssd
+    spec:
+      containers:
+      - name: agent-windows-visualstudio2017-ssd
+        image: gcr.io/llvm-premerge-checks/agent-windows
+        resources:
+          limits:
+            cpu: 14
+            memory: 20Gi
+          requests:
+            cpu: 14
+            memory: 20Gi
+#        volumeMounts:
+#        - name: nfs-pvc
+#          mountPath: /mnt/nfs          
+#        - name: ssd 
+#          mountPath: /mnt/disks/ssd0
+#      volumes:
+#      - name: nfs-pvc
+#        persistentVolumeClaim:
+#          claimName: nfs-jenkins
+#      - name: ssd
+#        hostPath:
+#          # directory location on host
+#          path: /mnt/disks/ssd0
+#          type: Directory          
+      nodeSelector:
+        cloud.google.com/gke-nodepool: jenkins-agents
