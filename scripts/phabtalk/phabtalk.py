@@ -19,8 +19,10 @@ build status, a summary and the test reults to Phabricator."""
 
 import argparse
 import os
+import time
 from typing import Optional
 from phabricator import Phabricator
+import socket
 from lxml import etree
 
 class TestResults:
@@ -166,8 +168,20 @@ class PhabTalk:
 
 def main():
     args = _parse_args()
-    p = PhabTalk(args.conduit_token, args.host, args.dryrun)
-    p.report_all(args.diff_id, args.ph_id, args.test_result_file, args.comment_file)
+    errorcount = 0
+    while True:
+        # retry on connenction problems
+        try:
+            p = PhabTalk(args.conduit_token, args.host, args.dryrun)
+            p.report_all(args.diff_id, args.ph_id, args.test_result_file, args.comment_file)
+        except socket.timeout as e:
+            errorcount += 1
+            if errorcount > 5:
+                print('Connection to Pharicator failed, giving up: {}'.format(e))
+                raise
+            print('Connection to Pharicator failed, retrying: {}'.format(e))
+            time.sleep(errorcount*10)
+        break
 
 
 def _parse_args():
