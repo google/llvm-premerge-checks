@@ -14,6 +14,5 @@ rem limitations under the License.
 md build
 cd build
 
-"C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat"
-
+call "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat"
 "C:\Program Files\CMake\bin\cmake.exe" ..\llvm -G Ninja
