@@ -14,14 +14,15 @@
 
 # define command line arguments
 param(
-    [Parameter(Mandatory=$true)][string]$IMAGE_NAME
+    [Parameter(Mandatory=$true)][string]$IMAGE_NAME,
+    [string]$token
 )
 
 # set script to stop on first error
 $ErrorActionPreference = "Stop"
 
 # some docs recommend setting 2GB memory limit
- docker build --memory 2GB -t $IMAGE_NAME "$PSScriptRoot\$IMAGE_NAME"
+ docker build --memory 2GB -t $IMAGE_NAME --build-arg token=$token "$PSScriptRoot\$IMAGE_NAME"
 If ($LastExitCode -ne 0) {
     exit
 }

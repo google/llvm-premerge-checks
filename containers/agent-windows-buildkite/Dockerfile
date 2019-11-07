@@ -23,18 +23,16 @@ RUN choco install -y git & `
     choco install -y gnuwin32-coreutils.install & `
     choco install -y ninja
 
-ARG token
-ENV buildkiteAgentToken=${token}
-RUN powershell -NoProfile -InputFormat None -Command `
-    Set-ExecutionPolicy Bypass -Scope Process -Force ; `
-    iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/buildkite/agent/master/install.ps1'))
-
 # use this drive to store the worksapce
 VOLUME W:
 RUN powershell -NoProfile -InputFormat None -Command `
     mkdir W:\jenkins 
 
-# Start developer command prompt with any other commands specified.
-#ENTRYPOINT "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat" &
-# Default to PowerShell if no other command specified.
-CMD java -jar C:\jenkins\swarm-client.jar -master http://jenkins-ui.jenkins.svc.cluster.local:8080 -executors 1 -fsroot W:\jenkins  -labels windows
+ARG token
+ENV buildkiteAgentToken="${token}"
+
+RUN powershell -NoProfile -InputFormat None -Command `
+    Set-ExecutionPolicy Bypass -Scope Process -Force ; `
+    iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/buildkite/agent/master/install.ps1'))
+
+CMD "C:\buildkite-agent\bin\buildkite-agent.exe" start
