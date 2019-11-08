@@ -28,7 +28,8 @@ If ($LastExitCode -ne 0) {
 }
 
 # mount a persistent workspace for experiments
-docker run -it -v C:\Users\kuhnel\workspace:w: $IMAGE_NAME
+New-Item -ItemType Directory -Force -Path $Env:USERPROFILE\workspace
+docker run -it -v $Env:USERPROFILE\workspace:w: $IMAGE_NAME
 If ($LastExitCode -ne 0) {
     exit
 }
