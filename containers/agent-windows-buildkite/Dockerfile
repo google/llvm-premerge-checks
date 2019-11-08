@@ -43,4 +43,7 @@ RUN powershell -NoProfile -InputFormat None -Command `
     Set-ExecutionPolicy Bypass -Scope Process -Force ; `
     iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/buildkite/agent/master/install.ps1'))
 
+# support long file names during git checkout
+RUN git config --system core.longpaths true
+
 CMD "C:\buildkite-agent\bin\buildkite-agent.exe" start
