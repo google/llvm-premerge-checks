@@ -1,6 +1,6 @@
 # Sign up for beta test
 
-To sign up for the pre-merge tests, please add your user id to the [Herald rule](https://reviews.llvm.org/H511) triggering the builds. If you can't modify the rule yourself, please add a comment to issue #54 with your **Phabricator user name** and we'll add you.
+To sign up for the pre-merge tests, please add your user id to the [Herald rule](https://reviews.llvm.org/H511) triggering the builds. If you can't modify the rule yourself, please add a comment to [this issue](https://github.com/google/llvm-premerge-checks/issues/54) with your **Phabricator user name** and we'll add you.
 
 
 # Integration in Phabricator
