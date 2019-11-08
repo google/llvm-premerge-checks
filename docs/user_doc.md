@@ -17,3 +17,7 @@ After every build the build server will comment on your latest patch, so that yo
 The build logs are stored for 90 days and automatically deleted after that.
 
 You can also trigger a build manually by using the "Run Plan Manually" link on the [Harbormaster page](https://reviews.llvm.org/harbormaster/plan/3/) and entering a revision ID in the pop-up window.
+
+# Reporting issues
+
+If you notice any bugs, please create a [new issue](https://github.com/google/llvm-premerge-checks/issues/new).
