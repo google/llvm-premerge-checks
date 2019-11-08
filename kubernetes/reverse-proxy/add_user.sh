@@ -14,16 +14,12 @@
 # limitations under the License.
 set -eux
 
+USER_NAME="${1}"
 AUTH_FILE="${HOME}/.llvm-premerge-checks/auth"
 
-if [ ! -f "${AUTH_FILE}" ] ; then
-    echo "Error: Did not find auth file in: ${AUTH_FILE}!"
-    exit 1
+if [ -f "${AUTH_FILE}" ] ; then
+    htpasswd "${AUTH_FILE}" "${USER_NAME}"
+else
+    mkdir -p "$(dirname "${AUTH_FILE}")"
+    htpasswd -c "${AUTH_FILE}" "${USER_NAME}"
 fi
-
-#delete the old secret
-kubectl delete secret proxy-auth --namespace=jenkins
-# upload the new secret
-kubectl create secret generic proxy-auth --from-file="${AUTH_FILE}" --namespace=jenkins
-
-echo "Done."
