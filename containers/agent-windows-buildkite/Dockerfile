@@ -12,7 +12,7 @@ RUN powershell -Command `
 # install Visual Studio build tools
 RUN powershell -NoProfile -InputFormat None -Command `
     choco install visualcpp-build-tools `
-        --version 15.0.26228.20170424 -y; `
+        --version 15.0.26228.20170424 -y --params "'/IncludeOptional'" ;`
     Write-Host 'Waiting for Visual C++ Build Tools to finish'; `
     Wait-Process -Name vs_installer
 
