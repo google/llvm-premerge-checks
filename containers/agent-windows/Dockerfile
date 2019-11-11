@@ -17,11 +17,22 @@ RUN powershell -NoProfile -InputFormat None -Command `
     Wait-Process -Name vs_installer
 
 # install other tools as described in https://llvm.org/docs/GettingStartedVS.html
+# and a few more that were not documented...
 RUN choco install -y git & `
     choco install -y cmake --version 3.15.4 & `
     choco install -y python2 & `
     choco install -y gnuwin32-coreutils.install & `
-    choco install -y ninja
+    choco install -y ninja & `
+    choco install -y grep & ` 
+    choco install -y sed & `
+    choco install -y diffutils
+RUN  pip install psutil    
+
+# configure Python encoding
+ENV PYTHONIOENCODING=UTF-8
+
+# update the path variable    
+RUN powershell.exe -Command $path = $env:path + ';c:\Program Files (x86)\GnuWin32\bin;C:\Program Files\CMake\bin'; Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\' -Name Path -Value $path
 
 # Install Java and Jenkins swarm plugin
 RUN choco install -y openjdk
