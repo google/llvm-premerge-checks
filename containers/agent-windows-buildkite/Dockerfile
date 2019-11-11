@@ -24,9 +24,9 @@ RUN choco install -y git & `
     choco install -y gnuwin32-coreutils.install & `
     choco install -y ninja & `
     choco install -y grep & ` 
-    choco install -y sed
-RUN  pip install psutil    
-RUN choco install -y diffutils
+    choco install -y sed & ` 
+    choco install -y diffutils
+RUN pip install psutil    
 
 # configure Python encoding
 ENV PYTHONIOENCODING=UTF-8
