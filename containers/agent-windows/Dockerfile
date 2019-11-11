@@ -12,7 +12,7 @@ RUN powershell -Command `
 # install Visual Studio build tools
 RUN powershell -NoProfile -InputFormat None -Command `
     choco install visualcpp-build-tools `
-        --version 15.0.26228.20170424 -y; `
+        --version 15.0.26228.20170424 -y --params "'/IncludeOptional'" ;`
     Write-Host 'Waiting for Visual C++ Build Tools to finish'; `
     Wait-Process -Name vs_installer
 
@@ -32,8 +32,9 @@ RUN powershell -NoProfile -InputFormat None -Command `
 
 # use this drive to store the worksapce
 VOLUME W:
-RUN powershell -NoProfile -InputFormat None -Command `
-    mkdir W:\jenkins 
+
+# support long file names during git checkout
+RUN git config --system core.longpaths true
 
 # Start developer command prompt with any other commands specified.
 #ENTRYPOINT "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat" &

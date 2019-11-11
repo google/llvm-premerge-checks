@@ -14,5 +14,8 @@ rem limitations under the License.
 md build
 cd build
 
-call "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat"
-"C:\Program Files\CMake\bin\cmake.exe" ..\llvm -G Ninja
+call "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64
+
+"C:\Program Files\CMake\bin\cmake.exe" ..\llvm -G Ninja ^
+    -D LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;libcxx;libcxxabi;lld" ^
+    -D LLVM_ENABLE_ASSERTIONS=ON
