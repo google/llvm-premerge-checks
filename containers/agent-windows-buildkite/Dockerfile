@@ -15,18 +15,24 @@ RUN powershell -NoProfile -InputFormat None -Command `
         --version 15.0.26228.20170424 -y --params "'/IncludeOptional'" ;`
     Write-Host 'Waiting for Visual C++ Build Tools to finish'; `
     Wait-Process -Name vs_installer
-#    choco install visualstudio2017buildtools -y `
-#        --version 15.9.17.0  `
-#        --package-parameters --quiet --norestart `
-#            --add Microsoft.VisualStudio.Workload.VCTools `
-#            --add Microsoft.VisualStudio.Component.VC.ATLMFC
 
 # install other tools as described in https://llvm.org/docs/GettingStartedVS.html
+# and a few more that were not documented...
 RUN choco install -y git & `
     choco install -y cmake --version 3.15.4 & `
     choco install -y python2 & `
     choco install -y gnuwin32-coreutils.install & `
-    choco install -y ninja
+    choco install -y ninja & `
+    choco install -y grep & ` 
+    choco install -y sed
+RUN  pip install psutil    
+RUN choco install -y diffutils
+
+# configure Python encoding
+ENV PYTHONIOENCODING=UTF-8
+
+# update the path variable    
+RUN powershell.exe -Command $path = $env:path + ';c:\Program Files (x86)\GnuWin32\bin;C:\Program Files\CMake\bin'; Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\' -Name Path -Value $path
 
 # use this drive to store the worksapce
 VOLUME W:
