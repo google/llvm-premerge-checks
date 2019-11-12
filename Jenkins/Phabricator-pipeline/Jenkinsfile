@@ -60,11 +60,6 @@ pipeline {
                 sh "${SCRIPT_DIR}/run_ninja.sh all"
             }
         }
-        stage('ninja check') {
-            steps {
-                sh "${SCRIPT_DIR}/run_ninja.sh check"
-            }
-        }
         stage('ninja check-all') {
             steps {
                 sh "${SCRIPT_DIR}/run_ninja.sh check-all"
