@@ -49,7 +49,7 @@ RUN powershell -NoProfile -InputFormat None -Command `
     Set-ExecutionPolicy Bypass -Scope Process -Force ; `
     iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/buildkite/agent/master/install.ps1'))
 
-# support long file names during git checkout
+# support long file names and do not change line endings
 RUN git config --system core.longpaths true & `
     git config --global core.autocrlf false
 
