@@ -20,4 +20,4 @@ IMAGE_NAME="${1%/}"
 
 cd "${DIR}/${IMAGE_NAME}"
 docker build -t ${IMAGE_NAME} .
-docker run -i -t ${IMAGE_NAME}
+docker run -i -t ${IMAGE_NAME} ${2}
