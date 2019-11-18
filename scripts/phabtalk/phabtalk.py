@@ -93,10 +93,7 @@ class PhabTalk:
             if test_case['result'] == 'fail':
                 header += '    failed: {}/{}\n'.format(test_case['namespace'], test_case['name'])
         text = ''
-        if text_file_path is not None:
-            if not os.path.exists(text_file_path):
-                raise FileNotFoundError('Could not find file with comments: {}'.format(text_file_path))
-            
+        if text_file_path is not None and os.path.exists(text_file_path):           
             with open(text_file_path) as input_file:
                 text = input_file.read()
         self._comment_on_diff(diff, header + text)
@@ -126,8 +123,8 @@ class PhabTalk:
             result.result_type = 'pass'
             return result
         if not os.path.exists(build_result_file):
-            print('Could not find build results, assuming build failed: {}'.format(build_result_file))
-            result.result_type = 'fail'
+            print('Warning: Could not find test results file: {}'.format(build_result_file))
+            result.result_type = 'pass'
             return result
         
         root_node = etree.parse(build_result_file)
