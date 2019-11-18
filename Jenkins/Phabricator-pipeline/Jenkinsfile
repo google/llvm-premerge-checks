@@ -44,6 +44,7 @@ pipeline {
                 {
                     git url: 'https://github.com/google/llvm-premerge-checks.git'
                 }
+                sh 'mkdir -p build'
             }            
         }
         stage('arc patch') {
