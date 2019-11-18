@@ -27,7 +27,7 @@ pipeline {
             TARGET_DIR = "/mnt/nfs/results/${MY_BUILD_ID}"
             RESULT_URL = "http://results.llvm-merge-guard.org/${MY_BUILD_ID}"
             TEST_REPORT = "${WORKSPACE}/build/test-results.xml"
-            DIFF_JSON = "${WORKSPACE}/build/diff.json"
+            DIFF_JSON = "${WORKSPACE}/diff.json"
     }
     stages {
         stage("build info"){
