@@ -56,7 +56,7 @@ def _git_checkout(git_hash: str):
 
 def _apply_patch(diff_id: str, conduit_token: str, host: str):
     print('running arc patch...')
-    cmd = 'arc  patch --nobranch --no-ansi --diff "{}" --nocommit '\
+    cmd = 'arc patch --force --nobranch --no-ansi --diff "{}" --nocommit '\
             '--conduit-token "{}" --conduit-uri "{}"'.format(
         diff_id, conduit_token, host )
     result = subprocess.run(cmd, capture_output=True, shell=True, text=True)

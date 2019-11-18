@@ -27,7 +27,7 @@ pipeline {
             TARGET_DIR = "/mnt/nfs/results/${MY_BUILD_ID}"
             RESULT_URL = "http://results.llvm-merge-guard.org/${MY_BUILD_ID}"
             TEST_REPORT = "${WORKSPACE}/build/test-results.xml"
-            DIFF_JSON = "${WORKSPACE}/diff.json"
+            DIFF_JSON = "${WORKSPACE}/build/diff.json"
     }
     stages {
         stage("build info"){
@@ -39,7 +39,6 @@ pipeline {
             steps {
                 git url: 'https://github.com/llvm/llvm-project.git'
                 sh 'git clean -fdx'
-                sh "python3 ${SCRIPT_DIR}/phabtalk/apply_patch.py"
                 sh 'mkdir -p llvm-premerge-checks'
                 dir("llvm-premerge-checks")
                 {
@@ -48,7 +47,12 @@ pipeline {
                 sh 'mkdir -p build'
             }            
         }
-       stage('CMake') {
+        stage('arc patch'){
+            steps {
+                sh "python3 ${SCRIPT_DIR}/phabtalk/apply_patch.py"
+            }
+        }
+        stage('CMake') {
             steps {
                 sh "${SCRIPT_DIR}/run_cmake.sh"
             }
