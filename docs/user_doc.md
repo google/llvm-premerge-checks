@@ -2,6 +2,15 @@
 
 To sign up for the pre-merge tests, please add your user id to the [Herald rule](https://reviews.llvm.org/H511) triggering the builds. If you can't modify the rule yourself, please add a comment to [this issue](https://github.com/google/llvm-premerge-checks/issues/54) with your **Phabricator user name** and we'll add you.
 
+# Requirements
+
+To get a patch on Phabricator tested, the build server must be able to apply the patch on Phabricator to the checked out git repository. If you want to get your patch tested, please make sure that that either:
+
+* You set a git hash as `sourceControlBaseRevision` in Phabricator which is available on the github repository,
+* **or** you define the dependencies of your patch in Phabricator, 
+* **or** your patch can be applied to the master branch.
+
+Only then can the build server apply the patch locally and run the builds and tests.
 
 # Integration in Phabricator
 
@@ -17,6 +26,7 @@ After every build the build server will comment on your latest patch, so that yo
 The build logs are stored for 90 days and automatically deleted after that.
 
 You can also trigger a build manually by using the "Run Plan Manually" link on the [Harbormaster page](https://reviews.llvm.org/harbormaster/plan/3/) and entering a revision ID in the pop-up window.
+
 
 # Reporting issues
 
