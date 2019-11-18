@@ -35,10 +35,11 @@ pipeline {
                 echo "Building diff ${DIFF_ID} with PHID ${PHID}"
             }
         }
-        stage("git checkout"){
+        stage("git checkout + arc patch"){
             steps {
                 git url: 'https://github.com/llvm/llvm-project.git'
                 sh 'git clean -fdx'
+                sh "python3 ${SCRIPT_DIR}/phabtalk/apply_patch.py"
                 sh 'mkdir -p llvm-premerge-checks'
                 dir("llvm-premerge-checks")
                 {
@@ -46,11 +47,6 @@ pipeline {
                 }
                 sh 'mkdir -p build'
             }            
-        }
-        stage('arc patch') {
-            steps {
-                sh "python3 ${SCRIPT_DIR}/phabtalk/apply_patch.py"
-            }
         }
        stage('CMake') {
             steps {
