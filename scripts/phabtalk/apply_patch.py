@@ -16,41 +16,53 @@ import argparse
 import os
 import subprocess
 from phabricator import Phabricator
-
+import json
 
 def main():
     diff_id = os.environ['DIFF_ID']
     phid = os.environ['PHID']
     conduit_token = os.environ['CONDUIT_TOKEN']
     host = os.environ['PHABRICATOR_HOST']
-
+    diff_json_path = os.environ['JSON_DIFF']
+    print('Applying patch for Phabricator diff {}'.format(diff_id))
     phab = Phabricator(token=conduit_token, host=host+'/api/')
     phab.update_interfaces()
 
-    _git_checkout(_get_parent_hash(diff_id, phab))
+    _git_checkout(_get_parent_hash(diff_id, phab, diff_json_path))
     _apply_patch(diff_id, conduit_token, host)
 
 
-def _get_parent_hash(diff_id: str, phab:Phabricator) -> str:
+def _get_parent_hash(diff_id: str, phab: Phabricator, diff_json_path: str) -> str:
     diff = phab.differential.getdiff(diff_id=diff_id)
+    # Keep a copy of the Phabricator answer for later usage in a json file
+    with open(diff_json_path,'w') as json_file:
+        json.dump(diff, json_file, sort_keys=True, indent=4)
     return diff['sourceControlBaseRevision']
 
 
-def _git_checkout(git_hash:str):
+def _git_checkout(git_hash: str):
     try:
-        print('Checking out git hash {}'.format(hash))
-        subprocess.check_call('git reset --hard {}'.format(git_hash), shell=True)
+        print('Checking out git hash {}'.format(git_hash))
+        subprocess.check_call('git reset --hard {}'.format(git_hash), stdout=sys.stdout, 
+            stderr=sys.stderr, shell=True)
     except subprocess.CalledProcessError:
-        print('ERROR: checkout failed, using master instead.')
-        subprocess.check_call('git checkout master', shell=True)
+        print('WARNING: checkout of hash failed, using master branch instead.')        
+        subprocess.check_call('git checkout master', stdout=sys.stdout, stderr=sys.stderr, 
+            shell=True)
+    print('git checkout completed.')
 
 
 def _apply_patch(diff_id: str, conduit_token: str, host: str):
-    print('running arc path...')
+    print('running arc patch...')
     cmd = 'arc  patch --nobranch --no-ansi --diff "{}" --nocommit '\
             '--conduit-token "{}" --conduit-uri "{}"'.format(
         diff_id, conduit_token, host )
-    subprocess.call(cmd, shell=True)
+    try:
+        subprocess.check_call(cmd, stdout=sys.stdout, stderr=sys.stderr, shell=True)
+    except subprocess.CalledProcessError:
+        print('arc patch failed!')
+        raise
+    print('Patching completed.')
 
 if __name__ == "__main__":
     main()

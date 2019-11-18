@@ -27,6 +27,7 @@ pipeline {
             TARGET_DIR = "/mnt/nfs/results/${MY_BUILD_ID}"
             RESULT_URL = "http://results.llvm-merge-guard.org/${MY_BUILD_ID}"
             TEST_REPORT = "${WORKSPACE}/build/test-results.xml"
+            DIFF_JSON = "${WORKSPACE}/build/diff.json"
     }
     stages {
         stage("build info"){
@@ -48,6 +49,8 @@ pipeline {
         stage('arc patch') {
             steps {
                 sh "python3 ${SCRIPT_DIR}/phabtalk/apply_patch.py"
+                // keep a copy of the answer from Phabricator for debugging
+                sh "cp ${DIFF_JSON} ${TARGET_DIR}"
             }
         }
        stage('CMake') {
