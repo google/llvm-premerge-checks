@@ -83,19 +83,27 @@ class PhabTalk:
 
     def _comment_on_diff_from_file(self, diff: str, text_file_path: str, test_results: TestResults):
         """Comment on a diff, read text from file."""
-        header = 'Build result: {} - '.format(test_results.result_type)
-        header += '{} tests passed, {} failed and {} were skipped.\n'.format(
-            test_results.test_stats['pass'],
-            test_results.test_stats['fail'],
-            test_results.test_stats['skip'],
-        )
-        for test_case in test_results.unit:
-            if test_case['result'] == 'fail':
-                header += '    failed: {}/{}\n'.format(test_case['namespace'], test_case['name'])
+        header = ''
+        if test_results.result_type is not None:
+            header = 'Build result: {} - '.format(test_results.result_type)
+            header += '{} tests passed, {} failed and {} were skipped.\n'.format(
+                test_results.test_stats['pass'],
+                test_results.test_stats['fail'],
+                test_results.test_stats['skip'],
+            )
+            for test_case in test_results.unit:
+                if test_case['result'] == 'fail':
+                    header += '    failed: {}/{}\n'.format(test_case['namespace'], test_case['name'])
+        
         text = ''
         if text_file_path is not None and os.path.exists(text_file_path):           
             with open(text_file_path) as input_file:
                 text = input_file.read()
+        
+        if len(header+text) == 0:
+            print('Comment for Phabricator would be empty. Not posting it.')
+            return
+        
         self._comment_on_diff(diff, header + text)
 
     def _report_test_results(self, phid: str, test_results: TestResults):
@@ -120,11 +128,11 @@ class PhabTalk:
 
         if build_result_file is None:
             # If no result file is specified: assume this is intentional
-            result.result_type = 'pass'
+            result.result_type = None
             return result
         if not os.path.exists(build_result_file):
             print('Warning: Could not find test results file: {}'.format(build_result_file))
-            result.result_type = 'pass'
+            result.result_type = None
             return result
         
         root_node = etree.parse(build_result_file)
