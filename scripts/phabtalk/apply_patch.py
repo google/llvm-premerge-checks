@@ -26,7 +26,6 @@ def main():
     conduit_token = os.environ['CONDUIT_TOKEN']
     host = os.environ['PHABRICATOR_HOST']
     diff_json_path = os.environ['DIFF_JSON']
-    print('Applying patch for Phabricator diff {} for build {}'.format(diff_id,phid))
     phab = Phabricator(token=conduit_token, host=host+'/api/')
     phab.update_interfaces()
 
@@ -37,8 +36,11 @@ def main():
 def _get_parent_hash(diff_id: str, phab: Phabricator, diff_json_path: str) -> str:
     diff = phab.differential.getdiff(diff_id=diff_id)
     # Keep a copy of the Phabricator answer for later usage in a json file
-    with open(diff_json_path,'w') as json_file:
-        json.dump(diff.response, json_file, sort_keys=True, indent=4)
+    try:
+        with open(diff_json_path,'w') as json_file:
+            json.dump(diff.response, json_file, sort_keys=True, indent=4)
+    except Exception:
+        print('WARNING: could not write build/diff.json log file')
     return diff['sourceControlBaseRevision']
 
 
