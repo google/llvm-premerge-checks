@@ -49,8 +49,6 @@ pipeline {
         stage('arc patch') {
             steps {
                 sh "python3 ${SCRIPT_DIR}/phabtalk/apply_patch.py"
-                // keep a copy of the answer from Phabricator for debugging
-                sh "cp ${DIFF_JSON} ${TARGET_DIR}"
             }
         }
        stage('CMake') {
@@ -75,6 +73,8 @@ pipeline {
             dir("${TARGET_DIR}") {
                 // copy console log to result folder
                 sh "wget -qO console-log.txt http://jenkins-ui.jenkins.svc.cluster.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText"
+                // keep a copy of the answer from Phabricator for debugging
+                sh "cp ${DIFF_JSON} ."
             }
             /// send results to Phabricator
             sh '''
