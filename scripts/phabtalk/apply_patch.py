@@ -60,11 +60,12 @@ def _apply_patch(diff_id: str, conduit_token: str, host: str):
             '--conduit-token "{}" --conduit-uri "{}"'.format(
         diff_id, conduit_token, host )
     result = subprocess.run(cmd, capture_output=True, shell=True, text=True)
+    print(result.stdout + result.stderr)
     if result.returncode != 0:      
-        print('ERROR: arc patch failed with error code {} and message:'.format(result.returncode))
-        print(result.stdout + result.stderr)
+        print('ERROR: arc patch failed with error code {}.'.format(result.returncode))
         raise subprocess.CalledProcessError('ERROR: arc patch failed')
     print('Patching completed.')
+
 
 if __name__ == "__main__":
     main()
