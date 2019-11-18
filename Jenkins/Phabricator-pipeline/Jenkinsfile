@@ -35,7 +35,7 @@ pipeline {
                 echo "Building diff ${DIFF_ID} with PHID ${PHID}"
             }
         }
-        stage("git checkout + arc patch"){
+        stage("git checkout"){
             steps {
                 git url: 'https://github.com/llvm/llvm-project.git'
                 sh 'git clean -fdx'
