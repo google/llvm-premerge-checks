@@ -36,7 +36,7 @@ def _get_parent_hash(diff_id: str, phab: Phabricator, diff_json_path: str) -> st
     diff = phab.differential.getdiff(diff_id=diff_id)
     # Keep a copy of the Phabricator answer for later usage in a json file
     with open(diff_json_path,'w') as json_file:
-        json.dump(diff, json_file, sort_keys=True, indent=4)
+        json.dump(diff.response, json_file, sort_keys=True, indent=4)
     return diff['sourceControlBaseRevision']
 
 
