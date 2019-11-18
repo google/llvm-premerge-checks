@@ -23,7 +23,7 @@ def main():
     phid = os.environ['PHID']
     conduit_token = os.environ['CONDUIT_TOKEN']
     host = os.environ['PHABRICATOR_HOST']
-    diff_json_path = os.environ['JSON_DIFF']
+    diff_json_path = os.environ['DIFF_JSON']
     print('Applying patch for Phabricator diff {} for build {}'.format(diff_id,phid))
     phab = Phabricator(token=conduit_token, host=host+'/api/')
     phab.update_interfaces()
