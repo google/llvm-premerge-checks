@@ -13,10 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import argparse
+import json
 import os
 import subprocess
+import sys
+
 from phabricator import Phabricator
-import json
 
 def main():
     diff_id = os.environ['DIFF_ID']
