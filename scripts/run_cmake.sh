@@ -23,6 +23,7 @@ export CC=clang-8
 export CXX=clang++-8
 export LD=LLD
 
+#TODO: move this to the pipeline
 TARGET_DIR="/mnt/nfs/results/${JOB_BASE_NAME}-${BUILD_NUMBER}"
 mkdir -p ${TARGET_DIR}
 
@@ -31,10 +32,11 @@ cmake -GNinja ../llvm -DCMAKE_BUILD_TYPE=Release -D LLVM_ENABLE_LLD=ON \
     -D LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;libcxx;libcxxabi;lld;libunwind" \
 	-D LLVM_CCACHE_BUILD=ON -D LLVM_CCACHE_DIR="${CCACHE_PATH}" -D LLVM_CCACHE_MAXSIZE=20G \
     -D LLVM_ENABLE_ASSERTIONS=ON -DCMAKE_CXX_FLAGS=-gmlt \
-    -DLLVM_LIT_ARGS="-v --xunit-xml-output ${WORKSPACE}/build/test-results.xml" 2>&1 | tee -a cmake-log.txt
+    -DLLVM_LIT_ARGS="-v --xunit-xml-output ${WORKSPACE}/build/test-results.xml" 
 RETURN_CODE="${PIPESTATUS[0]}"
 set -e
 
-cp cmake-log.txt CMakeCache.txt ${TARGET_DIR}
+#TODO: move this to the Pipeline
+cp CMakeCache.txt ${TARGET_DIR}
 echo "CMake completed ======================================"
 exit ${RETURN_CODE}

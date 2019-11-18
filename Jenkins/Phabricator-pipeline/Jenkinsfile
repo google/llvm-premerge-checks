@@ -75,6 +75,7 @@ pipeline {
                 // copy console log to result folder
                 sh "wget -qO console-log.txt http://jenkins-ui.jenkins.svc.cluster.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText"
                 // keep a copy of the answer from Phabricator for debugging
+                // TODO: move all file copy operations here
                 sh """
                     set -eu
                     if [ -f "${DIFF_JSON}" ]; then

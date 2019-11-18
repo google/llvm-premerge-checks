@@ -17,6 +17,7 @@ set -eu
 CMD=$1
 echo "Running ${CMD}... ====================================="
 cd ${WORKSPACE}
+# TODO: move copy operation to pipeline
 BUILD_ID="${JOB_BASE_NAME}-${BUILD_NUMBER}"
 TARGET_DIR="/mnt/nfs/results/${BUILD_ID}"
 
@@ -24,12 +25,12 @@ ulimit -n 8192
 cd build
 
 set +e
-ninja ${CMD} 2>&1 | tee -a ninja_${CMD}-log.txt
-RETURN_CODE="${PIPESTATUS[0]}"
+ninja ${CMD} 
+RETURN_CODE="$?"
 set -e
 
 echo "check-all completed ======================================"
-cp  ninja_${CMD}-log.txt ${TARGET_DIR}
+# TODO: move copy operation to pipeline
 if test -f "test-results.xml" ; then
 	cp test-results.xml ${TARGET_DIR}
 fi
