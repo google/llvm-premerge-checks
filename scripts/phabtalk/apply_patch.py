@@ -50,7 +50,7 @@ def _git_checkout(git_hash: str):
     except subprocess.CalledProcessError:
         print('WARNING: checkout of hash failed, using master branch instead.')        
         subprocess.check_call('git checkout master', stdout=sys.stdout, stderr=sys.stderr, 
-            shell=True)
+                              shell=True)
     print('git checkout completed.')
 
 
@@ -59,10 +59,11 @@ def _apply_patch(diff_id: str, conduit_token: str, host: str):
     cmd = 'arc  patch --nobranch --no-ansi --diff "{}" --nocommit '\
             '--conduit-token "{}" --conduit-uri "{}"'.format(
         diff_id, conduit_token, host )
-    try:
-        subprocess.check_call(cmd, stdout=sys.stdout, stderr=sys.stderr, shell=True)
-    except subprocess.CalledProcessError:
-        print('arc patch failed!')
+    result = subprocess.run(cmd, capture_output=True, stderr=subprocess.STDOUT, 
+                            shell=True, text=True)
+    if result.returncode != 0:      
+        print('ERROR: arc patch failed with error code {} and message:'.format(result.returncode))
+        print(result.stdout + result.stderr)
         raise
     print('Patching completed.')
 
