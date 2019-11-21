@@ -84,19 +84,19 @@ pipeline {
                 """
             }
             /// send results to Phabricator
-            sh '''
+            sh """
 set +x
 cat <<-EOF> ${PHAB_LOG}
 Log files: [[${RESULT_URL}/console-log.txt | console-log.txt]], [[${RESULT_URL}/CMakeCache.txt | CMakeCache.txt]]
 EOF
-'''
-            sh '''${SCRIPT_DIR}/phabtalk/phabtalk.py "${PHID}" "${DIFF_ID}" \
+"""
+            sh """${SCRIPT_DIR}/phabtalk/phabtalk.py "${PHID}" "${DIFF_ID}" \
                 --conduit-token "${CONDUIT_TOKEN}" \
                 --test-result-file "${TEST_REPORT}" \
                 --comment-file "${PHAB_LOG}" \
                 --host "${PHABRICATOR_HOST}/api/" \
                 --buildresult ${currentBuild.result}
-                '''
+                """
         }
     }    
 }
