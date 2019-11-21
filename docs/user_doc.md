@@ -1,10 +1,32 @@
-# Sign up for beta test
+# Pre-merge checks
 
-To sign up for the pre-merge tests, please add your user id to the [Herald rule](https://reviews.llvm.org/H511) triggering the builds. If you can't modify the rule yourself, please add a comment to [this issue](https://github.com/google/llvm-premerge-checks/issues/54) with your **Phabricator user name** and we'll add you.
+The *pre-merge checks* for the [LLVM project](http://llvm.org/) are a [continuous integration (CI)](https://en.wikipedia.org/wiki/Continuous_integration) workflow. The workflow checks the patches the developers upload to the [LLVM Phabricator](https://reviews.llvm.org) instance. *Phabricator* is the code review tool in the LLVM project. The workflow checks the patches before a user merges them the master branch - thus the term *pre-merge testing*. When a user uploads a patch to the LLVM Phabricator, Phabricator triggers the checks and then displays the results. 
+
+The *checks* comprise of these steps:
+
+1. Checkout of the git repository
+1. Apply the patch -- `arc patch`
+1. Run Cmake
+1. Build the binaries -- `ninja all`
+1. Run the test suite -- `ninja check-all`
+
+The checks are executed on one platform (Debian Testing on amd64 with the clang-8 tool chain) at the moment. The plan is to add more platforms, in the future.
+
+The CI system checks the patches **before** a user merges them to the master branch. This way bugs in a patch are contained during the code review stage and do not pollute the master branch. The more bugs the CI system can catch during the code review phase, the more stable and bug-free the master branch will become.
+
+# Beta testing
+
+The pre-merge checks are in the public beta testing phase right now. During the beta testing phase we want so see if the checks work as intended and to get more feedback from the users.
+
+If you find any problems please raise an [issue on github](https://github.com/google/llvm-premerge-checks/issues).
+
+## Sign up for beta test
+
+To sign up for the pre-merge beta testing, please add yourself to the ["pre-merge beta testing" project](https://reviews.llvm.org/project/members/78/) on Phabricator.
 
 # Requirements
 
-To get a patch on Phabricator tested, the build server must be able to apply the patch on Phabricator to the checked out git repository. If you want to get your patch tested, please make sure that that either:
+To get a patch on Phabricator tested - once you are signed up - the build server must be able to apply the patch to the checked out git repository. If you want to get your patch tested, please make sure that that either:
 
 * You set a git hash as `sourceControlBaseRevision` in Phabricator which is available on the github repository,
 * **or** you define the dependencies of your patch in Phabricator, 
@@ -31,3 +53,7 @@ You can also trigger a build manually by using the "Run Plan Manually" link on t
 # Reporting issues
 
 If you notice any bugs, please create a [new issue](https://github.com/google/llvm-premerge-checks/issues/new).
+
+# Contributing
+
+We're happy to get help on improving the infrastructure and the workflows. If you're interested please contact [Christian Kühnel](mailto:kuhnel@google.com).
