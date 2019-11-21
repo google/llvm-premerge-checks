@@ -1,14 +1,14 @@
 # Pre-merge checks
 
-The *pre-merge checks* for the [LLVM project](http://llvm.org/) are a [continuous integration (CI)](https://en.wikipedia.org/wiki/Continuous_integration) workflow. It runs checks the patches developers upload to the [LLVM Phabricator]((https://reviews.llvm.org) instance. *Phabricator* is being used as code review tool in the LLVM project. The CI system checks the patches before a user merges them the master branch - thus the term *pre-merge testing* . When a user uploads a patch to the LLVM Phabricator, Phabricator triggers the checks and then displays the results. 
+The *pre-merge checks* for the [LLVM project](http://llvm.org/) are a [continuous integration (CI)](https://en.wikipedia.org/wiki/Continuous_integration) workflow. The workflow checks the patches the developers upload to the [LLVM Phabricator](https://reviews.llvm.org) instance. *Phabricator* is the code review tool in the LLVM project. The workflow checks the patches before a user merges them the master branch - thus the term *pre-merge testing*. When a user uploads a patch to the LLVM Phabricator, Phabricator triggers the checks and then displays the results. 
 
 The *checks* comprise of these steps:
 
-* Checkout of the git repository
-* Apply the patch -- `arc patch`
-* Run Cmake
-* Build the binaries -- `ninja all`
-* Run the test suite -- `ninja check-all`
+1. Checkout of the git repository
+1. Apply the patch -- `arc patch`
+1. Run Cmake
+1. Build the binaries -- `ninja all`
+1. Run the test suite -- `ninja check-all`
 
 The checks are executed on one platform (Debian Testing on amd64 with the clang-8 tool chain) at the moment. The plan is to add more platforms, in the future.
 
