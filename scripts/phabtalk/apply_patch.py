@@ -65,7 +65,7 @@ def _apply_patch(diff_id: str, conduit_token: str, host: str):
     print(result.stdout + result.stderr)
     if result.returncode != 0:      
         print('ERROR: arc patch failed with error code {}.'.format(result.returncode))
-        raise subprocess.CalledProcessError('ERROR: arc patch failed')
+        raise Exception('ERROR: arc patch failed')
     print('Patching completed.')
 
 
