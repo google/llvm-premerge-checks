@@ -81,10 +81,13 @@ class PhabTalk:
         # https://secure.phabricator.com/conduit/method/differential.revision.edit/
         self._phab.differential.revision.edit(objectIdentifier=revision, transactions=transactions)
 
-    def _comment_on_diff_from_file(self, diff: str, text_file_path: str, test_results: TestResults):
+    def _comment_on_diff_from_file(self, diff: str, text_file_path: str, test_results: TestResults, buildresult:str):
         """Comment on a diff, read text from file."""
         header = ''
-        if test_results.result_type is not None:
+        if test_results.result_type is None:
+            # do this if there are no test results
+            header = 'Build result: {} - '.format(buildresult)
+        else:
             header = 'Build result: {} - '.format(test_results.result_type)
             header += '{} tests passed, {} failed and {} were skipped.\n'.format(
                 test_results.test_stats['pass'],
@@ -106,21 +109,31 @@ class PhabTalk:
         
         self._comment_on_diff(diff, header + text)
 
-    def _report_test_results(self, phid: str, test_results: TestResults):
+    def _report_test_results(self, phid: str, test_results: TestResults, build_result: str):
         """Report failed tests to phabricator.
 
         Only reporting failed tests as the full test suite is too large to upload.
         """
 
+        # use jenkins build status if possible
+        result = self._translate_jenkins_status(build_result)
+        # fall back to test results if Jenkins status is not availble
+        if result is None:
+            result = test_results.result_type
+        # If we do not have a proper status: fail the build.
+        if result is None:
+            result = 'fail'
+
         if self.dryrun:
             print('harbormaster.sendmessage =================')
-            print('type: {}'.format(test_results.result_type))
+            print('type: {}'.format(result))
             print('unit: {}'.format(test_results.unit))
             return
 
         # API details at
         # https://secure.phabricator.com/conduit/method/harbormaster.sendmessage/  
-        self._phab.harbormaster.sendmessage(buildTargetPHID=phid, type=test_results.result_type, 
+        self._phab.harbormaster.sendmessage(buildTargetPHID=phid, 
+            type=result, 
             unit=test_results.unit)
 
     def _compute_test_results(self, build_result_file: str) -> TestResults:
@@ -164,12 +177,25 @@ class PhabTalk:
             return 'skip'
         return 'pass'
 
-    def report_all(self, diff_id: str, ph_id: str, test_result_file: str, comment_file: str):
+    def report_all(self, diff_id: str, ph_id: str, test_result_file: str, comment_file: str, build_result:str):
         test_results = self._compute_test_results(test_result_file)
-        self._report_test_results(ph_id, test_results)
-        self._comment_on_diff_from_file(diff_id, comment_file, test_results)
+        self._report_test_results(ph_id, test_results, build_result)
+        self._comment_on_diff_from_file(diff_id, comment_file, test_results, build_result)
         print('reporting completed.')
 
+    @staticmethod
+    def _translate_jenkins_status(jenkins_status: str) -> str:
+        """
+        Translate the build status form Jenkins to Phabricator.
+
+        Jenkins semantics: https://jenkins.llvm-merge-guard.org/pipeline-syntax/globals#currentBuild
+        Phabricator semantics: https://reviews.llvm.org/conduit/method/harbormaster.sendmessage/
+        """
+        if jenkins_status.lower() == 'success':
+            return 'pass'
+        if jenkins_status.lower() == 'null':
+            return 'working'
+        return 'fail'
 
 def main():
     args = _parse_args()
@@ -178,7 +204,7 @@ def main():
         # retry on connenction problems
         try:
             p = PhabTalk(args.conduit_token, args.host, args.dryrun)
-            p.report_all(args.diff_id, args.ph_id, args.test_result_file, args.comment_file)
+            p.report_all(args.diff_id, args.ph_id, args.test_result_file, args.comment_file, args.buildresult)
         except socket.timeout as e:
             errorcount += 1
             if errorcount > 5:
@@ -200,7 +226,8 @@ def _parse_args():
     parser.add_argument('--host', type=str, dest='host', default="None", 
         help="full URL to API with trailing slash, e.g. https://reviews.llvm.org/api/")
     parser.add_argument('--dryrun', action='store_true',help="output results to the console, do not report back to the server")
-    
+    parser.add_argument('--buildresult', type=str, default=None,
+                        choices=['SUCCESS', 'UNSTABLE', 'FAILURE', 'null'])
     return parser.parse_args()    
 
 

@@ -94,7 +94,8 @@ EOF
                 --conduit-token "${CONDUIT_TOKEN}" \
                 --test-result-file "${TEST_REPORT}" \
                 --comment-file "${PHAB_LOG}" \
-                --host "${PHABRICATOR_HOST}/api/"
+                --host "${PHABRICATOR_HOST}/api/" \
+                --buildresult ${currentBuild.result}
                 '''
         }
     }    
