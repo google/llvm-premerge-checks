@@ -34,7 +34,7 @@ ENV PYTHONIOENCODING=UTF-8
 # update the path variable    
 RUN powershell.exe -Command $path = $env:path + ';c:\Program Files (x86)\GnuWin32\bin;C:\Program Files\CMake\bin'; Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\' -Name Path -Value $path
 
-# use this drive to store the worksapce
+# use this drive to store the worksapce'
 VOLUME W:
 
 # install buildkite agent as described in the documentation

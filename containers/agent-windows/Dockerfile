@@ -26,7 +26,7 @@ RUN choco install -y git & `
     choco install -y grep & ` 
     choco install -y sed & `
     choco install -y diffutils
-RUN  pip install psutil    
+RUN pip install psutil    
 
 # configure Python encoding
 ENV PYTHONIOENCODING=UTF-8
@@ -34,20 +34,14 @@ ENV PYTHONIOENCODING=UTF-8
 # update the path variable    
 RUN powershell.exe -Command $path = $env:path + ';c:\Program Files (x86)\GnuWin32\bin;C:\Program Files\CMake\bin'; Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\' -Name Path -Value $path
 
-# Install Java and Jenkins swarm plugin
-RUN choco install -y openjdk
-RUN powershell -NoProfile -InputFormat None -Command `
-    mkdir c:\jenkins ; `
-    cd \jenkins ; `
-    Invoke-WebRequest -OutFile swarm-client.jar -Uri https://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/swarm-client/3.17/swarm-client-3.17.jar
-
-# use this drive to store the worksapce
-VOLUME W:
+# use this folder to store the worksapce'
+VOLUME C:\workspace
+WORKDIR C:\workspace
 
 # support long file names during git checkout
-RUN git config --system core.longpaths true
+RUN git config --system core.longpaths true & `
+    git config --global core.autocrlf false
 
 # Start developer command prompt with any other commands specified.
 #ENTRYPOINT "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat" &
-# Default to PowerShell if no other command specified.
-CMD java -jar C:\jenkins\swarm-client.jar -master http://jenkins-ui.jenkins.svc.cluster.local:8080 -executors 1 -fsroot W:\jenkins  -labels windows
+CMD cmd

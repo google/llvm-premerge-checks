@@ -12,8 +12,11 @@
 @rem See the License for the specific language governing permissions and
 @rem limitations under the License.
 
+PUSHD %1
+
 cd build
 
 call "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64
 
 ninja %1
+POPD
