@@ -49,7 +49,7 @@ pipeline {
         }
         stage('arc patch'){
             steps {
-                sh "python3 ${SCRIPT_DIR}/phabtalk/apply_patch.py"
+                sh "python3 ${SCRIPT_DIR}/phabtalk/apply_patch.py --comment-file ${PHAB_LOG}"
             }
         }
         stage('CMake') {
@@ -86,7 +86,8 @@ pipeline {
             /// send results to Phabricator
             sh """
 set +x
-cat <<-EOF> ${PHAB_LOG}
+cat <<-EOF>> ${PHAB_LOG}
+
 Log files: [[${RESULT_URL}/console-log.txt | console-log.txt]], [[${RESULT_URL}/CMakeCache.txt | CMakeCache.txt]]
 EOF
 """

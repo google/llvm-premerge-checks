@@ -17,58 +17,109 @@ import json
 import os
 import subprocess
 import sys
-
+from typing import List, Optional
 from phabricator import Phabricator
 
-def main():
-    diff_id = os.environ['DIFF_ID']
-    phid = os.environ['PHID']
-    conduit_token = os.environ['CONDUIT_TOKEN']
-    host = os.environ['PHABRICATOR_HOST']
-    diff_json_path = os.environ['DIFF_JSON']
-    phab = Phabricator(token=conduit_token, host=host+'/api/')
-    phab.update_interfaces()
+class ApplyPatch:
 
-    _git_checkout(_get_parent_hash(diff_id, phab, diff_json_path))
-    _apply_patch(diff_id, conduit_token, host)
+    def __init__(self, comment_file_path: str):
+        # TODO: turn os.environ parameter into command line arguments
+        # this would be much clearer and easier for testing
+        self.comment_file_path = comment_file_path
+        self.conduit_token = os.environ.get('CONDUIT_TOKEN')   # type: Optional[str]
+        self.host = os.environ.get('PHABRICATOR_HOST')  # type: Optional[str]
+        self._load_arcrc()
+        self.diff_id = os.environ['DIFF_ID']  # type: str
+        self.diff_json_path = os.environ['DIFF_JSON']   # type: str
+        if not self.host.endswith('/api/'):
+            self.host += '/api/'
+        self.phab = Phabricator(token=self.conduit_token, host=self.host)
+        self.git_hash = None  # type: Optional[str]
+        self.msg = []  # type: List[str]
 
+    def _load_arcrc(self):
+        """Load arc configuration from file if not set."""
+        if self.conduit_token is not None or self.host is not None:
+            return
+        print('Loading configuration from ~/.arcrc file')
+        with open(os.path.expanduser('~/.arcrc'), 'r') as arcrc_file:
+            arcrc = json.load(arcrc_file)
+        # use the first host configured in the file
+        self.host = next(iter(arcrc['hosts']))
+        self.conduit_token = arcrc['hosts'][self.host]['token']
 
-def _get_parent_hash(diff_id: str, phab: Phabricator, diff_json_path: str) -> str:
-    diff = phab.differential.getdiff(diff_id=diff_id)
-    # Keep a copy of the Phabricator answer for later usage in a json file
-    try:
-        with open(diff_json_path,'w') as json_file:
-            json.dump(diff.response, json_file, sort_keys=True, indent=4)
-    except Exception:
-        print('WARNING: could not write build/diff.json log file')
-    return diff['sourceControlBaseRevision']
+    def run(self):
+        """try to apply the patch from phabricator
+        
+        Write to `self.comment_file` for showing error messages on Phabricator.
+        """
+        self.phab.update_interfaces()
 
+        try:
+            self._get_parent_hash()
+            self._git_checkout()
+            self._apply_patch()
+        finally:
+            self._write_error_message()
 
-def _git_checkout(git_hash: str):
-    try:
-        print('Checking out git hash {}'.format(git_hash))
-        subprocess.check_call('git reset --hard {}'.format(git_hash), stdout=sys.stdout, 
-            stderr=sys.stderr, shell=True)
-    except subprocess.CalledProcessError:
-        print('WARNING: checkout of hash failed, using master branch instead.')        
-        subprocess.check_call('git checkout master', stdout=sys.stdout, stderr=sys.stderr, 
-                              shell=True)
-    print('git checkout completed.')
+    def _get_parent_hash(self) -> str:
+        diff = self.phab.differential.getdiff(diff_id=self.diff_id)
+        # Keep a copy of the Phabricator answer for later usage in a json file
+        try:
+            with open(self.diff_json_path,'w') as json_file:
+                json.dump(diff.response, json_file, sort_keys=True, indent=4)
+        except Exception:
+            print('WARNING: could not write build/diff.json log file')
+        self.git_hash = diff['sourceControlBaseRevision']
 
+    def _git_checkout(self):
+        try:
+            print('Checking out git hash {}'.format(self.git_hash))
+            subprocess.check_call('git reset --hard {}'.format(self.git_hash), 
+                stdout=sys.stdout, stderr=sys.stderr, shell=True)
+        except subprocess.CalledProcessError:
+            print('WARNING: checkout of hash failed, using master branch instead.')
+            self.msg += [
+                'Could not check out parent git hash "{}". It was not found in '
+                'the repository. Did you configure the "Parent Revision" in '
+                'Phabricator properly? Trying to apply the patch to the '
+                'master branch instead...'.format(self.git_hash)]
+            subprocess.check_call('git checkout master', stdout=sys.stdout, 
+                stderr=sys.stderr, shell=True)
+        print('git checkout completed.')
 
-def _apply_patch(diff_id: str, conduit_token: str, host: str):
-    print('running arc patch...')
-    cmd = 'arc patch --force --nobranch --no-ansi --diff "{}" --nocommit '\
-            '--conduit-token "{}" --conduit-uri "{}"'.format(
-        diff_id, conduit_token, host )
-    result = subprocess.run(cmd, capture_output=True, shell=True, text=True)
-    print(result.stdout + result.stderr)
-    if result.returncode != 0:      
-        print('ERROR: arc patch failed with error code {}.'.format(result.returncode))
-        raise Exception('ERROR: arc patch failed')
-    print('Patching completed.')
+    def _apply_patch(self):
+        print('running arc patch...')
+        cmd = 'arc patch --force --nobranch --no-ansi --diff "{}" --nocommit '\
+                '--conduit-token "{}" --conduit-uri "{}"'.format(
+            self.diff_id, self.conduit_token, self.host )
+        result = subprocess.run(cmd, capture_output=True, shell=True, text=True)
+        print(result.stdout + result.stderr)
+        if result.returncode != 0:      
+            msg = (
+                'ERROR: arc patch failed with error code {}. '
+                'Check build log for details.'.format(result.returncode))
+            self.msg += [msg]
+            raise Exception(msg)
+        print('Patching completed.')
+
+    def _write_error_message(self):
+        """Write the log message to a file."""
+        if self.comment_file_path is None:
+            return
+
+        if len(self.msg) == 0:
+            return
+        print('writing error message to {}'.format(self.comment_file_path))
+        with open(self.comment_file_path, 'a') as comment_file:
+            text = '\n\n'.join(self.msg)
+            comment_file.write(text)
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Apply Phabricator patch to working directory.')
+    parser.add_argument('--comment-file', type=str, dest='comment_file_path', default=None)
+    args = parser.parse_args()
+    patcher = ApplyPatch(args.comment_file_path)
+    patcher.run()
 
