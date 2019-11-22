@@ -68,6 +68,7 @@ class ApplyPatch:
         try:
             with open(self.diff_json_path,'w') as json_file:
                 json.dump(diff.response, json_file, sort_keys=True, indent=4)
+            print('Wrote diff details to "{}".'.format(self.diff_json_path))
         except Exception:
             print('WARNING: could not write build/diff.json log file')
         self.git_hash = diff['sourceControlBaseRevision']
