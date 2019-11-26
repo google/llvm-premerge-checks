@@ -18,14 +18,11 @@ RUN powershell -NoProfile -InputFormat None -Command `
 
 # install other tools as described in https://llvm.org/docs/GettingStartedVS.html
 # and a few more that were not documented...
-RUN choco install -y git & `
-    choco install -y cmake --version 3.15.4 & `
-    choco install -y python2 & `
-    choco install -y gnuwin32-coreutils.install & `
-    choco install -y ninja & `
-    choco install -y grep & ` 
-    choco install -y sed & `
-    choco install -y diffutils
+RUN choco install -y git
+RUN choco install -y cmake --version 3.15.4
+RUN choco install -y python2
+RUN choco install -y ninja
+RUN choco install -y gnuwin
 RUN pip install psutil    
 
 # configure Python encoding
