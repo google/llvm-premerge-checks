@@ -20,7 +20,7 @@ The build bots are still in place as they cover a much wider range of checks on 
 
 # Roadmap
 
-During the LLVM developer meeting in Octover 2019, this was the raodmap we discussed:
+During the LLVM developer meeting in Octover 2019, this was the roadmap we discussed:
 * Until mid of November: preparation of the infrastructure for the beta testing
 * Mid of November:
   * Announcement of the public beta testing phase on the LLVM mailing list.
