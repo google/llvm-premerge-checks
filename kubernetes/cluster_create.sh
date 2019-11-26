@@ -31,6 +31,11 @@ gcloud container clusters create $GCP_CLUSTER --zone $GCP_ZONE \
 gcloud container node-pools create jenkins-agents --cluster $GCP_CLUSTER --zone $GCP_ZONE \
     --machine-type=n1-standard-32 --num-nodes=2 --local-ssd-count=1
 
+# Windows agents with local ssd
+gcloud container node-pools create windows-pool --cluster $GCP_CLUSTER \
+    --image-type=WINDOWS_SAC --no-enable-autoupgrade \
+    --machine-type=n1-standard-16 --local-ssd-count=1
+
 # create static IP address
 # IP can be created, but not used in Ingress. Not sure why
 gcloud compute addresses create web-static-ip --zone=$GCP_ZONE
