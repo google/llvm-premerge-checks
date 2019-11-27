@@ -25,6 +25,8 @@ cmake.exe ..\llvm -G Ninja -DCMAKE_BUILD_TYPE=Release ^
     -DLLVM_LIT_ARGS="-v --xunit-xml-output test-results.xml" ^
     -D LLVM_ENABLE_DIA_SDK=OFF
 
+if %errorlevel% neq 0 exit /b %errorlevel%
+
 rem LLVM_ENABLE_DIA_SDK=OFF is a workaround to make the tests pass.
 rem see https://bugs.llvm.org/show_bug.cgi?id=44151
 
