@@ -14,6 +14,6 @@ rem limitations under the License.
 md build
 cd build
 
-call run_cmake.bat
-call run_ninja.bat all
-call run_ninja.bat check-all
+call %~dp0\run_cmake.bat
+call %~dp0\run_ninja.bat all
+call %~dp0\run_ninja.bat check-all
