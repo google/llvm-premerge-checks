@@ -12,7 +12,7 @@
 @rem See the License for the specific language governing permissions and
 @rem limitations under the License.
 
-PUSHD %1
+PUSHD
 
 md build
 cd build
