@@ -6,7 +6,7 @@ The *checks* comprise of these steps:
 
 1. Checkout of the git repository
 1. Apply the patch -- `arc patch`
-1. Run Cmake
+1. Run Cmake -- see [run_cmake.sh](https://github.com/google/llvm-premerge-checks/blob/master/scripts/run_cmake.sh#L31) for details
 1. Build the binaries -- `ninja all`
 1. Run the test suite -- `ninja check-all`
 
