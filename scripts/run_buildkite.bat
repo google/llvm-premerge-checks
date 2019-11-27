@@ -12,16 +12,16 @@ rem WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 rem See the License for the specific language governing permissions and
 rem limitations under the License.
 
-echo "--- CMake"
+echo --- CMake
 call %~dp0\run_cmake.bat
 if %errorlevel% neq 0 exit /b %errorlevel%
 
-echo "--- ninja all"
+echo --- ninja all
 call %~dp0\run_ninja.bat all
 if %errorlevel% neq 0 exit /b %errorlevel%
 
-echo "--- ninja check-all"
+echo --- ninja check-all
 call %~dp0\run_ninja.bat check-all
 if %errorlevel% neq 0 exit /b %errorlevel%
 
-echo "--- done"
+echo --- done
