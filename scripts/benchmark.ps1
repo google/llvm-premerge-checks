@@ -19,6 +19,6 @@ param(
 Measure-Command { git clone --depth 1 https://github.com/llvm/llvm-project $WORKDIR }
 
 Set-Location $WORKDIR
-Measure-Command {& $PSScriptRoot\run_cmake.bat}
-Measure-Command {& $PSScriptRoot\run_ninja.bat all}
-Measure-Command {& $PSScriptRoot\run_ninja.bat check-all}
+Measure-Command {& $PSScriptRoot\run_cmake.ps1}
+Measure-Command {& $PSScriptRoot\run_ninja.ps1 all}
+Measure-Command {& $PSScriptRoot\run_ninja.ps1 check-all}

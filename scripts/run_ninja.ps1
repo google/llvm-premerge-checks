@@ -16,8 +16,7 @@ param(
     [Parameter(Mandatory=$true)][string]$target
 )
 
-New-Variable -Name SCRIPT_DIR -Value (Get-Item $PSScriptRoot).FullName
-. ${SCRIPT_DIR}\common.ps1
+. ${PSScriptRoot}\common.ps1
 
 Push-Location build
 

@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-New-Variable -Name SCRIPT_DIR -Value (Get-Item $PSScriptRoot).FullName
-. ${SCRIPT_DIR}\common.ps1
+. ${PSScriptRoot}\common.ps1
 
 New-Item -ItemType Directory -Force -Path build | Out-Null
 Push-Location build

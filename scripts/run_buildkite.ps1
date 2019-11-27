@@ -12,16 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-New-Variable -Name SCRIPT_DIR -Value (Get-Item $PSScriptRoot).FullName
-. ${SCRIPT_DIR}\common.ps1
+. ${PSScriptRoot}\common.ps1
 
 Write-Output "--- CMake"
-& "${SCRIPT_DIR}\run_cmake.ps1" 
+& "${PSScriptRoot}\run_cmake.ps1" 
 
 Write-Output "--- ninja all"
-& "${SCRIPT_DIR}\run_ninja.ps1" all
+& "${PSScriptRoot}\run_ninja.ps1" all
 
 Write-Output "--- ninja check-all"
-& "${SCRIPT_DIR}\run_ninja.ps1" check-all
+& "${PSScriptRoot}\run_ninja.ps1" check-all
 
 Write-Output --- done
