@@ -8,8 +8,8 @@ FROM gcr.io/llvm-premerge-checks/agent-windows
 # Supply your agent token via the arguement "-token <mytoken" when building the image
 ARG token
 ENV buildkiteAgentToken="${token}"
-ENV BUILDKITE_BUILD_PATH=C:\workspace\buildkite
-ENV BUILDKITE_AGENT_NAME=amd64-windows-visualstudio2017
+ENV BUILDKITE_BUILD_PATH=C:\ws\bk
+ENV BUILDKITE_AGENT_NAME=win-vs17
 
 RUN powershell -NoProfile -InputFormat None -Command `
     Set-ExecutionPolicy Bypass -Scope Process -Force ; `

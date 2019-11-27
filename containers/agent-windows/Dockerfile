@@ -32,8 +32,8 @@ ENV PYTHONIOENCODING=UTF-8
 RUN powershell.exe -Command $path = $env:path + ';c:\Program Files (x86)\GnuWin32\bin;C:\Program Files\CMake\bin'; Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\' -Name Path -Value $path
 
 # use this folder to store the worksapce'
-VOLUME C:\workspace
-WORKDIR C:\workspace
+VOLUME C:\ws
+WORKDIR C:\ws
 
 # support long file names during git checkout
 RUN git config --system core.longpaths true & `
