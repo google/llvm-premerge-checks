@@ -13,8 +13,8 @@
 @rem limitations under the License.
 
 
-JENKINS_SERVER=10.43.247.173
-AGENT_ROOT=${WORKSPACE}\agent
+set JENKINS_SERVER=10.43.247.173
+set AGENT_ROOT=C:\ws\agent
 
-mkdir %AGENT_ROOT%
+md %AGENT_ROOT%
 java -jar %SWARM_PLUGIN_JAR% -master http://%JENKINS_SERVER%:8080 -executors 1 -fsroot %AGENT_ROOT% -labels windows
