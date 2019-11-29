@@ -28,7 +28,7 @@ pipeline {
             steps {
                 git url: 'https://github.com/llvm/llvm-project.git'
                 pwsh 'git clean -fdx'
-                pwsh 'mkdir llvm-premerge-checks'
+                pwsh 'New-Item -ItemType Directory -Force -Path llvm-premerge-checks'
                 dir("llvm-premerge-checks")
                 {
                     git url: 'https://github.com/google/llvm-premerge-checks.git'
