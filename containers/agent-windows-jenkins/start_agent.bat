@@ -14,7 +14,6 @@
 
 
 set JENKINS_SERVER=10.43.247.173
-set AGENT_ROOT=C:\ws\agent
+set AGENT_ROOT=C:\ws\
 
-md %AGENT_ROOT%
 java -jar %SWARM_PLUGIN_JAR% -master http://%JENKINS_SERVER%:8080 -executors 1 -fsroot %AGENT_ROOT% -labels windows
