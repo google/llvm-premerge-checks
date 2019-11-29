@@ -15,6 +15,7 @@
 # define command line arguments
 param(
     [Parameter(Mandatory=$true)][string]$IMAGE_NAME,
+    [Parameter(Mandatory=$false)][string]$CMD="",
     [string]$token
 )
 
@@ -29,7 +30,7 @@ If ($LastExitCode -ne 0) {
 
 # mount a persistent workspace for experiments
 New-Item -ItemType Directory -Force -Path $Env:USERPROFILE\workspace
-docker run -it -v $Env:USERPROFILE\workspace:C:\ws --name $IMAGE_NAME $IMAGE_NAME
+docker run -it -v $Env:USERPROFILE\workspace:C:\ws $IMAGE_NAME $CMD
 If ($LastExitCode -ne 0) {
     exit
 }
