@@ -14,6 +14,7 @@
 
 . ${PSScriptRoot}\common.ps1
 
+Remove-Item build -Recurse -ErrorAction Ignore
 New-Item -ItemType Directory -Force -Path build | Out-Null
 Push-Location build
 
