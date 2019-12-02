@@ -26,4 +26,4 @@ gcloud components install docker-credential-gcr
 docker-credential-gcr configure-docker
 
 Write-Host "Launching docker container, this might take a while..."
-docker run gcr.io/llvm-premerge-checks/agent-windows-jenkins:latest -v d:\:c:\ws
+docker run -v D:\:C:\ws gcr.io/llvm-premerge-checks/agent-windows-jenkins:latest 
