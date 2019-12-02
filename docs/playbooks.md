@@ -83,3 +83,20 @@ General hints:
 7. Install [gcloud](https://cloud.google.com/sdk/docs/quickstart-windows) and set it up according to the instructions. Then run `gcloud auth configure-docker` to authorize docker to push images.
 
 Check your installation by running "docker build ." in the `containers/agent_windows` folder.
+
+
+## Spawning a new windows agent
+
+To spawn a new windows agent:
+
+1. Go to the [GCP page](https://pantheon.corp.google.com/compute/instances?project=llvm-premerge-checks&instancessize=50) and pick a new number for the agent.
+1. Update the machine name in `kubernetes/windows_agent_create.sh`.
+1. Run `kubernetes/windows_agent_create.sh`
+1. Go to the [GCP page](https://pantheon.corp.google.com/compute/instances?project=llvm-premerge-checks&instancessize=50) again 
+1. login to the new machine via RDP (you probably need to set the i).
+1. In the RDP session: run these commands in the CMD window to start the docker container:
+```cmd
+powershell 
+Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/kubernetes/windows_agent_bootstrap.ps1' -OutFile windows_agent_bootstrap.ps1
+.\windows_agent_bootstrap.ps1
+```
