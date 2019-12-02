@@ -20,10 +20,11 @@ ROOT_DIR="$(dirname ${DIR})"
 
 # get config options
 source "${ROOT_DIR}/k8s_config"
-NAME=agent-windows-2
+NAME=agent-windows-1
 
 gcloud compute instances create ${NAME} \
     --machine-type=n1-standard-32 \
+    --boot-disk-size=100GB \
     --local-ssd=device-name=local-ssd-0 \
     --image-project=gce-uefi-images \
     --image-family=windows-2019-core-for-containers \
