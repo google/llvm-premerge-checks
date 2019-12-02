@@ -12,14 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+Write-Host "Initializing local SSD..."
+New-Variable -Name diskid -Value (Get-Disk -FriendlyName "Google EphemeralDisk").Number
 # TODO: check if machine has an SSD
 # TODO: only do this, if SSD is not yet usable
-Write-Host "Initializing local SSD..."
-Initialize-Disk -Number 0
-New-Partition -DiskNumber 0 -UseMaximumSize -AssignDriveLetter
+Initialize-Disk -Number $diskid
+New-Partition -DiskNumber $diskid -UseMaximumSize -AssignDriveLetter
 Format-Volume -DriveLetter D
 
 Write-Host "Authenticating with gcloud..."
+# TODO: make this quiet and non-interactive
+gcloud components install docker-credential-gcr
 docker-credential-gcr configure-docker
 
 Write-Host "Launching docker container, this might take a while..."
