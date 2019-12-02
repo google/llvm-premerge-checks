@@ -12,8 +12,10 @@
 @rem See the License for the specific language governing permissions and
 @rem limitations under the License.
 
-
 set JENKINS_SERVER=jenkins.local
-set AGENT_ROOT=C:\ws\
+
+set AGENT_ROOT=C:\ws
+set WORKSPACE=%AGENT_ROOT%\workspace
+if not exist "%$WORKSPACE%" mkdir "%$WORKSPACE%"
 
 java -jar %SWARM_PLUGIN_JAR% -master http://%JENKINS_SERVER%:8080 -executors 1 -fsroot %AGENT_ROOT% -labels windows
