@@ -37,7 +37,7 @@ pipeline {
         }
         stage('CMake') {
             steps {
-                bat "powershell ${SCRIPT_DIR}/run_cmake.ps1"
+                powershell "${SCRIPT_DIR}/run_cmake.ps1"
             }
         }
         stage('ninja all') {
