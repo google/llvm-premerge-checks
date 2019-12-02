@@ -80,10 +80,15 @@ General hints:
     * Select "use Windows containers" during installation.
     * Start the "Docker Desktop" application, it will set up the required services for you.
 6. Install [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/).
-7. Install [gcloud](https://cloud.google.com/sdk/docs/quickstart-windows) and set it up according to the instructions. Then run `gcloud auth configure-docker` to authorize docker to push images.
+7. Install [gcloud](https://cloud.google.com/sdk/docs/quickstart-windows) and set it up according to the instructions. 
+8. Then run `gcloud auth configure-docker` to authorize docker to push images.
 
 Check your installation by running "docker build ." in the `containers/agent_windows` folder.
 
+To push push a new container run in `containers`:
+```
+powershell .\build_deploy.ps1 <container-folder>
+```
 
 ## Spawning a new windows agent
 
