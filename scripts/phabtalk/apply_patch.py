@@ -56,14 +56,17 @@ class ApplyPatch:
         self.phab.update_interfaces()
 
         try:
-            self._get_parent_hash()
-            self._git_checkout()
-            self._apply_patch()
+            dependencies = self._get_dependencies()
+            dep_str = ', '.join(['D{}'.format(d) for d in dependencies])
+            print('This diff depends on: {}'.format(dep_str))
+            # self._get_parent_hash()
+            # self._git_checkout()
+            # self._apply_patch()
         finally:
             self._write_error_message()
 
     def _get_parent_hash(self) -> str:
-        diff = self.phab.differential.getdiff(diff_id=self.diff_id)
+        diff = self._get_diff(self.diff_id)
         # Keep a copy of the Phabricator answer for later usage in a json file
         try:
             with open(self.diff_json_path,'w') as json_file:
@@ -72,6 +75,23 @@ class ApplyPatch:
         except Exception:
             print('WARNING: could not write build/diff.json log file')
         self.git_hash = diff['sourceControlBaseRevision']
+
+    def _get_diff(self, diff_id: str):
+        return self.phab.differential.getdiff(diff_id=diff_id)
+
+    def _get_revision(self, revision_id: int):
+        return self.phab.differential.query(ids=[revision_id])[0]
+
+    def _get_revisions(self, phids):
+        return self.phab.differential.query(phids=phids)
+
+    def _get_dependencies(self) -> List[int]:
+        revision_id = int(self._get_diff(self.diff_id).revisionID)
+        revision = self._get_revision(revision_id)
+        dependency_ids = revision['auxiliary']['phabricator:depends-on']
+        revisions = self._get_revisions(dependency_ids)
+        diff_ids = [int(rev['id']) for rev in revisions]
+        return diff_ids
 
     def _git_checkout(self):
         try:
@@ -90,7 +110,8 @@ class ApplyPatch:
         print('git checkout completed.')
 
     def _apply_patch(self):
-        TODO
+        # TODO
+        pass
 
     def _write_error_message(self):
         """Write the log message to a file."""
@@ -107,7 +128,7 @@ class ApplyPatch:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Apply Phabricator patch to working directory.')
-    parser.add_argument('diff_id', default=None)
+    parser.add_argument('diff_id', type=str)
     parser.add_argument('--comment-file', type=str, dest='comment_file_path', default=None)
     parser.add_argument('--token', type=str, default=None)
     parser.add_argument('--url', type=str, default=None)
