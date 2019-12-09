@@ -69,10 +69,9 @@ class ApplyPatch:
                 missing, landed = self._get_missing_landed_dependencies(dependencies)
                 print('  These have already landed: {}'.format(diff_list_to_str(landed)))
                 print('  These are missing on master: {}'.format(diff_list_to_str(missing)))
-                # TODO for revision in missing:
-                for revision in landed:
+                for revision in missing:
                     self._apply_revision(revision)
-            self._apply_diff(self.diff_id)
+            self._apply_diff(self.diff_id, revision_id)
         finally:
             self._write_error_message()
 
@@ -82,15 +81,19 @@ class ApplyPatch:
     def _get_revision(self, revision_id: int):
         return self.phab.differential.query(ids=[revision_id])[0]
 
-    def _get_revisions(self, phids: str = None, ids: int = None):
+    def _get_revisions(self, *, phids: str = None, ids: int = None):
         if phids is not None:
             return self.phab.differential.query(phids=phids)
+        if ids is not None:
+            return self.phab.differential.query(ids=ids)
+        raise InputError('no arguments given')
+
 
     def _get_dependencies(self) -> List[int]:
         revision_id = int(self._get_diff(self.diff_id).revisionID)
         revision = self._get_revision(revision_id)
         dependency_ids = revision['auxiliary']['phabricator:depends-on']
-        revisions = self._get_revisions(dependency_ids)
+        revisions = self._get_revisions(phids=dependency_ids)
         diff_ids = [int(rev['id']) for rev in revisions]
         # It seems Phabricator lists the dependencies in the opposite order,
         # so we reverse the order before returning the list, so that they
@@ -98,8 +101,8 @@ class ApplyPatch:
         diff_ids.reverse()
         return revision_id, diff_ids
 
-    def _apply_diff(self, diff_id: int):
-        print('Applying diff {}...'.format(diff_id))
+    def _apply_diff(self, diff_id: int, revision_id: int):
+        print('Applying diff {} for revision {}...'.format(diff_id, diff_to_str(revision_id)))
         diff = self.phab.differential.getrawdiff(diffID=diff_id).response
         proc = subprocess.run('git apply', input=diff, shell=True, text=True,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -107,8 +110,11 @@ class ApplyPatch:
             raise Exception('Applying patch failed:\n{}'.format(proc.stdout + proc.stderr))
 
     def _apply_revision(self, revision_id: int):
-        revision = self._get_revisions([revision_id])
-        print(revision.response)
+        revision = self._get_revisions(ids=[revision_id])[0]
+        # take the diff_id with the highest number, this should be latest one
+        diff_id = max(revision['diffs'])
+        self._apply_diff(diff_id, revision_id)
+        
 
     def _write_error_message(self):
         """Write the log message to a file."""
