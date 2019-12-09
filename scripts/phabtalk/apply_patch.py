@@ -24,6 +24,21 @@ from phabricator import Phabricator
 from git import Repo
 
 class ApplyPatch:
+    """Apply a diff from Phabricator on local working copy.
+
+    This script is a rewrite of `arc patch` to accomodate for dependencies
+    that have already landed, but could not be identified by `arc patch`.
+
+    For a given diff_id, this class will get the dependencies listed on Phabricator.
+    For each dependency D it wil check, if D has already landed by looking 
+    for the id of D in the gif history. If D has not landed, it will download 
+    the patch for D and try to apply it locally. Once this class has applied all 
+    dependencies, it will apply the diff itself.
+
+
+    This script must be called from the root folder of a local checkout of 
+    https://github.com/llvm/llvm-project
+    """
 
     def __init__(self, diff_id:str, comment_file_path: str, token: str, url: str, store_json_diff: str):
         # TODO: turn os.environ parameter into command line arguments
@@ -76,20 +91,22 @@ class ApplyPatch:
             self._write_error_message()
 
     def _get_diff(self, diff_id: str):
+        """Get a diff from Phabricator based on it's diff id."""
         return self.phab.differential.getdiff(diff_id=diff_id)
 
     def _get_revision(self, revision_id: int):
+        """Get a revision from Phabricator based on its revision id."""
         return self.phab.differential.query(ids=[revision_id])[0]
 
-    def _get_revisions(self, *, phids: str = None, ids: int = None):
+    def _get_revisions(self, *, phids: str = None):
+        """Get a list of revisions from Phabricator based on their PH-IDs."""
         if phids is not None:
             return self.phab.differential.query(phids=phids)
-        if ids is not None:
-            return self.phab.differential.query(ids=ids)
         raise InputError('no arguments given')
 
 
     def _get_dependencies(self) -> List[int]:
+        """Get all dependencies for the diff."""
         revision_id = int(self._get_diff(self.diff_id).revisionID)
         revision = self._get_revision(revision_id)
         dependency_ids = revision['auxiliary']['phabricator:depends-on']
@@ -102,6 +119,7 @@ class ApplyPatch:
         return revision_id, diff_ids
 
     def _apply_diff(self, diff_id: int, revision_id: int):
+        """Download and apply a diff to the local working copy."""
         print('Applying diff {} for revision {}...'.format(diff_id, diff_to_str(revision_id)))
         diff = self.phab.differential.getrawdiff(diffID=diff_id).response
         proc = subprocess.run('git apply', input=diff, shell=True, text=True,
@@ -110,7 +128,8 @@ class ApplyPatch:
             raise Exception('Applying patch failed:\n{}'.format(proc.stdout + proc.stderr))
 
     def _apply_revision(self, revision_id: int):
-        revision = self._get_revisions(ids=[revision_id])[0]
+        """Download and apply the latest  diff of a revision to the local working copy."""
+        revision = self._get_revision(revision_id)
         # take the diff_id with the highest number, this should be latest one
         diff_id = max(revision['diffs'])
         self._apply_diff(diff_id, revision_id)
@@ -129,6 +148,7 @@ class ApplyPatch:
             comment_file.write(text)
 
     def _get_landed_revisions(self, limit: int = 1000):
+        """Get list of landed revisions from current git branch."""
         diff_regex = re.compile(r'^Differential Revision: https:\/\/reviews\.llvm\.org\/(.*)$', re.MULTILINE)
         for commit in self.repo.iter_commits("master", max_count=limit):
             result = diff_regex.search(commit.message)
@@ -137,6 +157,7 @@ class ApplyPatch:
         return
 
     def _get_missing_landed_dependencies(self, dependencies: List[int]) -> Tuple[List[int], List[int]]:
+        """Check which of the dependencies have already landed on the current branch."""
         landed_deps = []
         missing_deps = []
         for dependency in dependencies:            
@@ -146,11 +167,16 @@ class ApplyPatch:
                 missing_deps.append(dependency)
         return missing_deps, landed_deps
 
+
 def diff_to_str(diff: int) -> str:
+    """Convert a diff id to a string with leading "D"."""
     return 'D{}'.format(diff)
 
+
 def diff_list_to_str(diffs: List[int]) -> str:
+    """Convert list of diff ids to a comma separated list, prefixed with "D"."""
     return ', '.join([diff_to_str(d) for d in diffs])
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Apply Phabricator patch to working directory.')
