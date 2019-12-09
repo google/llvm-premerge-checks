@@ -1,4 +1,4 @@
-#!/bin/env python3
+#!/usr/bin/env python3
 # Copyright 2019 Google LLC
 #
 # Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
@@ -90,19 +90,7 @@ class ApplyPatch:
         print('git checkout completed.')
 
     def _apply_patch(self):
-        print('running arc patch...')
-        cmd = 'arc patch --force --nobranch --no-ansi --diff "{}" --nocommit '\
-                '--conduit-token "{}" --conduit-uri "{}"'.format(
-            self.diff_id, self.conduit_token, self.host )
-        result = subprocess.run(cmd, capture_output=True, shell=True, text=True)
-        print(result.stdout + result.stderr)
-        if result.returncode != 0:      
-            msg = (
-                'ERROR: arc patch failed with error code {}. '
-                'Check build log for details.'.format(result.returncode))
-            self.msg += [msg]
-            raise Exception(msg)
-        print('Patching completed.')
+        TODO
 
     def _write_error_message(self):
         """Write the log message to a file."""
