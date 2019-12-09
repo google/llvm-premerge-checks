@@ -26,7 +26,6 @@ pipeline {
             BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
             TARGET_DIR = "/mnt/nfs/results/${BUILD_ID}"
             RESULT_URL = "http://results.llvm-merge-guard.org/${BUILD_ID}"
-            TEST_REPORT = "${WORKSPACE}/build/test-results.xml"
             DIFF_JSON = "${WORKSPACE}/build/diff.json"
     }
     stages {
@@ -95,21 +94,14 @@ pipeline {
                 """
             }
             /// send results to Phabricator
-            // TODO: list all files from results directory instead
-            sh """
-set +x
-cat <<-EOF>> ${PHAB_LOG}
-
-Log files: [[${RESULT_URL}/console-log.txt | console-log.txt]], [[${RESULT_URL}/CMakeCache.txt | CMakeCache.txt]]
-EOF
-"""
             sh """${SCRIPT_DIR}/phabtalk/phabtalk.py "${PHID}" "${DIFF_ID}" \
                 --conduit-token "${CONDUIT_TOKEN}" \
-                --test-result-file "${TEST_REPORT}" \
-                --comment-file "${PHAB_LOG}" \
+                --test-result-file "test-results.xml" \
                 --host "${PHABRICATOR_HOST}/api/" \
                 --buildresult ${currentBuild.result} \
-                --clang-format-patch "${TARGET_DIR}/clang-format.patch"
+                --clang-format-patch "clang-format.patch" \
+                --results-dir "${TARGET_DIR}" \
+                --results-url "${RESULT_URL}"
                 """
         }
     }    
