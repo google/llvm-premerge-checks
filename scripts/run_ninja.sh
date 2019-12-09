@@ -14,23 +14,22 @@
 # limitations under the License.
 set -eu
 
+# Runs ninja
+# Inputs: TARGET_DIR, WORKSPACE.
+# Outputs: $TARGET_DIR/test_results.xml
+
 CMD=$1
-echo "Running ${CMD}... ====================================="
-cd ${WORKSPACE}
-# TODO: move copy operation to pipeline
-BUILD_ID="${JOB_BASE_NAME}-${BUILD_NUMBER}"
-TARGET_DIR="/mnt/nfs/results/${BUILD_ID}"
+echo "Running ninja ${CMD}... ====================================="
 
 ulimit -n 8192
-cd build
+cd "${WORKSPACE}/build"
 
 set +e
 ninja ${CMD} 
 RETURN_CODE="$?"
 set -e
 
-echo "check-all completed ======================================"
-# TODO: move copy operation to pipeline
+echo "ninja ${CMD} completed ======================================"
 if test -f "test-results.xml" ; then
 	cp test-results.xml ${TARGET_DIR}
 fi
