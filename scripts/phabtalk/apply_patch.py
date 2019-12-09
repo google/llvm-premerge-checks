@@ -22,15 +22,15 @@ from phabricator import Phabricator
 
 class ApplyPatch:
 
-    def __init__(self, comment_file_path: str):
+    def __init__(self, diff_id:str, comment_file_path: str, token: str, url: str, store_json_diff: str):
         # TODO: turn os.environ parameter into command line arguments
         # this would be much clearer and easier for testing
         self.comment_file_path = comment_file_path
-        self.conduit_token = os.environ.get('CONDUIT_TOKEN')   # type: Optional[str]
-        self.host = os.environ.get('PHABRICATOR_HOST')  # type: Optional[str]
+        self.conduit_token = token   # type: Optional[str]
+        self.host = url  # type: Optional[str]
         self._load_arcrc()
-        self.diff_id = os.environ['DIFF_ID']  # type: str
-        self.diff_json_path = os.environ['DIFF_JSON']   # type: str
+        self.diff_id = diff_id  # type: str
+        self.diff_json_path = store_json_diff   # type: str
         if not self.host.endswith('/api/'):
             self.host += '/api/'
         self.phab = Phabricator(token=self.conduit_token, host=self.host)
@@ -107,8 +107,12 @@ class ApplyPatch:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Apply Phabricator patch to working directory.')
+    parser.add_argument('diff_id', default=None)
     parser.add_argument('--comment-file', type=str, dest='comment_file_path', default=None)
+    parser.add_argument('--token', type=str, default=None)
+    parser.add_argument('--url', type=str, default=None)
+    parser.add_argument('--store-json-diff', dest='store_json_diff', type=str, default=None)
     args = parser.parse_args()
-    patcher = ApplyPatch(args.comment_file_path)
+    patcher = ApplyPatch(args.diff_id, args.comment_file_path, args.token, args.url, args.store_json_diff)
     patcher.run()
 
