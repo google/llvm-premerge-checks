@@ -15,10 +15,13 @@
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
-from typing import List, Optional
+from typing import List, Optional, Tuple
+
 from phabricator import Phabricator
+from git import Repo
 
 class ApplyPatch:
 
@@ -36,6 +39,7 @@ class ApplyPatch:
         self.phab = Phabricator(token=self.conduit_token, host=self.host)
         self.git_hash = None  # type: Optional[str]
         self.msg = []  # type: List[str]
+        self.repo = Repo(os.getcwd())  # type: Repo
 
     def _load_arcrc(self):
         """Load arc configuration from file if not set."""
@@ -56,9 +60,17 @@ class ApplyPatch:
         self.phab.update_interfaces()
 
         try:
+            print('Checking out master...')
             dependencies = self._get_dependencies()
-            dep_str = ', '.join(['D{}'.format(d) for d in dependencies])
-            print('This diff depends on: {}'.format(dep_str))
+            self.repo.git.checkout('master')
+            if len(dependencies) > 0:
+                print('This diff depends on: {}'.format(diff_list_to_str(dependencies)))
+                missing, landed = self._get_missing_landed_dependencies(dependencies)
+                print('  These have already landed: {}'.format(diff_list_to_str(landed)))
+                print('  These are missing on master: {}'.format(diff_list_to_str(missing)))
+
+
+
             # self._get_parent_hash()
             # self._git_checkout()
             # self._apply_patch()
@@ -87,6 +99,7 @@ class ApplyPatch:
 
     def _get_dependencies(self) -> List[int]:
         revision_id = int(self._get_diff(self.diff_id).revisionID)
+        print('Analyzing {}'.format(diff_to_str(revision_id)))
         revision = self._get_revision(revision_id)
         dependency_ids = revision['auxiliary']['phabricator:depends-on']
         revisions = self._get_revisions(dependency_ids)
@@ -125,6 +138,29 @@ class ApplyPatch:
             text = '\n\n'.join(self.msg)
             comment_file.write(text)
 
+    def _get_landed_revisions(self, limit: int = 1000):
+        diff_regex = re.compile(r'^Differential Revision: https:\/\/reviews\.llvm\.org\/(.*)$', re.MULTILINE)
+        for commit in self.repo.iter_commits("master", max_count=limit):
+            result = diff_regex.search(commit.message)
+            if result is not None:
+                yield result.group(1)
+        return
+
+    def _get_missing_landed_dependencies(self, dependencies: List[int]) -> Tuple[List[int], List[int]]:
+        landed_deps = []
+        missing_deps = []
+        for dependency in dependencies:            
+            if diff_to_str(dependency) in self._get_landed_revisions():
+                landed_deps.append(dependency)
+            else:
+                missing_deps.append(dependency)
+        return missing_deps, landed_deps
+
+def diff_to_str(diff: int) -> str:
+    return 'D{}'.format(diff)
+
+def diff_list_to_str(diffs: List[int]) -> str:
+    return ', '.join([diff_to_str(d) for d in diffs])
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Apply Phabricator patch to working directory.')
