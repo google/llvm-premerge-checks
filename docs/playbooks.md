@@ -105,3 +105,8 @@ powershell
 Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/kubernetes/windows_agent_bootstrap.ps1' -OutFile windows_agent_bootstrap.ps1
 .\windows_agent_bootstrap.ps1
 ```
+
+## Testing scripts locally
+
+To experiment with a build scripts locally you will need a Conduit token. You can create one at
+https://reviews.llvm.org/settings/user/<USERNAME>/page/apitokens/ .
