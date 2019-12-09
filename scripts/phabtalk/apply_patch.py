@@ -61,32 +61,20 @@ class ApplyPatch:
 
         try:
             print('Checking out master...')
-            dependencies = self._get_dependencies()
             self.repo.git.checkout('master')
+            revision_id, dependencies = self._get_dependencies()
+            print('Analyzing {}'.format(diff_to_str(revision_id)))
             if len(dependencies) > 0:
                 print('This diff depends on: {}'.format(diff_list_to_str(dependencies)))
                 missing, landed = self._get_missing_landed_dependencies(dependencies)
                 print('  These have already landed: {}'.format(diff_list_to_str(landed)))
                 print('  These are missing on master: {}'.format(diff_list_to_str(missing)))
-
-
-
-            # self._get_parent_hash()
-            # self._git_checkout()
-            # self._apply_patch()
+                # TODO for revision in missing:
+                for revision in landed:
+                    self._apply_revision(revision)
+            self._apply_diff(self.diff_id)
         finally:
             self._write_error_message()
-
-    def _get_parent_hash(self) -> str:
-        diff = self._get_diff(self.diff_id)
-        # Keep a copy of the Phabricator answer for later usage in a json file
-        try:
-            with open(self.diff_json_path,'w') as json_file:
-                json.dump(diff.response, json_file, sort_keys=True, indent=4)
-            print('Wrote diff details to "{}".'.format(self.diff_json_path))
-        except Exception:
-            print('WARNING: could not write build/diff.json log file')
-        self.git_hash = diff['sourceControlBaseRevision']
 
     def _get_diff(self, diff_id: str):
         return self.phab.differential.getdiff(diff_id=diff_id)
@@ -94,37 +82,33 @@ class ApplyPatch:
     def _get_revision(self, revision_id: int):
         return self.phab.differential.query(ids=[revision_id])[0]
 
-    def _get_revisions(self, phids):
-        return self.phab.differential.query(phids=phids)
+    def _get_revisions(self, phids: str = None, ids: int = None):
+        if phids is not None:
+            return self.phab.differential.query(phids=phids)
 
     def _get_dependencies(self) -> List[int]:
         revision_id = int(self._get_diff(self.diff_id).revisionID)
-        print('Analyzing {}'.format(diff_to_str(revision_id)))
         revision = self._get_revision(revision_id)
         dependency_ids = revision['auxiliary']['phabricator:depends-on']
         revisions = self._get_revisions(dependency_ids)
         diff_ids = [int(rev['id']) for rev in revisions]
-        return diff_ids
+        # It seems Phabricator lists the dependencies in the opposite order,
+        # so we reverse the order before returning the list, so that they
+        # can be applied in this order
+        diff_ids.reverse()
+        return revision_id, diff_ids
 
-    def _git_checkout(self):
-        try:
-            print('Checking out git hash {}'.format(self.git_hash))
-            subprocess.check_call('git reset --hard {}'.format(self.git_hash), 
-                stdout=sys.stdout, stderr=sys.stderr, shell=True)
-        except subprocess.CalledProcessError:
-            print('WARNING: checkout of hash failed, using master branch instead.')
-            self.msg += [
-                'Could not check out parent git hash "{}". It was not found in '
-                'the repository. Did you configure the "Parent Revision" in '
-                'Phabricator properly? Trying to apply the patch to the '
-                'master branch instead...'.format(self.git_hash)]
-            subprocess.check_call('git checkout master', stdout=sys.stdout, 
-                stderr=sys.stderr, shell=True)
-        print('git checkout completed.')
+    def _apply_diff(self, diff_id: int):
+        print('Applying diff {}...'.format(diff_id))
+        diff = self.phab.differential.getrawdiff(diffID=diff_id).response
+        proc = subprocess.run('git apply', input=diff, shell=True, text=True,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if proc.returncode != 0:
+            raise Exception('Applying patch failed:\n{}'.format(proc.stdout + proc.stderr))
 
-    def _apply_patch(self):
-        # TODO
-        pass
+    def _apply_revision(self, revision_id: int):
+        revision = self._get_revisions([revision_id])
+        print(revision.response)
 
     def _write_error_message(self):
         """Write the log message to a file."""
