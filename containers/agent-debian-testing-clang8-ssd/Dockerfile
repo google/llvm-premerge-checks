@@ -2,14 +2,16 @@ FROM debian:testing
 
 RUN apt-get update ;\
     apt-get install -y --no-install-recommends locales \
-        cmake ninja-build git ca-certificates clang-8 lld-8 ccache python3 build-essential \
-        clang-tidy-8 clang-format-8 \
+        cmake ninja-build git ca-certificates clang lld ccache python3 build-essential \
+        clang-tidy clang-format \
         python3-psutil arcanist zip wget \
         openjdk-11-jdk \
         python3-pip python3-setuptools \
-        swig python3-dev libedit-dev libncurses5-dev libxml2-dev liblzma-dev golang rsync; \ 
+        swig python3-dev libedit-dev libncurses5-dev libxml2-dev liblzma-dev golang rsync jq; \
         apt-get clean
 
+# Make python3 default (needed by git-clang-format and others).
+RUN rm -f /usr/bin/python && ln -s /usr/bin/python3 /usr/bin/python
 # required for openssh server
 RUN mkdir -p /run/sshd
 
