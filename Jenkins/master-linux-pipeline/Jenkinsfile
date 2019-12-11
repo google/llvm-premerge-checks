@@ -28,12 +28,14 @@ pipeline {
                 git url: 'https://github.com/llvm/llvm-project.git'
                 sh 'git clean -fdx'
                 sh 'mkdir -p llvm-premerge-checks'
-                sh 'mkdir -p "${TARGET_DIR}"'
                 dir("llvm-premerge-checks")
                 {
                     git url: 'https://github.com/google/llvm-premerge-checks.git'
                 }
-            }            
+                sh 'rm -rf build || true'
+                sh 'mkdir -p build'
+                sh 'mkdir -p "${TARGET_DIR}"'
+            }
         }
         stage('CMake') {
             steps {
