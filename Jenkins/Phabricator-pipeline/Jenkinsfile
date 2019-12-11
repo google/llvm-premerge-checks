@@ -46,7 +46,7 @@ pipeline {
                 }
                 sh 'rm -rf build || true'
                 sh 'mkdir -p build'
-                sh 'mkdir -p "${TARGET_DIR}'
+                sh 'mkdir -p "${TARGET_DIR}"'
             }
         }
         stage('arc patch'){
