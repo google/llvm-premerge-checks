@@ -28,6 +28,7 @@ pipeline {
                 git url: 'https://github.com/llvm/llvm-project.git'
                 powershell 'git clean -fdx'
                 powershell 'New-Item -ItemType Directory -Force -Path llvm-premerge-checks'
+                powershell 'New-Item -ItemType Directory -Force -Path ${TARGET_DIR}'
                 dir("llvm-premerge-checks")
                 {
                     git url: 'https://github.com/google/llvm-premerge-checks.git'

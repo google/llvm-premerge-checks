@@ -31,7 +31,7 @@ set -e
 
 echo "ninja ${CMD} completed ======================================"
 if test -f "test-results.xml" ; then
-	cp test-results.xml ${TARGET_DIR}
+	cp test-results.xml "${TARGET_DIR}"
 fi
 
 exit ${RETURN_CODE}
