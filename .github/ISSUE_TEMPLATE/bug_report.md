@@ -1,7 +1,7 @@
 ---
 name: Bug report
 about: Create a report to help us improve llvm-premerge-checks
-title: "[phabricator]"
+title: ""
 labels: bug
 assignees: ''
 
