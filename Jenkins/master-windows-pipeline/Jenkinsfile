@@ -25,16 +25,7 @@ pipeline {
     stages {
         stage("git checkout"){
             steps {
-                // test to see if this is faster then Jenkins own git command...
-                powershell """
-                    if (Test-Path .git -PathType Container) {
-                        git clean -fdx
-                        git pull
-                        #TODO: in case of errors: delete the folder and `git clone`
-                    } else {
-                        git clone --depth=1 https://github.com/llvm/llvm-project
-                    }                
-                """
+                git url: 'https://github.com/llvm/llvm-project.git'
                 powershell 'New-Item -ItemType Directory -Force -Path llvm-premerge-checks'
                 powershell 'New-Item -ItemType Directory -Force -Path ${TARGET_DIR}'
                 dir("llvm-premerge-checks")
