@@ -21,7 +21,6 @@ pipeline {
         BUILD_ID="${JOB_BASE_NAME}-${BUILD_NUMBER}"
         TARGET_DIR="/mnt/nfs/results/${BUILD_ID}"
         SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
-
     }
     stages {
         stage("git checkout"){
@@ -33,7 +32,10 @@ pipeline {
                 {
                     git url: 'https://github.com/google/llvm-premerge-checks.git'
                 }
-            }            
+                sh 'rm -rf build || true'
+                sh 'mkdir -p build'
+                sh 'mkdir -p "${TARGET_DIR}"'
+            }
         }
         stage('CMake') {
             steps {

@@ -105,3 +105,11 @@ powershell
 Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/kubernetes/windows_agent_bootstrap.ps1' -OutFile windows_agent_bootstrap.ps1
 .\windows_agent_bootstrap.ps1
 ```
+
+## Testing scripts locally
+
+Build and run agent docker image `sudo build_run.sh agent-debian-testing-clang8-ssd /bin/bash`.
+
+Within a container set environment variables similar to [pipeline](https://github.com/google/llvm-premerge-checks/blob/master/Jenkins/Phabricator-pipeline/Jenkinsfile).
+
+Additionally set `WORKSPACE`, `PHID` and `DIFF_ID` parameters. Set `CONDUIT_TOKEN` with your personal one from `https://reviews.llvm.org/settings/user/<USERNAME>/page/apitokens/`.

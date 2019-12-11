@@ -23,16 +23,18 @@ pipeline {
             PHABRICATOR_HOST = 'https://reviews.llvm.org'
             PHAB_LOG = "${WORKSPACE}/build/.phabricator-comment"
             SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
-            MY_BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
-            TARGET_DIR = "/mnt/nfs/results/${MY_BUILD_ID}"
-            RESULT_URL = "http://results.llvm-merge-guard.org/${MY_BUILD_ID}"
-            TEST_REPORT = "${WORKSPACE}/build/test-results.xml"
+            BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
+            TARGET_DIR = "/mnt/nfs/results/${BUILD_ID}"
+            RESULT_URL = "http://results.llvm-merge-guard.org/${BUILD_ID}"
             DIFF_JSON = "${WORKSPACE}/build/diff.json"
     }
     stages {
         stage("build info"){
             steps {
                 echo "Building diff ${DIFF_ID} with PHID ${PHID}"
+                script {
+                    currentBuild.displayName = "diff ${DIFF_ID}"
+                }
             }
         }
         stage("git checkout"){
@@ -44,8 +46,10 @@ pipeline {
                 {
                     git url: 'https://github.com/google/llvm-premerge-checks.git'
                 }
+                sh 'rm -rf build || true'
                 sh 'mkdir -p build'
-            }            
+                sh 'mkdir -p "${TARGET_DIR}"'
+            }
         }
         stage('arc patch'){
             steps {
@@ -67,9 +71,15 @@ pipeline {
                 sh "${SCRIPT_DIR}/run_ninja.sh check-all"
             }
         }
+        stage('linters') {
+            steps {
+                sh "${SCRIPT_DIR}/lint.sh"
+            }
+        }
     }
     post { 
-        always { 
+        always {
+
             echo "Console log is available at ${RESULT_URL}"
             dir("${TARGET_DIR}") {
                 // copy console log to result folder
@@ -84,19 +94,14 @@ pipeline {
                 """
             }
             /// send results to Phabricator
-            sh """
-set +x
-cat <<-EOF>> ${PHAB_LOG}
-
-Log files: [[${RESULT_URL}/console-log.txt | console-log.txt]], [[${RESULT_URL}/CMakeCache.txt | CMakeCache.txt]]
-EOF
-"""
             sh """${SCRIPT_DIR}/phabtalk/phabtalk.py "${PHID}" "${DIFF_ID}" \
                 --conduit-token "${CONDUIT_TOKEN}" \
-                --test-result-file "${TEST_REPORT}" \
-                --comment-file "${PHAB_LOG}" \
+                --test-result-file "test-results.xml" \
                 --host "${PHABRICATOR_HOST}/api/" \
-                --buildresult ${currentBuild.result}
+                --buildresult ${currentBuild.result} \
+                --clang-format-patch "clang-format.patch" \
+                --results-dir "${TARGET_DIR}" \
+                --results-url "${RESULT_URL}"
                 """
         }
     }    
