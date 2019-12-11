@@ -33,7 +33,9 @@ pipeline {
         stage("build info"){
             steps {
                 echo "Building diff ${DIFF_ID} with PHID ${PHID}"
-                currentBuild.description = "diff ${DIFF_ID}"
+                script {
+                    currentBuild.displayName = "diff ${DIFF_ID}"
+                }
             }
         }
         stage("git checkout"){
