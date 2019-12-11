@@ -19,8 +19,8 @@ set -eux
 # Outputs: $TARGET_DIR/CMakeCache.txt, $WORKSPACE/compile_commands.json (symlink).
 
 echo "Running CMake... ======================================"
-export CC=clang-8
-export CXX=clang++-8
+export CC=clang
+export CXX=clang++
 export LD=LLD
 
 cd "$WORKSPACE"/build

@@ -23,7 +23,7 @@ echo "Running linters... ====================================="
 cd "${WORKSPACE}"
 # Let clang format apply patches --diff doesn't produces results in the format
 # we want.
-python3 /usr/bin/git-clang-format-8 --style=llvm --binary=/usr/bin/clang-format-8
+git-clang-format --style=llvm
 set +e
 git diff -U0 --exit-code > "${TARGET_DIR}"/clang-format.patch
 STATUS="${PIPESTATUS[0]}"
