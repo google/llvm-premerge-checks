@@ -19,17 +19,21 @@ build status, a summary and the test reults to Phabricator."""
 
 import argparse
 import os
+import re
+import socket
 import time
 from typing import Optional
-from phabricator import Phabricator
-import socket
+
 from lxml import etree
+from phabricator import Phabricator
+
 
 class TestResults:
 
     def __init__(self):
         self.result_type = None  # type: str
         self.unit = []  #type: List
+        self.lint = []
         self.test_stats = {
             'pass':0,
             'fail':0, 
@@ -38,7 +42,9 @@ class TestResults:
 
 
 class PhabTalk:
-    """Talk to Phabricator to upload build results."""
+    """Talk to Phabricator to upload build results.
+       See https://secure.phabricator.com/conduit/method/harbormaster.sendmessage/
+    """
 
     def __init__(self, token: Optional[str], host: Optional[str], dryrun: bool):
         self._phab = None  # type: Optional[Phabricator]
@@ -128,15 +134,18 @@ class PhabTalk:
             print('harbormaster.sendmessage =================')
             print('type: {}'.format(result))
             print('unit: {}'.format(test_results.unit))
+            print('lint: {}'.format(test_results.lint))
             return
 
         # API details at
         # https://secure.phabricator.com/conduit/method/harbormaster.sendmessage/  
-        self._phab.harbormaster.sendmessage(buildTargetPHID=phid, 
+        self._phab.harbormaster.sendmessage(
+            buildTargetPHID=phid,
             type=result, 
-            unit=test_results.unit)
+            unit=test_results.unit,
+            lint=test_results.lint)
 
-    def _compute_test_results(self, build_result_file: str) -> TestResults:
+    def _compute_test_results(self, build_result_file: str, clang_format_patch: str) -> TestResults:
         result = TestResults()
 
         if build_result_file is None:
@@ -165,8 +174,63 @@ class PhabTalk:
                     'details' : failure.text
                 }
                 result.result_type = 'fail'
-                result.unit.append(test_result)        
+                result.unit.append(test_result)
+        if os.path.exists(clang_format_patch):
+            diffs = self.parse_patch(open(clang_format_patch, 'rt'))
+            for d in diffs:
+                lint_message = {
+                    'name': 'Please fix the formatting',
+                    'severity': 'autofix',
+                    'code': 'clang-format',
+                    'path': d['filename'],
+                    'line': d['line'],
+                    'char': 1,
+                    'description': '```\n' + d['diff'] + '\n```',
+                }
+                result.lint.append(lint_message)
         return result
+
+    def parse_patch(self, patch) -> []:
+        """Extract the changed lines from `patch` file.
+        The return value is a list of dictionaries {filename, line, diff}.
+        Diff must be generated with -U0 (no context lines).
+        """
+        entries = []
+        lines = []
+        filename = None
+        line_number = 0
+        for line in patch:
+            match = re.search(r'^(\+\+\+|---) [^/]+/(.*)', line)
+            if match:
+                if len(lines) > 0:
+                    entries.append({
+                        'filename': filename,
+                        'diff': ''.join(lines),
+                        'line': line_number,
+                    })
+                    lines = []
+                filename = match.group(2).rstrip('\r\n')
+                continue
+            match = re.search(r'^@@ -(\d+)(,(\d+))? \+(\d+)(,(\d+))?', line)
+            if match:
+                if len(lines) > 0:
+                    entries.append({
+                        'filename': filename,
+                        'diff': ''.join(lines),
+                        'line': line_number,
+                    })
+                    lines = []
+                line_number = int(match.group(1))
+                continue
+            if line.startswith('+') or line.startswith('-'):
+                lines.append(line)
+        if len(lines) > 0:
+            entries.append({
+                'filename': filename,
+                'diff': ''.join(lines),
+                'line': line_number,
+            })
+        return entries
 
     @staticmethod
     def _test_case_status(test_case) -> str:
@@ -177,8 +241,10 @@ class PhabTalk:
             return 'skip'
         return 'pass'
 
-    def report_all(self, diff_id: str, ph_id: str, test_result_file: str, comment_file: str, build_result:str):
-        test_results = self._compute_test_results(test_result_file)
+    def report_all(self, diff_id: str, ph_id: str, test_result_file: str,
+        comment_file: str, build_result: str, clang_format_patch: str):
+        test_results = self._compute_test_results(test_result_file, clang_format_patch)
+
         self._report_test_results(ph_id, test_results, build_result)
         self._comment_on_diff_from_file(diff_id, comment_file, test_results, build_result)
         print('reporting completed.')
@@ -203,8 +269,11 @@ def main():
     while True:
         # retry on connenction problems
         try:
+            # TODO: separate build of test results and sending the individual messages (to diff and test results)
             p = PhabTalk(args.conduit_token, args.host, args.dryrun)
-            p.report_all(args.diff_id, args.ph_id, args.test_result_file, args.comment_file, args.buildresult)
+            p.report_all(args.diff_id, args.ph_id, args.test_result_file,
+                         args.comment_file, args.buildresult,
+                         args.clang_format_patch)
         except socket.timeout as e:
             errorcount += 1
             if errorcount > 5:
@@ -228,6 +297,9 @@ def _parse_args():
     parser.add_argument('--dryrun', action='store_true',help="output results to the console, do not report back to the server")
     parser.add_argument('--buildresult', type=str, default=None,
                         choices=['SUCCESS', 'UNSTABLE', 'FAILURE', 'null'])
+    parser.add_argument('--clang-format-patch', type=str, default=None,
+                        dest='clang_format_patch',
+                        help="patch produced by git-clang-format")
     return parser.parse_args()    
 
 

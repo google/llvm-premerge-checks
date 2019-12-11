@@ -21,7 +21,6 @@ pipeline {
         BUILD_ID="${JOB_BASE_NAME}-${BUILD_NUMBER}"
         TARGET_DIR="/mnt/nfs/results/${BUILD_ID}"
         SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
-
     }
     stages {
         stage("git checkout"){
@@ -29,6 +28,7 @@ pipeline {
                 git url: 'https://github.com/llvm/llvm-project.git'
                 sh 'git clean -fdx'
                 sh 'mkdir -p llvm-premerge-checks'
+                sh 'mkdir -p "${TARGET_DIR}"'
                 dir("llvm-premerge-checks")
                 {
                     git url: 'https://github.com/google/llvm-premerge-checks.git'

@@ -108,5 +108,8 @@ Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-c
 
 ## Testing scripts locally
 
-To experiment with a build scripts locally you will need a Conduit token. You can create one at
-https://reviews.llvm.org/settings/user/<USERNAME>/page/apitokens/ .
+Build and run agent docker image `sudo build_run.sh agent-debian-testing-clang8-ssd /bin/bash`.
+
+Within a container set environment variables similar to [pipeline](https://github.com/google/llvm-premerge-checks/blob/master/Jenkins/Phabricator-pipeline/Jenkinsfile).
+
+Additionally set `WORKSPACE`, `PHID` and `DIFF_ID` parameters. Set `CONDUIT_TOKEN` with your personal one from `https://reviews.llvm.org/settings/user/<USERNAME>/page/apitokens/`.

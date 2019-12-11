@@ -23,11 +23,12 @@ pipeline {
             PHABRICATOR_HOST = 'https://reviews.llvm.org'
             PHAB_LOG = "${WORKSPACE}/build/.phabricator-comment"
             SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
-            MY_BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
-            TARGET_DIR = "/mnt/nfs/results/${MY_BUILD_ID}"
-            RESULT_URL = "http://results.llvm-merge-guard.org/${MY_BUILD_ID}"
+            BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
+            TARGET_DIR = "/mnt/nfs/results/${BUILD_ID}"
+            RESULT_URL = "http://results.llvm-merge-guard.org/${BUILD_ID}"
             TEST_REPORT = "${WORKSPACE}/build/test-results.xml"
             DIFF_JSON = "${WORKSPACE}/build/diff.json"
+            TARGET_DIR="/mnt/nfs/results/${JOB_BASE_NAME}-${BUILD_NUMBER}"
     }
     stages {
         stage("build info"){
@@ -44,8 +45,10 @@ pipeline {
                 {
                     git url: 'https://github.com/google/llvm-premerge-checks.git'
                 }
+                sh 'rm -rf build || true'
                 sh 'mkdir -p build'
-            }            
+                sh 'mkdir -p "${TARGET_DIR}'
+            }
         }
         stage('arc patch'){
             steps {
@@ -67,6 +70,11 @@ pipeline {
                 sh "${SCRIPT_DIR}/run_ninja.sh check-all"
             }
         }
+        stage('linters') {
+            steps {
+                sh "${SCRIPT_DIR}/lint.sh"
+            }
+        }
     }
     post { 
         always { 
@@ -84,6 +92,7 @@ pipeline {
                 """
             }
             /// send results to Phabricator
+            // TODO: list all files from results directory instead
             sh """
 set +x
 cat <<-EOF>> ${PHAB_LOG}
@@ -96,7 +105,8 @@ EOF
                 --test-result-file "${TEST_REPORT}" \
                 --comment-file "${PHAB_LOG}" \
                 --host "${PHABRICATOR_HOST}/api/" \
-                --buildresult ${currentBuild.result}
+                --buildresult ${currentBuild.result} \
+                ---clang-format-patch="${TARGET_DIR}/clang-format.patch"
                 """
         }
     }    

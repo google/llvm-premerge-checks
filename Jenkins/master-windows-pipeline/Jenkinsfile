@@ -21,7 +21,6 @@ pipeline {
         BUILD_ID="${JOB_BASE_NAME}-${BUILD_NUMBER}"
         TARGET_DIR="/mnt/nfs/results/${BUILD_ID}"
         SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
-
     }
     stages {
         stage("git checkout"){
