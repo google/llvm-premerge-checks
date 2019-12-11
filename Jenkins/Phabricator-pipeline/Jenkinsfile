@@ -33,6 +33,7 @@ pipeline {
         stage("build info"){
             steps {
                 echo "Building diff ${DIFF_ID} with PHID ${PHID}"
+                currentBuild.description = "diff ${DIFF_ID}"
             }
         }
         stage("git checkout"){
@@ -76,7 +77,8 @@ pipeline {
         }
     }
     post { 
-        always { 
+        always {
+
             echo "Console log is available at ${RESULT_URL}"
             dir("${TARGET_DIR}") {
                 // copy console log to result folder
@@ -105,7 +107,7 @@ EOF
                 --comment-file "${PHAB_LOG}" \
                 --host "${PHABRICATOR_HOST}/api/" \
                 --buildresult ${currentBuild.result} \
-                ---clang-format-patch "${TARGET_DIR}/clang-format.patch"
+                --clang-format-patch "${TARGET_DIR}/clang-format.patch"
                 """
         }
     }    
