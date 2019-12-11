@@ -105,7 +105,7 @@ EOF
                 --comment-file "${PHAB_LOG}" \
                 --host "${PHABRICATOR_HOST}/api/" \
                 --buildresult ${currentBuild.result} \
-                ---clang-format-patch="${TARGET_DIR}/clang-format.patch"
+                ---clang-format-patch "${TARGET_DIR}/clang-format.patch"
                 """
         }
     }    
