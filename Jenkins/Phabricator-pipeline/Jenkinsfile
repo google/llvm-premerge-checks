@@ -33,7 +33,16 @@ pipeline {
             steps {
                 echo "Building diff ${DIFF_ID} with PHID ${PHID}"
                 script {
-                    currentBuild.displayName = "diff ${DIFF_ID}"
+                    def revision_phid = sh(script:
+                        'echo \'{"constraints":{"ids":[' + DIFF_ID + ']}}\' | '+
+                        'arc call-conduit --conduit-uri=$PHABRICATOR_HOST --conduit-token $CONDUIT_TOKEN differential.diff.search | ' +
+                        'jq -r ".response.data[0].fields.revisionPHID"', returnStdout: true).trim()
+                    def drev_id = sh(script:
+                        'echo \'{"constraints":{"phids":["' + revision_phid + '"]}}\' | ' +
+                        'arc call-conduit --conduit-uri=$PHABRICATOR_HOST --conduit-token $CONDUIT_TOKEN differential.revision.search | ' +
+                        'jq -r ".response.data[0].id"', returnStdout: true).trim()
+                    currentBuild.displayName += " D${drev_id}"
+                    currentBuild.description = "<a href='https://reviews.llvm.org/D${drev_id}'>D${drev_id}</a>"
                 }
             }
         }
