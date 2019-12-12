@@ -104,11 +104,13 @@ pipeline {
             }
             /// send results to Phabricator
             sh """${SCRIPT_DIR}/phabtalk/phabtalk.py "${PHID}" "${DIFF_ID}" \
+                --workspace "${WORKSPACE}" \
                 --conduit-token "${CONDUIT_TOKEN}" \
                 --test-result-file "test-results.xml" \
                 --host "${PHABRICATOR_HOST}/api/" \
                 --buildresult ${currentBuild.result} \
                 --clang-format-patch "clang-format.patch" \
+                --clang-tidy-result "clang-tidy.txt" \
                 --results-dir "${TARGET_DIR}" \
                 --results-url "${RESULT_URL}"
                 """
