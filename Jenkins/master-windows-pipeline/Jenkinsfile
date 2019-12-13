@@ -17,6 +17,8 @@ pipeline {
     triggers {
         pollSCM '0 H/2 * * *'
     }
+    // enable timestaps for getting execution times
+    options { timestamps () }
     environment {
         BUILD_ID="${JOB_BASE_NAME}-${BUILD_NUMBER}"
         TARGET_DIR="/mnt/nfs/results/${BUILD_ID}"
