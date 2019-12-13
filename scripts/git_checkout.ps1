@@ -14,7 +14,8 @@
 
 Set-PSDebug -Trace 1
 
-if (Test-Path -PathType Container .git){
+if (Test-Path -PathType Container "llvm-project"){
+    Set-Location llvm-project
     Write-Output "performing git pull..."
     git checkout master 2>&1 | %{ "$_" }
     git reset --hard 2>&1 | %{ "$_" }
