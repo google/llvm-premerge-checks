@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+Set-PSDebug -Trace 1
 
 if (Test-Path -PathType Container .git){
     Write-Output "performing git pull..."
