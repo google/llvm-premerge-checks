@@ -27,7 +27,7 @@ function Invoke-CmdScript {
       [String] $scriptName
     )
     $cmdLine = """$scriptName"" $args & set"
-    & $Env:SystemRoot\system32\cmd.exe /c $cmdLine 2>&1 |
+    & $Env:SystemRoot\system32\cmd.exe /c $cmdLine |
     select-string '^([^=]*)=(.*)$' | foreach-object {
       $varName = $_.Matches[0].Groups[1].Value
       $varValue = $_.Matches[0].Groups[2].Value
@@ -43,7 +43,7 @@ function Invoke-Call {
         [scriptblock]$ScriptBlock,
         [string]$ErrorAction = $ErrorActionPreference
     )
-    & @ScriptBlock
+    & @ScriptBlock 2>&1 | %{ "$_" }
     if (($lastexitcode -ne 0) -and $ErrorAction -eq "Stop") {
         Write-Error "Command $ScriptBlock exited with $lastexitcode."
         exit $lastexitcode

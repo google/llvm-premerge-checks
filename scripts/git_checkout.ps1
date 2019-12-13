@@ -12,17 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+. ${PSScriptRoot}\common.ps1
+
 Set-PSDebug -Trace 1
+
+# Wrap git commant in error handling function
+function Invoke-Git
+{
+    param (
+        [scriptblock]$args
+    )
+    Invoke-Call -ScriptBlock { git $args } -ErrorAction Stop
+}
 
 if (Test-Path -PathType Container "llvm-project"){
     Set-Location llvm-project
     Write-Output "performing git pull..."
-    git checkout master 2>&1 | %{ "$_" }
-    git reset --hard 2>&1 | %{ "$_" }
-    git clean -fdx 2>&1 | %{ "$_" }
-    git pull 2>&1 | %{ "$_" }
+    Invoke-Git checkout master
+    Invoke-Git reset
+    Invoke-Git clean -fdx
+    Invoke-Git pull
     # TODO: in case of errors: delete folder and clone
 } else {
     Write-Output "performing git clone..."
-    git clone -q --depth 1 https://github.com/llvm/llvm-project 2>&1 | %{ "$_" }
-}
+    Invoke-Git clone -q --depth 1 https://github.com/llvm/llvm-project
