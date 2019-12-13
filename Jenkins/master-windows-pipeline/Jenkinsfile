@@ -14,9 +14,12 @@
 
 pipeline {
     agent { label 'windows' }
-    triggers {
-        pollSCM '0 H/2 * * *'
-    }
+    
+    // TODO(christian.kuehnel): re-enable scheduled builds 
+    // once the pipeline works properly
+    //triggers {
+    //    pollSCM '0 H/2 * * *'
+    //}
     // enable timestaps for getting execution times
     options { timestamps () }
     environment {
