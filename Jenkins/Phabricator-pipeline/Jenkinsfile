@@ -44,6 +44,10 @@ pipeline {
                     currentBuild.displayName += " D${drev_id}"
                     currentBuild.description = "<a href='https://reviews.llvm.org/D${drev_id}'>D${drev_id}</a>"
                 }
+                // Report versions of the installed packages.
+                sh 'dpkg -l'
+                sh 'clang --version'
+                sh 'python --version'
             }
         }
         stage("git checkout"){
