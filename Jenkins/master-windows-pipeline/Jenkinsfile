@@ -23,9 +23,10 @@ pipeline {
     // enable timestaps for getting execution times
     options { timestamps () }
     environment {
-        BUILD_ID="${JOB_BASE_NAME}-${BUILD_NUMBER}"
-        TARGET_DIR="/mnt/nfs/results/${BUILD_ID}"
+        BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
+        TARGET_DIR = "/mnt/nfs/results/${BUILD_ID}"
         SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
+        RESULT_DIR = "C:\\results\\${BUILD_ID}"
     }
     stages {
         stage("git checkout"){
