@@ -20,9 +20,7 @@ Push-Location build
 
 Invoke-CmdScript "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64
 
-Invoke-Call -ScriptBlock { 
-    cmake.exe ..\llvm -G Ninja -DCMAKE_BUILD_TYPE=Release         -D LLVM_ENABLE_PROJECTS="clang;clang-tools-extra"         -D LLVM_ENABLE_ASSERTIONS=ON         -DLLVM_LIT_ARGS="-v --xunit-xml-output test-results.xml"         -D LLVM_ENABLE_DIA_SDK=OFF --trace
-} -ErrorAction Stop
+Invoke-Call -ScriptBlock { cmake ..\llvm -G Ninja -DCMAKE_BUILD_TYPE=Release         -D LLVM_ENABLE_PROJECTS="clang;clang-tools-extra"         -D LLVM_ENABLE_ASSERTIONS=ON         -DLLVM_LIT_ARGS="-v --xunit-xml-output test-results.xml"         -D LLVM_ENABLE_DIA_SDK=OFF --trace} -ErrorAction Stop
 
 # LLVM_ENABLE_DIA_SDK=OFF is a workaround to make the tests pass.
 # see https://bugs.llvm.org/show_bug.cgi?id=44151
