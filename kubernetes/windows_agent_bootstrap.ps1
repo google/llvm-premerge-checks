@@ -20,6 +20,10 @@ Initialize-Disk -Number $diskid
 New-Partition -DiskNumber $diskid -UseMaximumSize -AssignDriveLetter
 Format-Volume -DriveLetter D
 
+Write-Host "Mounting result storage..."
+Install-WindowsFeature NFS-Client
+net use E: \\results.local\exports
+
 Write-Host "Authenticating with gcloud..."
 # TODO: make this quiet and non-interactive
 # TODO: check if this works if it's already installed
@@ -28,4 +32,4 @@ docker-credential-gcr configure-docker
 
 Write-Host "Launching docker container, this might take a while..."
 docker pull gcr.io/llvm-premerge-checks/agent-windows-jenkins:latest 
-docker run -it -v D:\:C:\ws gcr.io/llvm-premerge-checks/agent-windows-jenkins:latest 
+docker run -it -v D:\:C:\ws -v E:\results:C:\results gcr.io/llvm-premerge-checks/agent-windows-jenkins:latest 

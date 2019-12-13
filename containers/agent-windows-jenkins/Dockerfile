@@ -13,6 +13,9 @@ RUN powershell -NoProfile -InputFormat None -Command `
     mkdir c:\jenkins ; `
     Invoke-WebRequest -Uri %SWARM_PLUGIN_URL% -OutFile %SWARM_PLUGIN_JAR%
 
+# network storage for build results
+VOLUME C:\results
+
 # start swarm plugin
 COPY start_agent.bat c:\jenkins
 CMD c:\jenkins\start_agent.bat
