@@ -61,29 +61,35 @@ These are the steps to set up the build server on a clean infrastructure:
 
 If you want to build/update/test docker container for Windows, you need to do this on a Windows machine. Here are the instructions to set up such a machine on GCP.
 
-General hints:
-* Use a GCP instance with "presistent SSD". This is much faster the the "persistent Disk".
-* Try to avoid paths with white spaces in them.
-* You need to [configure Internet Explorer to allow downloads](https://improveandrepeat.com/2018/03/internet-explorer-on-windows-server-enable-file-downloads/).
-* Install Chrome, as Internet Explorer is a bit outdated. 
-* Install a nice IDE to edit Dockerfiles and scripts. [VS Code](https://code.visualstudio.com/Download) is a good option.
-
 1. Pick a GCP Windows image with Desktop Support.
-2. Use the "Server Manager" application to install the "features":
-    * Containers
-    * HyperV
-3. Install git with the default options: https://git-scm.com/download/win
-4. git clone https://github.com/google/llvm-premerge-checks.git
-    * Register your ssh keys on the windows machine on github if you intend to push changes.
-5. Install docker: https://hub.docker.com/editions/community/docker-ce-desktop-windows
-    * You will need a DockerHub account to download the installer.
-    * Select "use Windows containers" during installation.
-    * Start the "Docker Desktop" application, it will set up the required services for you.
-6. Install [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/).
-7. Install [gcloud](https://cloud.google.com/sdk/docs/quickstart-windows) and set it up according to the instructions. 
-8. Then run `gcloud auth configure-docker` to authorize docker to push images.
-
-Check your installation by running "docker build ." in the `containers/agent_windows` folder.
+    * pick a "persistent SSD" as boot Disk. This is much faster
+    * Add a "local scratch SSD" and use it as you workspace. This is much faster.
+1. Format the local SSD partition and use it as workspace.
+1. install [Chocolately](https://chocolatey.org/docs/installation).
+1. Install git: `choco install -y git`
+1. Install [docker-Desktop](https://docs.docker.com/docker-for-windows/install/) (requires docker account)
+    * select "use Windows containers" during installation
+    * note: The installation via Chocolately might not work. So do this manually.
+1. *optional:* install apps to help you work in the machine:
+```
+choco install -y googlechrome vscode
+```
+1. Log out of the machine and log back in.
+1. Repeast until success:
+    1. Start "Docker Desktop" and let it install it's dependencies. 
+    Then reboot manually, when the error message pops up.
+    1. If you have trouble with the machine name: try to shorten it to 16 chars.
+1. Contigure the Docker credentials for GCP:
+```
+gcloud components install docker-credential-gcr
+docker-credential-gcr configure-docker
+```
+1. To build and run the current agent run:
+```
+git clone https://github.com/google/llvm-premerge-checks
+cd llvm-premerge-checks\containers
+powershell .\build_run.ps1 agent-windows-jenkins
+```
 
 To push push a new container run in `containers`:
 ```
