@@ -16,12 +16,12 @@ Set-PSDebug -Trace 1
 
 if (Test-Path -PathType Container .git){
     Write-Output "performing git pull..."
-    git checkout master 2>&1
-    git reset --hard 2>&1
-    git clean -fdx 2>&1
-    git pull 2>&1
+    git checkout master 2>&1 | %{ "$_" }
+    git reset --hard 2>&1 | %{ "$_" }
+    git clean -fdx 2>&1 | %{ "$_" }
+    git pull 2>&1 | %{ "$_" }
     # TODO: in case of errors: delete folder and clone
 } else {
     Write-Output "performing git clone..."
-    git clone -q --depth 1 https://github.com/llvm/llvm-project 2>&1
+    git clone -q --depth 1 https://github.com/llvm/llvm-project 2>&1 | %{ "$_" }
 }
