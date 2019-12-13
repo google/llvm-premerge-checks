@@ -23,5 +23,5 @@ if (Test-Path -PathType Container .git){
     # TODO: in case of errors: delete folder and clone
 } else {
     Write-Output "performing git clone..."
-    git clone --depth 1 https://github.com/llvm/llvm-project 2>&1
+    git clone -q --depth 1 https://github.com/llvm/llvm-project 2>&1
 }
