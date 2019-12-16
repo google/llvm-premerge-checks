@@ -18,8 +18,13 @@ param(
 
 . ${PSScriptRoot}\common.ps1
 
+# cd into build folder
 Push-Location build
 
-Invoke-Call -ScriptBlock {ninja $target} -ErrorAction Stop
+# load Visual Studio environment variables
+Invoke-CmdScript "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64
+
+# call ninja
+Invoke-Call -ScriptBlock {ninja $target}
 
 Pop-Location
