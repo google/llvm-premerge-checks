@@ -90,6 +90,12 @@ git clone https://github.com/google/llvm-premerge-checks
 cd llvm-premerge-checks\containers
 powershell .\build_run.ps1 agent-windows-jenkins
 ```
+1. If you want to be able to push changes to github, you need to set up your github SSH keys and user name:
+```
+ssh-keygen
+git config --global user.name <your name>
+git config --global user.email <your email>
+```
 
 To push push a new container run in `containers`:
 ```
