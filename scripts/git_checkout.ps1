@@ -14,25 +14,26 @@
 
 . ${PSScriptRoot}\common.ps1
 
-Set-PSDebug -Trace 1
+#Set-PSDebug -Trace 1
 
 # Wrap git commant in error handling function
-function Invoke-Git
-{
-    param (
-        [scriptblock]$args
-    )
-    Invoke-Call -ScriptBlock { git $args } -ErrorAction Stop
+function Invoke-Git($cmd) {
+    Invoke-Call -ScriptBlock { git @cmd } -ErrorAction Stop
 }
 
 if (Test-Path -PathType Container "llvm-project"){
     Set-Location llvm-project
     Write-Output "performing git pull..."
-    Invoke-Git checkout master
-    Invoke-Git reset
-    Invoke-Git clean -fdx
-    Invoke-Git pull
+    $branch = (git branch) | Out-String
+    $branch = ($branch -split '\r')[0]
+    if ($branch -ne "* master"){
+        Invoke-Call -ScriptBlock { git checkout master} -ErrorAction Stop
+    }
+    Invoke-Call -ScriptBlock { git reset --hard } -ErrorAction Stop
+    Invoke-Call -ScriptBlock { git clean -fdx } -ErrorAction Stop
+    Invoke-Call -ScriptBlock { git pull } -ErrorAction Stop
     # TODO: in case of errors: delete folder and clone
 } else {
     Write-Output "performing git clone..."
-    Invoke-Git clone -q --depth 1 https://github.com/llvm/llvm-project
+    Invoke-Call -ScriptBlock { git clone -q --depth 1 https://github.com/llvm/llvm-project } -ErrorAction Stop
+}
