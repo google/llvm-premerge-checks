@@ -24,7 +24,7 @@ if (Test-Path -PathType Container "llvm-project"){
     }
     Invoke-Call -ScriptBlock { git reset --hard }
     Invoke-Call -ScriptBlock { git clean -fdx }
-    Invoke-Call -ScriptBlock { git pull }
+    Invoke-Call -ScriptBlock { git pull -q }
     # TODO: in case of errors: delete folder and clone
 } else {
     Write-Output "performing git clone..."
