@@ -75,11 +75,11 @@ If you want to build/update/test docker container for Windows, you need to do th
 choco install -y googlechrome vscode
 ```
 1. Log out of the machine and log back in.
-1. Repeast until success:
+1. Repeat until success:
     1. Start "Docker Desktop" and let it install it's dependencies. 
     Then reboot manually, when the error message pops up.
     1. If you have trouble with the machine name: try to shorten it to 16 chars.
-1. Contigure the Docker credentials for GCP:
+1. Configure the Docker credentials for GCP:
 ```
 gcloud components install docker-credential-gcr
 docker-credential-gcr configure-docker
