@@ -29,7 +29,7 @@ If ($LastExitCode -ne 0) {
 }
 
 # mount a persistent workspace for experiments
-docker run -it -v D:\:C:\ws -v E:\results:C:\results $IMAGE_NAME $CMD
+docker run -it -v D:\:C:\ws $IMAGE_NAME $CMD
 If ($LastExitCode -ne 0) {
     exit
 }
