@@ -31,15 +31,15 @@ pipeline {
     stages {
         stage("git checkout"){
             steps {
+                echo "getting llvm-premerge-checks... "
                 dir("llvm-premerge-checks")
                 {
                     git url: 'https://github.com/google/llvm-premerge-checks.git'
                 }
-                dir("llvm-project"){
-                    powershell "${SCRIPT_DIR}/git_checkout.ps1"
-                    powershell 'New-Item -ItemType Directory -Force -Path ${TARGET_DIR}'
-                    powershell 'New-Item -ItemType Directory -Force -Path ${RESULT_DIR}'
-                }
+                echo "getting llvm-project... "
+                powershell "${SCRIPT_DIR}/git_checkout.ps1"
+                powershell 'New-Item -ItemType Directory -Force -Path ${TARGET_DIR}'
+                powershell 'New-Item -ItemType Directory -Force -Path ${RESULT_DIR}'
             }            
         }
         stage('CMake') {
