@@ -24,7 +24,6 @@ pipeline {
     options { timestamps () }
     environment {
         BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
-        TARGET_DIR = "/mnt/nfs/results/${BUILD_ID}"
         SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
         RESULT_DIR = "C:\\results\\${BUILD_ID}"
     }
@@ -38,8 +37,7 @@ pipeline {
                 }
                 echo "getting llvm-project... "
                 powershell "${SCRIPT_DIR}/git_checkout.ps1"
-                powershell 'New-Item -ItemType Directory -Force -Path ${TARGET_DIR}'
-                powershell 'New-Item -ItemType Directory -Force -Path ${RESULT_DIR}'
+                powershell "New-Item -ItemType Directory -Force -Path ${RESULT_DIR}"
             }            
         }
         stage('CMake') {
