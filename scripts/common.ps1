@@ -16,7 +16,6 @@
 
 # stop script on errors
 Set-StrictMode -Version Latest
-$ErrorActionPreference = "Stop"
 $PSDefaultParameterValues['*:ErrorAction']='Stop'
 
 
@@ -41,9 +40,9 @@ function Invoke-CmdScript {
 function Invoke-Call {
     param (
         [scriptblock]$ScriptBlock,
-        [string]$ErrorAction = $ErrorActionPreference
+        [string]$ErrorAction = "Stop"
     )
-    & @ScriptBlock 2>&1 3>&1 4>&1 | ForEach-Object { "$_" }
+    & @ScriptBlock | ForEach-Object { "$_" }
     if (($lastexitcode -ne 0) -and $ErrorAction -eq "Stop") {
         Write-Error "Command $ScriptBlock exited with $lastexitcode."
         exit $lastexitcode
