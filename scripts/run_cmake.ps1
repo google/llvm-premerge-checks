@@ -25,8 +25,7 @@ Invoke-Call -ScriptBlock {
          -D LLVM_ENABLE_PROJECTS="clang;clang-tools-extra" `
          -D LLVM_ENABLE_ASSERTIONS=ON `
          -DLLVM_LIT_ARGS="-v --xunit-xml-output test-results.xml" `
-         -D LLVM_ENABLE_DIA_SDK=OFF `
-         --trace
+         -D LLVM_ENABLE_DIA_SDK=OFF
 } -ErrorAction Stop
 
 # LLVM_ENABLE_DIA_SDK=OFF is a workaround to make the tests pass.
