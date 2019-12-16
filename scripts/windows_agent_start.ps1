@@ -1,4 +1,3 @@
-#!/bin/bash
 # Copyright 2019 Google LLC
 #
 # Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
@@ -13,21 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -eux
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-ROOT_DIR="$(dirname ${DIR})"
+. ${PSScriptRoot}\common.ps1
 
-# get config options
-# shellcheck source=../k8s_config
-source "${ROOT_DIR}/k8s_config"
-NAME=agent-windows-2
+$JENKINS_SERVER="jenkins.local"
+$AGENT_ROOT="D:\"
+$SWARM_PLUGIN_JAR="C:\jenkins\swarm-client.jar"
 
-gcloud beta compute instances create "${NAME}" \
-  --project="${GCP_PROJECT}" \
-  --zone="${GCP_ZONE}" \
-  --machine-type=n1-highcpu-32 \
-  --local-ssd=device-name=local-ssd-0 \
-  --image=windows-server-2019-dc-v20191210 \
-  --image-project=windows-cloud \
-  --boot-disk-size=100GB
+java -jar ${SWARM_PLUGIN_JAR} -master http://${JENKINS_SERVER}:8080 -executors 1 -fsroot ${AGENT_ROOT} -labels windows
