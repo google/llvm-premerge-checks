@@ -60,7 +60,7 @@ spec:
       volumes:
         - name: result-pvc
           gcePersistentDisk:
-            pdName: results
+            pdName: results-new
             fsType: ext4
       nodeSelector:
         cloud.google.com/gke-nodepool: default-pool
