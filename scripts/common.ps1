@@ -43,7 +43,7 @@ function Invoke-Call {
         [scriptblock]$ScriptBlock,
         [string]$ErrorAction = $ErrorActionPreference
     )
-    & @ScriptBlock 2>&1 3>&1 4>&1| ForEach-Object { "$_" }
+    & @ScriptBlock 2>&1 3>&1 4>&1 | ForEach-Object { "$_" }
     if (($lastexitcode -ne 0) -and $ErrorAction -eq "Stop") {
         Write-Error "Command $ScriptBlock exited with $lastexitcode."
         exit $lastexitcode
