@@ -35,13 +35,18 @@ class BuildReport:
         self.success = True
         self.working = False
         self.unit = []  # type: List
-        self.lint = []
+        self.lint = {}
         self.test_stats = {
             'pass': 0,
             'fail': 0,
             'skip': 0
         }  # type: Dict[str, int]
 
+    def addLint(self, m):
+        key = '{}:{}'.format(m['path'], m['line'])
+        if key not in self.lint:
+            self.lint[key] = []
+        self.lint[key].append(m)
 
 class PhabTalk:
     """Talk to Phabricator to upload build results.
@@ -100,17 +105,37 @@ class PhabTalk:
         elif not report.success:
             result_type = 'fail'
 
+        # Group lint messages by file and line.
+        lint_messages = []
+        for v in report.lint.values():
+            path = ''
+            line = 0
+            descriptions = []
+            for e in v:
+                path = e['path']
+                line = e['line']
+                descriptions.append('{}: {}'.format(e['name'], e['description']))
+            lint_message = {
+                'name': 'Pre-merge checks',
+                'severity': 'warning',
+                'code': 'llvm-premerge-checks',
+                'path': path,
+                'line': line,
+                'description': '\n'.join(descriptions),
+            }
+            lint_messages.append(lint_message)
+
         if self.dryrun:
             print('harbormaster.sendmessage =================')
             print('type: {}'.format(result_type))
             print('unit: {}'.format(report.unit))
-            print('lint: {}'.format(report.lint))
+            print('lint: {}'.format(lint_messages))
         else:
             _try_call(lambda: self._phab.harbormaster.sendmessage(
                 buildTargetPHID=phid,
                 type=result_type,
                 unit=report.unit,
-                lint=report.lint))
+                lint=lint_messages))
 
         if len(report.comments) > 0:
             _try_call(lambda: self._comment_on_diff(diff_id, '\n\n'.join(report.comments)))
@@ -159,32 +184,73 @@ def _parse_patch(patch) -> []:
     return entries
 
 
-def _add_clang_format(report: BuildReport, clang_format_patch: str, results_dir: str,
-                      results_url: str):
+def _add_clang_format(report: BuildReport, results_dir: str,
+                      results_url: str, clang_format_patch: str):
     """Populates results from diff produced by clang format."""
-    if clang_format_patch is None:
+    present = (clang_format_patch is not None) and os.path.exists(os.path.join(results_dir, clang_format_patch))
+    if not present:
+        print('clang-format result {} is not found'.format(clang_format_patch))
+        report.comments.append(section_title('clang-format', False, False))
         return
     p = os.path.join(results_dir, clang_format_patch)
-    ok = True
-    if os.path.exists(p):
-        ok = False
-        diffs = _parse_patch(open(p, 'rt'))
-        for d in diffs:
-            lint_message = {
-                'name': 'Please fix the formatting',
-                'severity': 'autofix',
-                'code': 'clang-format',
-                'path': d['filename'],
-                'line': d['line'],
-                'char': 1,
-                'description': '```\n' + d['diff'] + '\n```',
-            }
-            report.lint.append(lint_message)
-    comment = section_title('clang-format', ok)
-    if not ok:
-        comment += 'Please format your changes with clang-format by running `git-clang-format HEAD^` or apply ' \
+    diffs = _parse_patch(open(p, 'r'))
+    success = len(diffs) == 0
+    for d in diffs:
+        report.addLint({
+            'name': 'clang-format',
+            'severity': 'autofix',
+            'code': 'clang-format',
+            'path': d['filename'],
+            'line': d['line'],
+            'char': 1,
+            'description': 'please reformat the code\n```\n' + d['diff'] + '\n```',
+        })
+    comment = section_title('clang-format', success, present)
+    if not success:
+        comment += 'Please format your changes with clang-format by running `git-clang-format HEAD^` or applying ' \
                    'this [[ {}/{} | patch ]].'.format(results_url, clang_format_patch)
     report.comments.append(comment)
+    report.success = success and report.success
+
+
+def _add_clang_tidy(report: BuildReport, results_dir: str, results_url: str, workspace: str, clang_tidy_file: str):
+    # Typical message looks like
+    # [..]/clang/include/clang/AST/DeclCXX.h:3058:20: error: no member named 'LifetimeExtendedTemporary' in 'clang::Decl' [clang-diagnostic-error]
+
+    pattern = '^{}/([^:]*):(\\d+):(\\d+): (.*): (.*)'.format(workspace)
+    success = True
+    present = (clang_tidy_file is not None) and os.path.exists(os.path.join(results_dir, clang_tidy_file))
+    if not present:
+        print('clang-tidy result {} is not found'.format(clang_tidy_file))
+        report.comments.append(section_title('clang-tidy', False, False))
+        return
+
+    p = os.path.join(results_dir, clang_tidy_file)
+    for line in open(p, 'r'):
+        match = re.search(pattern, line)
+        if match:
+            file_name = match.group(1)
+            line_pos = match.group(2)
+            char_pos = match.group(3)
+            severity = match.group(4)
+            text = match.group(5)
+            if severity in ['warning', 'error']:
+                success = False
+                report.addLint({
+                    'name': 'clang-tidy',
+                    'severity': 'warning',
+                    'code': 'clang-tidy',
+                    'path': file_name,
+                    'line': int(line_pos),
+                    'char': int(char_pos),
+                    'description': '{}: {}'.format(severity, text),
+                })
+
+    comment = section_title('clang-tidy', success, present)
+    if not success:
+        comment += 'Please fix [[ {}/{} | clang-tidy findings ]].'.format(results_url, clang_tidy_file)
+    report.comments.append(comment)
+    report.success = success and report.success
 
 
 def _try_call(call):
@@ -203,27 +269,26 @@ def _try_call(call):
         break
 
 
-def _add_test_results(report: BuildReport, build_result_file: str):
+def _add_test_results(report: BuildReport, results_dir: str, build_result_file: str):
     """Populates results from build test results XML.
 
      Only reporting failed tests as the full test suite is too large to upload.
      """
-    if build_result_file is None:
-        return
-    if not os.path.exists(build_result_file):
-        print('Warning: Could not find test results file: {}'.format(
-            build_result_file))
+
+    success = True
+    present = (build_result_file is not None) and os.path.exists(os.path.join(results_dir, build_result_file))
+    if not present:
+        print('Warning: Could not find test results file: {}'.format(build_result_file))
+        report.comments.append(section_title('Unit tests', False, present))
         return
 
-    root_node = etree.parse(build_result_file)
-
-    ok = True
+    root_node = etree.parse(os.path.join(results_dir, build_result_file))
     for test_case in root_node.xpath('//testcase'):
         test_result = _test_case_status(test_case)
         report.test_stats[test_result] += 1
 
         if test_result == 'fail':
-            ok = False
+            success = False
             failure = test_case.find('failure')
             test_result = {
                 'name': test_case.attrib['name'],
@@ -234,8 +299,7 @@ def _add_test_results(report: BuildReport, build_result_file: str):
             }
             report.unit.append(test_result)
 
-    report.success = ok and report.success
-    comment = section_title('Unit tests', ok)
+    comment = section_title('Unit tests', success, True)
     comment += '{} tests passed, {} failed and {} were skipped.\n'.format(
         report.test_stats['pass'],
         report.test_stats['fail'],
@@ -245,6 +309,7 @@ def _add_test_results(report: BuildReport, build_result_file: str):
         if test_case['result'] == 'fail':
             comment += '    failed: {}/{}\n'.format(test_case['namespace'], test_case['name'])
     report.comments.append(comment)
+    report.success = success and report.success
 
 
 def _add_links_to_artifacts(report: BuildReport, results_dir: str, results_url: str):
@@ -267,11 +332,13 @@ def _test_case_status(test_case) -> str:
     return 'pass'
 
 
-def section_title(title: str, ok: bool) -> str:
-    return '{} {}: {}. '.format(
-        '{icon check-circle color=green}' if ok else '{icon times-circle color=red}',
-        title,
-        'pass' if ok else 'fail')
+def section_title(title: str, ok: bool, present: bool) -> str:
+    icon = '{icon question-circle color=gray}'
+    result = 'unknown'
+    if present:
+        icon = '{icon check-circle color=green}' if ok else '{icon times-circle color=red}'
+        result = 'pass' if ok else 'fail'
+    return '{} {}: {}. '.format(icon, title, result)
 
 
 def main():
@@ -287,8 +354,9 @@ def main():
         else:
             report.success = False
 
-    _add_test_results(report, os.path.join(args.results_dir, args.test_result_file))
-    _add_clang_format(report, args.clang_format_patch, args.results_dir, args.results_url)
+    _add_test_results(report, args.results_dir, args.test_result_file)
+    _add_clang_tidy(report, args.results_dir, args.results_url, args.workspace, args.clang_tidy_result)
+    _add_clang_format(report, args.results_dir, args.results_url, args.clang_format_patch)
     _add_links_to_artifacts(report, args.results_dir, args.results_url)
     p = PhabTalk(args.conduit_token, args.host, args.dryrun)
     p.submit_report(args.diff_id, args.ph_id, report, args.buildresult)
@@ -299,25 +367,26 @@ def _parse_args():
         description='Write build status back to Phabricator.')
     parser.add_argument('ph_id', type=str)
     parser.add_argument('diff_id', type=str)
-    parser.add_argument('--test-result-file', type=str, dest='test_result_file',
-                        default='test-results.xml')
-    parser.add_argument('--conduit-token', type=str, dest='conduit_token',
-                        default=None)
-    parser.add_argument('--host', type=str, dest='host', default="None",
+    parser.add_argument('--test-result-file', type=str, dest='test_result_file', default='test-results.xml')
+    parser.add_argument('--conduit-token', type=str, dest='conduit_token', required=True)
+    parser.add_argument('--host', type=str, dest='host', default="https://reviews.llvm.org/api/",
                         help="full URL to API with trailing slash, e.g. https://reviews.llvm.org/api/")
     parser.add_argument('--dryrun', action='store_true',
                         help="output results to the console, do not report back to the server")
-    parser.add_argument('--buildresult', type=str, default=None,
-                        choices=['SUCCESS', 'UNSTABLE', 'FAILURE', 'null'])
+    parser.add_argument('--buildresult', type=str, default=None, choices=['SUCCESS', 'UNSTABLE', 'FAILURE', 'null'])
     parser.add_argument('--clang-format-patch', type=str, default=None,
                         dest='clang_format_patch',
                         help="path to diff produced by git-clang-format, relative to results-dir")
-    parser.add_argument('--results-dir', type=str, default=None,
+    parser.add_argument('--clang-tidy-result', type=str, default=None,
+                        dest='clang_tidy_result',
+                        help="path to diff produced by git-clang-tidy, relative to results-dir")
+    parser.add_argument('--results-dir', type=str, default=None, required=True,
                         dest='results_dir',
                         help="directory of all build artifacts")
     parser.add_argument('--results-url', type=str, default=None,
                         dest='results_url',
                         help="public URL to access results directory")
+    parser.add_argument('--workspace', type=str, required=True, help="path to workspace")
     return parser.parse_args()
 
 

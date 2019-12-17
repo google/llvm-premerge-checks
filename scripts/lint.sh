@@ -21,17 +21,15 @@ set -eux
 echo "Running linters... ====================================="
 
 cd "${WORKSPACE}"
-# Let clang format apply patches --diff doesn't produces results in the format
-# we want.
+# Let clang format apply patches --diff doesn't produces results in the format we want.
 git-clang-format --style=llvm
 set +e
 git diff -U0 --exit-code > "${TARGET_DIR}"/clang-format.patch
 STATUS="${PIPESTATUS[0]}"
 set -e
-# Drop file if there are no findings.
-if [[ $STATUS == 0 ]]; then rm "${TARGET_DIR}"/clang-format.patch; fi
-
 # Revert changes of git-clang-format.
 git checkout -- .
+
+git diff HEAD^ | clang-tidy-diff -p1 -quiet > "${TARGET_DIR}"/clang-tidy.txt
 
 echo "linters completed ======================================"
