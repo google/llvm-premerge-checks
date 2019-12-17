@@ -15,13 +15,13 @@
 pipeline {
     agent { label 'windows' }
     
-    // TODO(christian.kuehnel): re-enable scheduled builds 
-    // once the pipeline works properly
-    //triggers {
-    //    pollSCM '0 H/2 * * *'
-    //}
+    triggers {
+        pollSCM '0 H/2 * * *'
+    }
+
     // enable timestaps for getting execution times
     options { timestamps () }
+
     environment {
         BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
         SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
