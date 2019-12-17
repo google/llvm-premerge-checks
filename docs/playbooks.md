@@ -67,9 +67,7 @@ If you want to build/update/test docker container for Windows, you need to do th
 1. Format the local SSD partition and use it as workspace.
 1. install [Chocolately](https://chocolatey.org/docs/installation).
 1. Install git: `choco install -y git`
-1. Install [docker-Desktop](https://docs.docker.com/docker-for-windows/install/) (requires docker account)
-    * select "use Windows containers" during installation
-    * note: The installation via Chocolately might not work. So do this manually.
+1. Install [Docker Enterprise](https://docs.docker.com/ee/docker-ee/windows/docker-ee/) 
 1. *optional:* install apps to help you work in the machine:
 ```
 choco install -y googlechrome vscode
