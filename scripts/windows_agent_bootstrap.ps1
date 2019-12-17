@@ -13,7 +13,7 @@
 # limitations under the License.
 
 Write-Host "Initializing local SSD..."
-New-Variable -Name diskid -Value (Get-Disk -FriendlyName "Google PersistentDisk").Number
+New-Variable -Name diskid -Value (Get-Disk -FriendlyName "Google EphemeralDisk").Number
 # TODO: check if machine has an SSD
 # TODO: only do this, if SSD is not yet usable
 Initialize-Disk -Number $diskid
