@@ -19,4 +19,9 @@ $JENKINS_SERVER="jenkins.local"
 $AGENT_ROOT="D:\"
 $SWARM_PLUGIN_JAR="C:\jenkins\swarm-client.jar"
 
-java -jar ${SWARM_PLUGIN_JAR} -master http://${JENKINS_SERVER}:8080 -executors 1 -fsroot ${AGENT_ROOT} -labels windows
+java -jar ${SWARM_PLUGIN_JAR} `
+    -master http://${JENKINS_SERVER}:8080 `
+    -executors 1 `
+    -fsroot ${AGENT_ROOT} `
+    -labels windows `
+    -name $env:computername
