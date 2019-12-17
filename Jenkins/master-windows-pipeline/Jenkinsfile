@@ -62,17 +62,15 @@ pipeline {
             }
         }
     }
-/*
     post { 
         always { 
             echo "Console log is available at https://results.new.llvm-merge-guard.org/${BUILD_ID}"
             dir("${env.TARGET_DIR}") {
                 // copy console log to result folder
-                bat "wget -qO console-log.txt http://jenkins-ui.jenkins.svc.cluster.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText"
+                powershell "Invoke-WebRequest -OutFile console-log.txt -uri http://jenkins.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText"
                 // TODO: move all file copy operations here
             }
         }
-    }
-*/
+    } 
 
 }
