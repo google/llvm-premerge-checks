@@ -37,12 +37,11 @@ pipeline {
                     git url: 'https://github.com/google/llvm-premerge-checks.git'
                 }
                 echo "getting llvm-project... "
-                powershell "${SCRIPT_DIR}/git_checkout.ps1"
-/*                dir("llvm-project")
+                //powershell "${SCRIPT_DIR}/git_checkout.ps1"
+                dir("llvm-project")
                 {
                     git url: 'https://github.com/llvm/llvm-project.git'
                 }
-*/
                 powershell "New-Item -ItemType Directory -Force -Path ${RESULT_DIR}"
             }            
         }
@@ -76,7 +75,7 @@ pipeline {
                 // Google Cloud Storage
                 powershell """
                     # get the console log
-                    Invoke-WebRequest -OutFile console-log.txt -uri http://jenkins.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText" -ErrorAction 
+                    Invoke-WebRequest -OutFile console-log.txt -uri "http://jenkins.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText" -ErrorAction 
 
                     Copy-Item "${LLVM_DIR}\\build\\CMakeCache.txt"
                     Copy-Item "${LLVM_DIR}\\build\\test-results.xml"
