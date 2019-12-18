@@ -37,12 +37,11 @@ pipeline {
                     git url: 'https://github.com/google/llvm-premerge-checks.git'
                 }
                 echo "getting llvm-project... "
-                powershell "${SCRIPT_DIR}/git_checkout.ps1"
-/*                dir("llvm-project")
+                //powershell "${SCRIPT_DIR}/git_checkout.ps1"
+                dir("llvm-project")
                 {
                     git url: 'https://github.com/llvm/llvm-project.git'
                 }
-*/
                 powershell "New-Item -ItemType Directory -Force -Path ${RESULT_DIR}"
             }            
         }
