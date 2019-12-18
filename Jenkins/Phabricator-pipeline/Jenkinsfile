@@ -33,6 +33,7 @@ pipeline {
             steps {
                 echo "Building diff ${DIFF_ID} with PHID ${PHID}"
                 script {
+                    def success = true
                     def revision_phid = sh(script:
                         'echo \'{"constraints":{"ids":[' + DIFF_ID + ']}}\' | '+
                         'arc call-conduit --conduit-uri=$PHABRICATOR_HOST --conduit-token $CONDUIT_TOKEN differential.diff.search | ' +
@@ -76,12 +77,26 @@ pipeline {
         }
         stage('ninja all') {
             steps {
-                sh "${SCRIPT_DIR}/run_ninja.sh all"
+                script {
+                    try {
+                        sh(script: "${SCRIPT_DIR}/run_ninja.sh all")
+                    } catch (e) {
+                          success = false;
+                          echo e.toString()
+                    }
+                }
             }
         }
         stage('ninja check-all') {
             steps {
-                sh "${SCRIPT_DIR}/run_ninja.sh check-all"
+                script {
+                    try {
+                        sh(script: "${SCRIPT_DIR}/run_ninja.sh check-all")
+                    } catch (e) {
+                        success = false;
+                        echo e.toString()
+                    }
+                }
             }
         }
         stage('linters') {
@@ -92,7 +107,13 @@ pipeline {
     }
     post { 
         always {
-
+            script {
+                if (success) {
+                    currentBuild.result = "SUCCESS"
+                } else {
+                    currentBuild.result = "FAILURE"
+                }
+            }
             echo "Console log is available at ${RESULT_URL}"
             dir("${TARGET_DIR}") {
                 // copy console log to result folder
