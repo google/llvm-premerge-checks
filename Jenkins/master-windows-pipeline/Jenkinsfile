@@ -25,7 +25,7 @@ pipeline {
     environment {
         MY_BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
         SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
-        RESULT_DIR = "E:\\results\\${MY_BUILD_ID}"
+        RESULT_DIR = "${WORKSPACE}\\results"
         LLVM_DIR = "${WORKSPACE}\\llvm-project"
     }
     stages {
@@ -55,7 +55,7 @@ pipeline {
         }
         stage('ninja all') {
             steps {
-                dir"${LLVM_DIR}"){
+                dir("${LLVM_DIR}"){
                     powershell "${SCRIPT_DIR}/run_ninja.ps1 all"
                 }
             }
@@ -70,14 +70,19 @@ pipeline {
     }
     post { 
         always { 
-            echo "Console log is available at https://results.new.llvm-merge-guard.org/${MY_BUILD_ID}"
-            dir("${env.TARGET_DIR}") {
-                // copy console log to result folder
-                powershell "Invoke-WebRequest -OutFile console-log.txt -uri http://jenkins.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText"
-                // copy result files, fail silently if they do not exist
-                powershell """                    
-                    Copy-Item "${LLVM_DIR}\\build\\CMakeCache.txt" -ErrorAction SilentlyContinue
-                    Copy-Item "${LLVM_DIR}\\build\\test-results.xml" -ErrorAction SilentlyContinue
+            echo "Logs uploaded to https://pantheon.corp.google.com/storage/browser/llvm-premerge-checks/results/${MY_BUILD_ID}."
+            dir("${env.RESULT_DIR}") {
+                // gather all result files in a folder, then upload everything to
+                // Google Cloud Storage
+                powershell """
+                    # get the console log
+                    Invoke-WebRequest -OutFile console-log.txt -uri http://jenkins.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText" -ErrorAction 
+
+                    Copy-Item "${LLVM_DIR}\\build\\CMakeCache.txt"
+                    Copy-Item "${LLVM_DIR}\\build\\test-results.xml"
+                    
+                    # upload files
+                    gsutil cp *.* gs://llvm-premerge-checks/results/${MY_BUILD_ID}/
                 """
             }
         }
