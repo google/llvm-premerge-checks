@@ -65,11 +65,19 @@ If you want to build/update/test docker container for Windows, you need to do th
     * pick a "persistent SSD" as boot Disk. This is much faster
     * Add a "local scratch SSD" and use it as you workspace. This is much faster.
 1. Format the local SSD partition and use it as workspace.
-1. install [Chocolately](https://chocolatey.org/docs/installation).
-1. Install git: `choco install -y git`
-1. Install [Docker Enterprise](https://docs.docker.com/ee/docker-ee/windows/docker-ee/) 
-1. *optional:* install apps to help you work in the machine:
+1. install [Chocolately](https://chocolatey.org/docs/installation):
+```bat
+@"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
 ```
+1. Install git: `choco install -y git`
+1. Install [Docker Enterprise](https://docs.docker.com/ee/docker-ee/windows/docker-ee/) and reboot:
+```powershell
+Install-Module DockerMsftProvider -Force
+Install-Package Docker -ProviderName DockerMsftProvider -Force
+Restart-Computer
+```
+1. *optional:* install apps to help you work in the machine:
+```powershell
 choco install -y googlechrome vscode
 ```
 1. Log out of the machine and log back in.
@@ -78,25 +86,25 @@ choco install -y googlechrome vscode
     Then reboot manually, when the error message pops up.
     1. If you have trouble with the machine name: try to shorten it to 16 chars.
 1. Configure the Docker credentials for GCP:
-```
+```powershell
 gcloud components install docker-credential-gcr
 docker-credential-gcr configure-docker
 ```
 1. To build and run the current agent run:
-```
+```powershell
 git clone https://github.com/google/llvm-premerge-checks
 cd llvm-premerge-checks\containers
 powershell .\build_run.ps1 agent-windows-jenkins
 ```
 1. If you want to be able to push changes to github, you need to set up your github SSH keys and user name:
-```
+```powershell
 ssh-keygen
 git config --global user.name <your name>
 git config --global user.email <your email>
 ```
 
 To push push a new container run in `containers`:
-```
+```powershell
 powershell .\build_deploy.ps1 <container-folder>
 ```
 
