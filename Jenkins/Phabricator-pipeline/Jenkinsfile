@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+def success = true
+
 pipeline {
     agent { label 'linux' }
     parameters {
@@ -33,7 +35,6 @@ pipeline {
             steps {
                 echo "Building diff ${DIFF_ID} with PHID ${PHID}"
                 script {
-                    def success = true
                     def revision_phid = sh(script:
                         'echo \'{"constraints":{"ids":[' + DIFF_ID + ']}}\' | '+
                         'arc call-conduit --conduit-uri=$PHABRICATOR_HOST --conduit-token $CONDUIT_TOKEN differential.diff.search | ' +
