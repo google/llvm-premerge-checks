@@ -46,3 +46,6 @@ $SWARM_PLUGIN_URL="https://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/s
 $SWARM_PLUGIN_JAR="C:\jenkins\swarm-client.jar"
 mkdir c:\jenkins
 Invoke-WebRequest -Uri $SWARM_PLUGIN_URL -OutFile $SWARM_PLUGIN_JAR
+
+# TODO: put build-agent-results_key.json on the machine somehow
+gcloud auth activate-service-account --key-file C:\jenkins\build-agent-results_key.json
