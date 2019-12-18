@@ -16,6 +16,11 @@ set JENKINS_SERVER=jenkins.local
 
 set AGENT_ROOT=C:\ws
 set WORKSPACE=%AGENT_ROOT%\workspace
-if not exist "%WORKSPACE%" mkdir "%WORKSPACE%"
+
+@rem authenticate gsutil
+gcloud auth activate-service-account --key-file C:\credentials\build-agent-results_key.json
+
+set TEMP=C:\TEMP
+set TMP=%TEMP%
 
 java -jar %SWARM_PLUGIN_JAR% -master http://%JENKINS_SERVER%:8080 -executors 1 -fsroot %AGENT_ROOT% -labels windows
