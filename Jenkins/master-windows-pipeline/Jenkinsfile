@@ -75,7 +75,9 @@ pipeline {
                 // gather all result files in a folder, then upload everything to
                 // Google Cloud Storage
                 powershell """
-                    $ErrorActionPreference = "Continue"
+                    # continue on errors
+                    \$ErrorActionPreference = "Continue"
+
                     # get the console log
                     Invoke-WebRequest -OutFile console-log.txt -uri http://jenkins.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText" -ErrorAction 
 
