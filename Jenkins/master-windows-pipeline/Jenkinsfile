@@ -23,9 +23,10 @@ pipeline {
     options { timestamps () }
 
     environment {
-        BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
+        MY_BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
         SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
-        RESULT_DIR = "C:\\results\\${BUILD_ID}"
+        RESULT_DIR = "E:\\results\\${MY_BUILD_ID}"
+        LLVM_DIR = "${WORKSPACE}\\llvm-project"
     }
     stages {
         stage("git checkout"){
@@ -37,26 +38,31 @@ pipeline {
                 }
                 echo "getting llvm-project... "
                 powershell "${SCRIPT_DIR}/git_checkout.ps1"
+/*                dir("llvm-project")
+                {
+                    git url: 'https://github.com/llvm/llvm-project.git'
+                }
+*/
                 powershell "New-Item -ItemType Directory -Force -Path ${RESULT_DIR}"
             }            
         }
         stage('CMake') {
             steps {
-                dir("llvm-project"){
+                dir("${LLVM_DIR}"){
                     powershell "${SCRIPT_DIR}/run_cmake.ps1"
                 }
             }
         }
         stage('ninja all') {
             steps {
-                dir("llvm-project"){
+                dir"${LLVM_DIR}"){
                     powershell "${SCRIPT_DIR}/run_ninja.ps1 all"
                 }
             }
         }
         stage('ninja check-all') {
             steps {
-                dir("llvm-project"){
+                dir("${LLVM_DIR}"){
                     powershell "${SCRIPT_DIR}/run_ninja.ps1 check-all"
                 }
             }
@@ -64,11 +70,15 @@ pipeline {
     }
     post { 
         always { 
-            echo "Console log is available at https://results.new.llvm-merge-guard.org/${BUILD_ID}"
+            echo "Console log is available at https://results.new.llvm-merge-guard.org/${MY_BUILD_ID}"
             dir("${env.TARGET_DIR}") {
                 // copy console log to result folder
                 powershell "Invoke-WebRequest -OutFile console-log.txt -uri http://jenkins.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText"
-                // TODO: move all file copy operations here
+                // copy result files, fail silently if they do not exist
+                powershell """                    
+                    Copy-Item "${LLVM_DIR}\\build\\CMakeCache.txt" -ErrorAction SilentlyContinue
+                    Copy-Item "${LLVM_DIR}\\build\\test-results.xml" -ErrorAction SilentlyContinue
+                """
             }
         }
     } 
