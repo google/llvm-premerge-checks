@@ -60,6 +60,7 @@ pipeline {
                 // copy console log to result folder
                 sh "wget -qO console-log.txt http://jenkins-ui.jenkins.svc.cluster.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText"
                 // TODO: move all file copy operations here
+                junit 'build/*.xml'
             }
         }
     }
