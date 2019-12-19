@@ -9,6 +9,7 @@ The *checks* comprise of these steps:
 1. Run Cmake -- see [run_cmake.sh](https://github.com/google/llvm-premerge-checks/blob/master/scripts/run_cmake.sh#L31) for details
 1. Build the binaries -- `ninja all`
 1. Run the test suite -- `ninja check-all`
+1. Run clang-format and clang-tidy on the diff.
 
 The checks are executed on one platform (Debian Testing on amd64 with the clang-8 tool chain) at the moment. The plan is to add more platforms, in the future.
 
@@ -23,6 +24,8 @@ If you find any problems please raise an [issue on github](https://github.com/go
 ## Sign up for beta test
 
 To sign up for the pre-merge beta testing, please add yourself to the ["pre-merge beta testing" project](https://reviews.llvm.org/project/members/78/) on Phabricator.
+
+The checks are enabled for all changes to `clang-tools-extra/clangd`.
 
 # Requirements
 
