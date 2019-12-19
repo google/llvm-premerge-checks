@@ -84,7 +84,7 @@ pipeline {
                     gsutil cp *.* gs://llvm-premerge-checks/results/${MY_BUILD_ID}/
                 """
             }
-            junit "${LLVM_DIR}/build/*.xml"
+            junit "${LLVM_DIR}\\build\\test-results.xml"
         }
     } 
 
