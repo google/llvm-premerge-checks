@@ -16,7 +16,7 @@ pipeline {
     agent { label 'windows' }
     
     triggers {
-        pollSCM '0 H/2 * * *'
+        pollSCM 'H H/2 * * *'
     }
 
     // enable timestaps for getting execution times
