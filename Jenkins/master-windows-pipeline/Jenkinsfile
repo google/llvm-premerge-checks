@@ -80,7 +80,8 @@ pipeline {
                     Copy-Item "${LLVM_DIR}\\build\\test-results.xml"
                     
                     # upload files
-                    gsutil cp *.* gs://llvm-premerge-checks/results/${MY_BUILD_ID}/
+                    \$ErrorActionPreference = 'SilentlyContinue'
+                    gsutil cp -Z *.* gs://llvm-premerge-checks/results/${MY_BUILD_ID}/
                 """
             }
             // doesn't find junit results, not sure why...
