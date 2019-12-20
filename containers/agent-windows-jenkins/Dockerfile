@@ -14,13 +14,12 @@ RUN powershell -NoProfile -InputFormat None -Command `
     Invoke-WebRequest -Uri %SWARM_PLUGIN_URL% -OutFile %SWARM_PLUGIN_JAR%
 
 # install gsutils to access Google Cloud Storage
-RUN powershell -NoProfile -InputFormat None -Command `
-    (New-Object Net.WebClient).DownloadFile("https://dl.google.com/dl/cloudsdk/channels/rapid/GoogleCloudSDKInstaller.exe", "$env:Temp\GoogleCloudSDKInstaller.exe") ; `
-    & $env:Temp\GoogleCloudSDKInstaller.exe ; `
-    del $env:Temp\GoogleCloudSDKInstaller.exe
+RUN pip install gsutil
 VOLUME C:\credentials
+
+# temporary directory, can be mounted on host if required 
 VOLUME C:\Temp
 
 # start swarm plugin
-COPY start_agent.bat c:\jenkins
-CMD c:\jenkins\start_agent.bat
+COPY start_agent.ps1 c:\jenkins
+CMD powershell c:\jenkins\start_agent.ps1
