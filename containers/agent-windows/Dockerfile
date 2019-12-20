@@ -20,7 +20,7 @@ RUN powershell -NoProfile -InputFormat None -Command `
 # and a few more that were not documented...
 RUN choco install -y git
 RUN choco install -y cmake --version 3.15.4
-RUN choco install -y python2
+RUN choco install -y python3
 RUN choco install -y ninja
 RUN choco install -y gnuwin
 RUN pip install psutil    
