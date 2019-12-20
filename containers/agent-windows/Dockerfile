@@ -5,7 +5,7 @@ ARG version=ltsc2019
 FROM mcr.microsoft.com/windows/servercore:$version
 
 # install chocolately as package manager
-RUN powershell -Command `
+RUN powershell -NoProfile -InputFormat None -Command `
     iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1')) ; `
     choco feature disable --name showDownloadProgress
 
@@ -29,7 +29,9 @@ RUN pip install psutil
 ENV PYTHONIOENCODING=UTF-8
 
 # update the path variable    
-RUN powershell.exe -Command $path = $env:path + ';c:\Program Files (x86)\GnuWin32\bin;C:\Program Files\CMake\bin'; Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\' -Name Path -Value $path
+RUN powershell -NoProfile -InputFormat None  -Command `
+    $path = $env:path + ';c:\Program Files (x86)\GnuWin32\bin;C:\Program Files\CMake\bin'; `
+    Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\' -Name Path -Value $path
 
 # use this folder to store the worksapce'
 VOLUME C:\ws
