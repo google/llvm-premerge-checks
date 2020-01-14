@@ -29,6 +29,8 @@ The checks are enabled for all changes to `clang-tools-extra/clangd`.
 
 # Requirements
 
+The builds are only triggered if the Revision in Phabricator is created/updated via `arc diff`. If you update a Revision via the Web UI it will [not trigger](https://secure.phabricator.com/Q447) a build.
+
 To get a patch on Phabricator tested - once you are signed up - the build server must be able to apply the patch to the checked out git repository. If you want to get your patch tested, please make sure that that either:
 
 * You set a git hash as `sourceControlBaseRevision` in Phabricator which is available on the github repository,
