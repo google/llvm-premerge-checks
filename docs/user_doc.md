@@ -23,9 +23,9 @@ If you find any problems please raise an [issue on github](https://github.com/go
 
 ## Sign up for beta test
 
-To sign up for the pre-merge beta testing, please add yourself to the ["pre-merge beta testing" project](https://reviews.llvm.org/project/members/78/) on Phabricator.
+To sign up for the pre-merge beta testing, please add yourself to the ["pre-merge beta testing" project](https://reviews.llvm.org/project/members/78/) on Phabricator ([H511](https://reviews.llvm.org/H11)).
 
-The checks are enabled for all changes to `clang-tools-extra/clangd`.
+The checks are enabled for all changes to `clang-tools-extra/clangd` ([H527](https://reviews.llvm.org/H527)) and `mlir`([H552](https://reviews.llvm.org/H552)).
 
 # Requirements
 
