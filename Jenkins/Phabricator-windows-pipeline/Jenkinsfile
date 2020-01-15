@@ -15,7 +15,7 @@
 def success = true
 
 pipeline {
-    agent { label 'linux' }
+    agent { label 'windows' }
     parameters {
         string(name: 'DIFF_ID')
         string(name: 'PHID')
