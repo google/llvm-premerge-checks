@@ -30,6 +30,7 @@ set -e
 # Revert changes of git-clang-format.
 git checkout -- .
 
-git diff HEAD^ | clang-tidy-diff -p1 -quiet > "${TARGET_DIR}"/clang-tidy.txt
+# TODO: clang tidy is currently disabled, see https://github.com/google/llvm-premerge-checks/issues/91
+# git diff HEAD^ | clang-tidy-diff -p1 -quiet > "${TARGET_DIR}"/clang-tidy.txt
 
 echo "linters completed ======================================"
