@@ -58,7 +58,7 @@ pipeline {
                 dir("${LLVM_DIR}"){
                     powershell """
                         \$ErrorActionPreference = 'Stop'
-                        python3 ${SCRIPT_DIR}/phabtalk/apply_patch2.py --comment-file ${PHAB_LOG}  --token ${CONDUIT_TOKEN} --url ${PHABRICATOR_HOST} ${DIFF_ID}
+                        python ${SCRIPT_DIR}/phabtalk/apply_patch2.py --comment-file ${PHAB_LOG}  --token ${CONDUIT_TOKEN} --url ${PHABRICATOR_HOST} ${DIFF_ID}
                         """
                 }
             }
