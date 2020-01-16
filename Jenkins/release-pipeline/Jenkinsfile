@@ -14,22 +14,22 @@
 
 pipeline {
     agent none
-    
+
     triggers {
         pollSCM 'H/5 * * * *'
-    }
-    environment {
-        MY_BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
-        TARGET_DIR="/mnt/nfs/results/${MY_BUILD_ID}"
-        SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
-        RESULT_DIR = "${WORKSPACE}\\results"
-        LLVM_DIR = "${WORKSPACE}\\llvm-project"        
     }
     stages {
         stage("build and test on Windows and Linux"){
             parallel {
                 stage("Linux"){
                     agent { label "linux"}
+                    environment {
+                        MY_BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
+                        TARGET_DIR="/mnt/nfs/results/${MY_BUILD_ID}"
+                        SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
+                        RESULT_DIR = "${WORKSPACE}\\results"
+                        LLVM_DIR = "${WORKSPACE}\\llvm-project"        
+                    }
                     stages {
                         stage("git checkout"){
                             steps {
@@ -74,6 +74,13 @@ pipeline {
                 }
                 stage("Windows"){
                     agent { label "windows"}
+                    environment {
+                        MY_BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
+                        TARGET_DIR="/mnt/nfs/results/${MY_BUILD_ID}"
+                        SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
+                        RESULT_DIR = "${WORKSPACE}\\results"
+                        LLVM_DIR = "${WORKSPACE}\\llvm-project"        
+                    }
                     stages {
                         stage("git checkout"){
                             steps {
