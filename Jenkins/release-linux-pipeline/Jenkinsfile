@@ -15,7 +15,7 @@
 pipeline {
     agent { label 'linux' }
     triggers {
-        pollSCM 'H H/2 * * *'
+        pollSCM '*/5 * * * *'
     }
     environment {
         BUILD_ID="${JOB_BASE_NAME}-${BUILD_NUMBER}"
