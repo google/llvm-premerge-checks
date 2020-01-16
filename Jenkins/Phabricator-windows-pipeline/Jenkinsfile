@@ -25,9 +25,9 @@ pipeline {
             PHABRICATOR_HOST = 'https://reviews.llvm.org'
             PHAB_LOG = "${WORKSPACE}/build/.phabricator-comment"
             SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
-            BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
-            TARGET_DIR = "/mnt/nfs/results/${BUILD_ID}"
-            RESULT_URL = "http://results.llvm-merge-guard.org/${BUILD_ID}"
+            MY_BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
+            TARGET_DIR = "/mnt/nfs/results/${MY_BUILD_ID}"
+            RESULT_URL = "http://results.llvm-merge-guard.org/${MY_BUILD_ID}"
             DIFF_JSON = "${WORKSPACE}/build/diff.json"
     }
     stages {
