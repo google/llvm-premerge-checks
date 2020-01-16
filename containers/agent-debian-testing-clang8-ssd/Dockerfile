@@ -30,7 +30,7 @@ RUN cd /scripts ;\
 
 COPY start_agent.sh report_results.sh /scripts/
 
-# for the phabtalk script
+# install python dependencies for the scripts
 RUN pip3 install -r https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/phabtalk/requirements.txt
 
 RUN groupadd -g ${gid} ${group} ;\

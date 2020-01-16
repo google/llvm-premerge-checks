@@ -17,6 +17,9 @@ RUN powershell -NoProfile -InputFormat None -Command `
 RUN pip install gsutil
 VOLUME C:\credentials
 
+# install python dependencies for the scripts
+RUN pip install -r https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/phabtalk/requirements.txt
+
 # temporary directory, can be mounted on host if required 
 VOLUME C:\Temp
 
