@@ -56,8 +56,7 @@ pipeline {
         stage('arc patch'){
             steps {
                 dir("${LLVM_DIR}"){
-                    powershell """
-                        \$ErrorActionPreference = 'Stop'
+                    bat """
                         python ${SCRIPT_DIR}/phabtalk/apply_patch2.py --comment-file ${PHAB_LOG}  --token ${CONDUIT_TOKEN} --url ${PHABRICATOR_HOST} ${DIFF_ID}
                         """
                 }
