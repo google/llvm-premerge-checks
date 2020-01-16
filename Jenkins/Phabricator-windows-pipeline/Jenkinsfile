@@ -21,14 +21,16 @@ pipeline {
         string(name: 'PHID')
     }
     environment {
-            CONDUIT_TOKEN = credentials('phabricator-conduit-token')
-            PHABRICATOR_HOST = 'https://reviews.llvm.org'
-            PHAB_LOG = "${WORKSPACE}/build/.phabricator-comment"
-            SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
-            MY_BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
-            TARGET_DIR = "/mnt/nfs/results/${MY_BUILD_ID}"
-            RESULT_URL = "http://results.llvm-merge-guard.org/${MY_BUILD_ID}"
-            DIFF_JSON = "${WORKSPACE}/build/diff.json"
+        CONDUIT_TOKEN = credentials('phabricator-conduit-token')
+        PHABRICATOR_HOST = 'https://reviews.llvm.org'
+        PHAB_LOG = "${WORKSPACE}/build/.phabricator-comment"
+        MY_BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
+        TARGET_DIR = "/mnt/nfs/results/${MY_BUILD_ID}"
+        RESULT_URL = "http://results.llvm-merge-guard.org/${MY_BUILD_ID}"
+        DIFF_JSON = "${WORKSPACE}/build/diff.json"
+        SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
+        RESULT_DIR = "${WORKSPACE}\\results"
+        LLVM_DIR = "${WORKSPACE}\\llvm-project"
     }
     stages {
         stage("build info"){
