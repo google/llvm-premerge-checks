@@ -17,6 +17,7 @@ set -eux
 
 #folder where this script is stored.
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+export WORKSPACE=$BUILDKITE_BUILD_PATH
 
 echo "--- CMake"
 ${DIR}/run_cmake.sh
