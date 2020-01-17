@@ -31,4 +31,4 @@ sed -i -r s/token=\"[^\"]+\"/token=\"`cat /credentials/buildkite-token`\"/g /etc
 sed -i -r s/build-path=\"[^\"]+\"/build-path=\"\/mnt\/disks\/ssd0\/agent\"/g /etc/buildkite-agent/buildkite-agent.cfg
 
 # start the buildkite agent
-buildkite-agent start
+buildkite-agent start --tags "os=linux"
