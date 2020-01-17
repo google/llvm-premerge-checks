@@ -26,9 +26,6 @@ chown -R buildkite:buildkite "${CCACHE_PATH}"
 
 # TODO(kuhnel): wipe the disk(s) on startup
 
-# set the token in the config file
-sed -i -r s/token=\"[^\"]+\"/token=\"`cat /credentials/buildkite-token`\"/g /etc/buildkite-agent/buildkite-agent.cfg
-sed -i -r s/build-path=\"[^\"]+\"/build-path=\"\/mnt\/disks\/ssd0\/agent\"/g /etc/buildkite-agent/buildkite-agent.cfg
-
 # start the buildkite agent
-buildkite-agent start --tags "os=linux"
+buildkite-agent start --tags "os=linux" --build-path=/mnt/disks/ssd0/agent \
+    --token `cat /credentials/buildkite-token`
