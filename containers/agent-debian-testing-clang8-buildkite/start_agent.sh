@@ -13,14 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Starts a new instances of a docker image. Example:
-# sudo build_run.sh agent-debian-testing-clang8-ssd /bin/bash
+SSD_ROOT="/mnt/disks/ssd0"
+AGENT_ROOT="${SSD_ROOT}/agent"
 
-set -eux
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+# prepare root folder for Jenkins agent
+mkdir -p "${AGENT_ROOT}"
+chown -R buildkite:buildkite "${AGENT_ROOT}"
 
-IMAGE_NAME="${1%/}"
+# prepare folder for ccache
+mkdir -p "${CCACHE_PATH}"
+chown -R buildkite:buildkite "${CCACHE_PATH}"
 
-cd "${DIR}/${IMAGE_NAME}"
-docker build -t ${IMAGE_NAME} .
-docker run -i -t -v ~/.llvm-premerge-checks:/credentials ${IMAGE_NAME} ${2}
+# TODO(kuhnel): wipe the disk(s) on startup
+
+# set the token in the config file
+sed -i -r s/token=\"[^\"]+\"/token=\"`cat /credentials/buildkite-token`\"/g /etc/buildkite-agent/buildkite-agent.cfg
+
+# start the buildkite agent
+buildkite-agent start

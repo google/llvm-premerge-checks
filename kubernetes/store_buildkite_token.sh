@@ -12,15 +12,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#-------------------------------------------------------------------------------
 
-# Starts a new instances of a docker image. Example:
-# sudo build_run.sh agent-debian-testing-clang8-ssd /bin/bash
+# store the buildkite token as kubernetes secret
+# 
+# Get the token from the website [1] and store it in this file locally in
+# ~/.llvm-premerge-checks/buildkite-token  
+# Do not share this token with anyone!
+# [1] https://buildkite.com/organizations/llvm-project/agents
 
-set -eux
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-
-IMAGE_NAME="${1%/}"
-
-cd "${DIR}/${IMAGE_NAME}"
-docker build -t ${IMAGE_NAME} .
-docker run -i -t -v ~/.llvm-premerge-checks:/credentials ${IMAGE_NAME} ${2}
+kubectl create secret generic buildkite-token --from-file ~/.llvm-premerge-checks/buildkite-token 
