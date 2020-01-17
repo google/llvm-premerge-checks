@@ -1,0 +1,54 @@
+# Copyright 2019 Google LLC
+#
+# Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://llvm.org/LICENSE.txt
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: agent-debian-testing-clang8-buildkite
+  namespace: jenkins
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: agent-debian-testing-clang8-buildkite
+    spec:
+      containers:
+      - name: agent-debian-testing-clang8-buildkite
+        image: gcr.io/llvm-premerge-checks/agent-debian-testing-clang8-buildkite 
+        ports:
+        - containerPort: 22
+        resources:
+          limits:
+            cpu: 30
+            memory: 45Gi
+          requests:
+            cpu: 30
+            memory: 45Gi
+        volumeMounts:
+        - name: ssd 
+          mountPath: /mnt/disks/ssd0
+        - name: credentials
+          mountPath: /credentials
+      volumes:
+      - name: ssd
+        hostPath:
+          # directory location on host
+          path: /mnt/disks/ssd0
+          type: Directory          
+      - name: credentials
+        secret:
+          secretName: buildkite-token
+      nodeSelector:
+        cloud.google.com/gke-nodepool: jenkins-agents
