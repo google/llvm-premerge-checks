@@ -20,7 +20,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 export WORKSPACE=`pwd`
 
 # create a clean build folder
-BUILD_DIR=${BUILDKITE_BUILD_PATH}/build
+BUILD_DIR=${WORKSPACE}/build
 rm -rf ${BUILD_DIR} || true
 mkdir -p ${BUILD_DIR}
 
