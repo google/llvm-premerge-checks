@@ -17,7 +17,7 @@ set -eux
 
 #folder where this script is stored.
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-export WORKSPACE=${BUILDKITE_BUILD_PATH}
+export WORKSPACE=`pwd`
 
 # create a clean build folder
 BUILD_DIR=${BUILDKITE_BUILD_PATH}/build
