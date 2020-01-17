@@ -21,4 +21,4 @@
 # Do not share this token with anyone!
 # [1] https://buildkite.com/organizations/llvm-project/agents
 
-kubectl create secret generic buildkite-token --from-file ~/.llvm-premerge-checks/buildkite-token 
+kubectl create secret generic buildkite-token --namespace jenkins --from-file ~/.llvm-premerge-checks/buildkite-token 

@@ -16,7 +16,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: agent-debian-testing-clang8-buildkite
-  namespace: jenkins
+  namespace: buildkite
 spec:
   replicas: 1
   template:
