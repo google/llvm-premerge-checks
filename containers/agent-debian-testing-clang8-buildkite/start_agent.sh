@@ -15,17 +15,18 @@
 
 SSD_ROOT="/mnt/disks/ssd0"
 AGENT_ROOT="${SSD_ROOT}/agent"
+USER=buildkite-agent
 
 # prepare root folder for Jenkins agent
 mkdir -p "${AGENT_ROOT}"
-chown -R buildkite:buildkite "${AGENT_ROOT}"
+chown -R ${USER}:${USER} "${AGENT_ROOT}"
 
 # prepare folder for ccache
 mkdir -p "${CCACHE_PATH}"
-chown -R buildkite:buildkite "${CCACHE_PATH}"
+chown -R ${USER}:${USER} "${CCACHE_PATH}"
 
 # TODO(kuhnel): wipe the disk(s) on startup
 
 # start the buildkite agent
-buildkite-agent start --tags "os=linux" --build-path=/mnt/disks/ssd0/agent \
-    --token `cat /credentials/buildkite-token`
+su buildkite-agent -c "buildkite-agent start --tags \"os=linux\" --build-path=/mnt/disks/ssd0/agent \
+    --token `cat /credentials/buildkite-token`"
