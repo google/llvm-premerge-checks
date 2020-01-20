@@ -92,7 +92,7 @@ class ApplyPatch:
 
     def _create_phab(self):
         phab = Phabricator(token=self.conduit_token, host=self.host)
-        self._phab.update_interfaces()
+        phab.update_interfaces()
         return phab
 
     def _get_diff(self, diff_id: str):
