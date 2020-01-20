@@ -88,6 +88,7 @@ class ApplyPatch:
                 for revision in missing:
                     self._apply_revision(revision)
             self._apply_diff(self.diff_id, revision_id)
+            print('done.')
         finally:
             self._write_error_message()
 
