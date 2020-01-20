@@ -76,6 +76,8 @@ class ApplyPatch:
         try:
             print('Checking out master...')
             self.repo.git.checkout('master')
+            print('Cleanup...')
+            self.repo.git.clean('-fdx')
             revision_id, dependencies = self._get_dependencies()
             print('Analyzing {}'.format(diff_to_str(revision_id)))
             if len(dependencies) > 0:
