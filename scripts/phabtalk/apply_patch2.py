@@ -51,7 +51,7 @@ class ApplyPatch:
         self.diff_json_path = store_json_diff   # type: str
         if not self.host.endswith('/api/'):
             self.host += '/api/'
-        self.phab = Phabricator(token=self.conduit_token, host=self.host)
+        self.phab = self._create_phab()
         self.git_hash = None  # type: Optional[str]
         self.msg = []  # type: List[str]
         self.repo = Repo(os.getcwd())  # type: Repo
@@ -89,6 +89,11 @@ class ApplyPatch:
             self._apply_diff(self.diff_id, revision_id)
         finally:
             self._write_error_message()
+
+    def _create_phab():
+        phab = Phabricator(token=self.conduit_token, host=self.host)
+        self._phab.update_interfaces()
+        return phab
 
     def _get_diff(self, diff_id: str):
         """Get a diff from Phabricator based on it's diff id."""
