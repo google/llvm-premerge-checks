@@ -72,7 +72,6 @@ class ApplyPatch:
         
         Write to `self.comment_file` for showing error messages on Phabricator.
         """
-        self.phab.update_interfaces()
 
         try:
             print('Checking out master...')
