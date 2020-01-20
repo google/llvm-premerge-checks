@@ -90,7 +90,7 @@ class ApplyPatch:
         finally:
             self._write_error_message()
 
-    def _create_phab():
+    def _create_phab(self):
         phab = Phabricator(token=self.conduit_token, host=self.host)
         self._phab.update_interfaces()
         return phab
