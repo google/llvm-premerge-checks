@@ -105,9 +105,13 @@ class ApplyPatch:
 
     def _get_revisions(self, *, phids: str = None):
         """Get a list of revisions from Phabricator based on their PH-IDs."""
-        if phids is not None:
-            return self.phab.differential.query(phids=phids)
-        raise InputError('no arguments given')
+        if phids is None:
+            raise InputError('no arguments given')
+        if phids == []:
+            # Handle an empty query locally. Otherwise the connection
+            # will time out.
+            return []
+        return self.phab.differential.query(phids=phids)
 
 
     def _get_dependencies(self) -> List[int]:
