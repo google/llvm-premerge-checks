@@ -126,7 +126,7 @@ Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-c
 
 ## Testing scripts locally
 
-Build and run agent docker image `sudo build_run.sh agent-debian-testing-clang8-ssd /bin/bash`.
+Build and run agent docker image `sudo ./containers/build_run.sh agent-debian-testing-clang8-ssd /bin/bash`.
 
 Within a container set environment variables similar to [pipeline](https://github.com/google/llvm-premerge-checks/blob/master/Jenkins/Phabricator-pipeline/Jenkinsfile).
 
