@@ -120,7 +120,15 @@ To spawn a new windows agent:
 1. In the RDP session: run these commands in the CMD window to start the docker container:
 ```cmd
 powershell 
-Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/kubernetes/windows_agent_bootstrap.ps1' -OutFile windows_agent_bootstrap.ps1
+Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/windows_agent_bootstrap.ps1' -OutFile windows_agent_bootstrap.ps1
+.\windows_agent_bootstrap.ps1
+```
+1. Wait for the machine to reboot, then login again and store the `gsutil` credentials in `build-agent-results_key`.
+TODO: add documentation on how to create these.
+1. run this script to start containers:
+```cmd
+powershell 
+Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/windows_agent_start.ps1' -OutFile windows_agent_bootstrap.ps1
 .\windows_agent_bootstrap.ps1
 ```
 
