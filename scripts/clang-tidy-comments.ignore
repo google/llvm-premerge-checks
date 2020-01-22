@@ -1,0 +1,4 @@
+# Files that are allowed by clang-tidy.ignore but should not receive inline review comments.
+# Right now it works in whitelist mode and only some files / directories are whitelisted.
+*
+!clang-tools-extra/clangd/**

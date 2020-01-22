@@ -1,4 +1,4 @@
-#!/bin/env python3
+#!/usr/bin/env python3
 # Copyright 2019 Google LLC
 #
 # Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");

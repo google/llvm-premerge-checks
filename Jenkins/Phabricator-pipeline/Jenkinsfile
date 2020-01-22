@@ -149,6 +149,7 @@ pipeline {
                 --buildresult ${currentBuild.result} \
                 --clang-format-patch "clang-format.patch" \
                 --clang-tidy-result "clang-tidy.txt" \
+                --clang-tidy-ignore "${SCRIPT_DIR}/clang-tidy-comments.ignore" \
                 --results-dir "${TARGET_DIR}" \
                 --results-url "${RESULT_URL}"
                 """
