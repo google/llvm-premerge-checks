@@ -74,11 +74,12 @@ class ApplyPatch:
         """
 
         try:
-            print('Checking out master...')
-            self.repo.git.checkout('master')
+            revision_id, dependencies, base_revision = self._get_dependencies()
+            print('Checking out {}...'.format(base_revision))
+            self.repo.git.checkout(base_revision)
+            print('Revision is {}'.format(self.repo.head.commit.hexsha))
             print('Cleanup...')
             self.repo.git.clean('-fdx')
-            revision_id, dependencies = self._get_dependencies()
             print('Analyzing {}'.format(diff_to_str(revision_id)))
             if len(dependencies) > 0:
                 print('This diff depends on: {}'.format(diff_list_to_str(dependencies)))
@@ -115,10 +116,14 @@ class ApplyPatch:
         return self.phab.differential.query(phids=phids)
 
 
-    def _get_dependencies(self) -> List[int]:
+    def _get_dependencies(self) -> Tuple[int,List[int],str]:
         """Get all dependencies for the diff."""
-        revision_id = int(self._get_diff(self.diff_id).revisionID)
+        diff = self._get_diff(self.diff_id)
+        revision_id = int(diff.revisionID)
         revision = self._get_revision(revision_id)
+        base_revision = diff['sourceControlBaseRevision']
+        if base_revision is None or len(base_revision) == 0:
+            base_revision = 'master'
         dependency_ids = revision['auxiliary']['phabricator:depends-on']
         revisions = self._get_revisions(phids=dependency_ids)
         diff_ids = [int(rev['id']) for rev in revisions]
@@ -126,13 +131,13 @@ class ApplyPatch:
         # so we reverse the order before returning the list, so that they
         # can be applied in this order
         diff_ids.reverse()
-        return revision_id, diff_ids
+        return revision_id, diff_ids, base_revision
 
     def _apply_diff(self, diff_id: int, revision_id: int):
         """Download and apply a diff to the local working copy."""
         print('Applying diff {} for revision {}...'.format(diff_id, diff_to_str(revision_id)))
         diff = self.phab.differential.getrawdiff(diffID=diff_id).response
-        proc = subprocess.run('patch -p1', input=diff, shell=True, text=True,
+        proc = subprocess.run('git apply', input=diff, shell=True, text=True,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if proc.returncode != 0:
             raise Exception('Applying patch failed:\n{}'.format(proc.stdout + proc.stderr))
