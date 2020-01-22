@@ -24,6 +24,7 @@ import socket
 import time
 from typing import Optional
 
+import pathspec
 from lxml import etree
 from phabricator import Phabricator
 
@@ -47,6 +48,7 @@ class BuildReport:
         if key not in self.lint:
             self.lint[key] = []
         self.lint[key].append(m)
+
 
 class PhabTalk:
     """Talk to Phabricator to upload build results.
@@ -213,18 +215,25 @@ def _add_clang_format(report: BuildReport, results_dir: str,
     report.success = success and report.success
 
 
-def _add_clang_tidy(report: BuildReport, results_dir: str, results_url: str, workspace: str, clang_tidy_file: str):
+def _add_clang_tidy(report: BuildReport, results_dir: str, results_url: str, workspace: str, clang_tidy_file: str,
+                    clang_tidy_ignore: str):
     # Typical message looks like
     # [..]/clang/include/clang/AST/DeclCXX.h:3058:20: error: no member named 'LifetimeExtendedTemporary' in 'clang::Decl' [clang-diagnostic-error]
-
     pattern = '^{}/([^:]*):(\\d+):(\\d+): (.*): (.*)'.format(workspace)
-    success = True
+    errors_count = 0
+    warn_count = 0
     present = (clang_tidy_file is not None) and os.path.exists(os.path.join(results_dir, clang_tidy_file))
     if not present:
         print('clang-tidy result {} is not found'.format(clang_tidy_file))
         report.comments.append(section_title('clang-tidy', False, False))
         return
-
+    present = (clang_tidy_ignore is not None) and os.path.exists(clang_tidy_ignore)
+    if not present:
+        print('clang-tidy ignore file {} is not found'.format(clang_tidy_ignore))
+        report.comments.append(section_title('clang-tidy', False, False))
+        return
+    ignore = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern,
+                                          open(clang_tidy_ignore, 'r').readlines())
     p = os.path.join(results_dir, clang_tidy_file)
     for line in open(p, 'r'):
         match = re.search(pattern, line)
@@ -235,20 +244,27 @@ def _add_clang_tidy(report: BuildReport, results_dir: str, results_url: str, wor
             severity = match.group(4)
             text = match.group(5)
             if severity in ['warning', 'error']:
-                success = False
-                report.addLint({
-                    'name': 'clang-tidy',
-                    'severity': 'warning',
-                    'code': 'clang-tidy',
-                    'path': file_name,
-                    'line': int(line_pos),
-                    'char': int(char_pos),
-                    'description': '{}: {}'.format(severity, text),
-                })
-
+                if severity == 'warning':
+                    warn_count += 1
+                if severity == 'error':
+                    errors_count += 1
+                if ignore.match_file(file_name):
+                    print('{} is ignored by pattern and no comment will be added')
+                else:
+                    report.addLint({
+                        'name': 'clang-tidy',
+                        'severity': 'warning',
+                        'code': 'clang-tidy',
+                        'path': file_name,
+                        'line': int(line_pos),
+                        'char': int(char_pos),
+                        'description': '{}: {}'.format(severity, text),
+                    })
+    success = errors_count + warn_count == 0
     comment = section_title('clang-tidy', success, present)
     if not success:
-        comment += 'Please fix [[ {}/{} | clang-tidy findings ]].'.format(results_url, clang_tidy_file)
+        comment += 'clang-tidy found [[ {}/{} | {} errors and {} warnings]].'\
+            .format(results_url, clang_tidy_file, errors_count, warn_count)
     report.comments.append(comment)
     report.success = success and report.success
 
@@ -355,7 +371,8 @@ def main():
             report.success = False
 
     _add_test_results(report, args.results_dir, args.test_result_file)
-    _add_clang_tidy(report, args.results_dir, args.results_url, args.workspace, args.clang_tidy_result)
+    _add_clang_tidy(report, args.results_dir, args.results_url, args.workspace, args.clang_tidy_result,
+                    args.clang_tidy_ignore)
     _add_clang_format(report, args.results_dir, args.results_url, args.clang_format_patch)
     _add_links_to_artifacts(report, args.results_dir, args.results_url)
     p = PhabTalk(args.conduit_token, args.host, args.dryrun)
@@ -380,6 +397,9 @@ def _parse_args():
     parser.add_argument('--clang-tidy-result', type=str, default=None,
                         dest='clang_tidy_result',
                         help="path to diff produced by git-clang-tidy, relative to results-dir")
+    parser.add_argument('--clang-tidy-ignore', type=str, default=None,
+                        dest='clang_tidy_ignore',
+                        help="path to file with patters to exclude commenting on for clang-tidy findings")
     parser.add_argument('--results-dir', type=str, default=None, required=True,
                         dest='results_dir',
                         help="directory of all build artifacts")

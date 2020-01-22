@@ -21,16 +21,17 @@ set -eux
 echo "Running linters... ====================================="
 
 cd "${WORKSPACE}"
+
+# clang-format
 # Let clang format apply patches --diff doesn't produces results in the format we want.
 git-clang-format
 set +e
-git diff -U0 --exit-code > "${TARGET_DIR}"/clang-format.patch
-STATUS="${PIPESTATUS[0]}"
+git diff -U0 --exit-code | "${SCRIPT_DIR}/ignore_diff.py" "${SCRIPT_DIR}/clang-format.ignore" > "${TARGET_DIR}"/clang-format.patch
 set -e
 # Revert changes of git-clang-format.
 git checkout -- .
 
-# TODO: clang tidy is currently disabled, see https://github.com/google/llvm-premerge-checks/issues/91
-# git diff HEAD^ | clang-tidy-diff -p1 -quiet > "${TARGET_DIR}"/clang-tidy.txt
+# clang-tidy
+git diff -U0 HEAD^ | "${SCRIPT_DIR}/ignore_diff.py" "${SCRIPT_DIR}/clang-tidy.ignore" | clang-tidy-diff -p1 -quiet > "${TARGET_DIR}"/clang-tidy.txt
 
 echo "linters completed ======================================"
