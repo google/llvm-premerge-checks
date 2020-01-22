@@ -79,6 +79,7 @@ class ApplyPatch:
             self.repo.git.checkout(base_revision)
             print('Revision is {}'.format(self.repo.head.commit.hexsha))
             print('Cleanup...')
+            self.repo.git.reset('--hard')
             self.repo.git.clean('-fdx')
             print('Analyzing {}'.format(diff_to_str(revision_id)))
             if len(dependencies) > 0:
@@ -138,7 +139,7 @@ class ApplyPatch:
         """Download and apply a diff to the local working copy."""
         print('Applying diff {} for revision {}...'.format(diff_id, diff_to_str(revision_id)))
         diff = self.phab.differential.getrawdiff(diffID=diff_id).response
-        proc = subprocess.run('git apply', input=diff, shell=True, text=True,
+        proc = subprocess.run('git apply --whitespace=nowarn --binary -v', input=diff, shell=True, text=True,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if proc.returncode != 0:
             raise Exception('Applying patch failed:\n{}'.format(proc.stdout + proc.stderr))
@@ -149,7 +150,6 @@ class ApplyPatch:
         # take the diff_id with the highest number, this should be latest one
         diff_id = max(revision['diffs'])
         self._apply_diff(diff_id, revision_id)
-        
 
     def _write_error_message(self):
         """Write the log message to a file."""
