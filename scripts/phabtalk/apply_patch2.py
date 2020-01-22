@@ -78,7 +78,7 @@ class ApplyPatch:
             print('Checking out {}...'.format(base_revision))
             self.repo.git.checkout(base_revision)
             print('Revision is {}'.format(self.repo.head.commit.hexsha))
-            print('Cleanup...')
+            print('git reset, git cleanup...')
             self.repo.git.reset('--hard')
             self.repo.git.clean('-fdx')
             print('Analyzing {}'.format(diff_to_str(revision_id)))
@@ -139,7 +139,7 @@ class ApplyPatch:
         """Download and apply a diff to the local working copy."""
         print('Applying diff {} for revision {}...'.format(diff_id, diff_to_str(revision_id)))
         diff = self.phab.differential.getrawdiff(diffID=diff_id).response
-        proc = subprocess.run('git apply --whitespace=nowarn --binary -v', input=diff, shell=True, text=True,
+        proc = subprocess.run('patch -p1', input=diff, shell=True, text=True,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if proc.returncode != 0:
             raise Exception('Applying patch failed:\n{}'.format(proc.stdout + proc.stderr))
