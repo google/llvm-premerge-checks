@@ -6,11 +6,14 @@
 General remarks:
 * GCP does not route any traffic to your services unless the service is "healthy". It might take a few minutes after startup before the services is classified as healthy. Until then you will only see some generic error message.
 
-These are the steps to set up the build server on a clean infrastructure:
+These are the steps to set up the build server on a clean infrastructure:  
 1. Configure the tools on your local machine:
     ```bash
     ./local_setup.sh
     ```
+   If you not running docker under your user, you might need to
+   `sudo gcloud auth login --no-launch-browser && gcloud auth configure-docker`
+   before running other commands under sudo.
 1. Delete the old cluster, if it still exists:
     ```bash
     cd kubernetes/cluster

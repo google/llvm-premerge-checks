@@ -31,7 +31,9 @@ RUN cd /scripts ;\
 COPY start_agent.sh report_results.sh /scripts/
 
 # install python dependencies for the scripts
-RUN pip3 install -r https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/phabtalk/requirements.txt
+# ADD will checks that contentent of a file has changed.
+ADD "https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/phabtalk/requirements.txt" requirements.txt
+RUN pip3 install -r requirements.txt
 
 RUN groupadd -g ${gid} ${group} ;\
     useradd -c "Jenkins user" -d /home/${user} -u ${uid} -g ${gid} -m ${user} ;\
