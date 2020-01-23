@@ -253,7 +253,7 @@ def _add_clang_tidy(report: BuildReport, results_dir: str, results_url: str, wor
                 if severity == 'error':
                     errors_count += 1
                 if ignore.match_file(file_name):
-                    print('{} is ignored by pattern and no comment will be added')
+                    print('{} is ignored by pattern and no comment will be added'.format(file_name))
                 else:
                     inline_comments += 1
                     report.addLint({
