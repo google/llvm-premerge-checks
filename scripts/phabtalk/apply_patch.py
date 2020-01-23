@@ -87,6 +87,8 @@ class ApplyPatch:
                 'master branch instead...'.format(self.git_hash)]
             subprocess.check_call('git checkout master', stdout=sys.stdout, 
                 stderr=sys.stderr, shell=True)
+        subprocess.check_call('git show -s', stdout=sys.stdout,
+                              stderr=sys.stderr, shell=True)
         print('git checkout completed.')
 
     def _apply_patch(self):

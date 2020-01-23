@@ -46,16 +46,14 @@ pipeline {
                     currentBuild.displayName += " D${drev_id}"
                     currentBuild.description = "<a href='https://reviews.llvm.org/D${drev_id}'>D${drev_id}</a>"
                 }
-                // Report versions of the installed packages.
-                sh 'dpkg -l'
-                sh 'clang --version'
-                sh 'python --version'
+                sh 'dpkg -l' // Report versions of the installed packages.
             }
         }
         stage("git checkout"){
             steps {
                 git url: 'https://github.com/llvm/llvm-project.git'
                 sh 'git clean -fdx'
+                sh 'git show -s'
                 sh 'mkdir -p llvm-premerge-checks'
                 dir("llvm-premerge-checks")
                 {
