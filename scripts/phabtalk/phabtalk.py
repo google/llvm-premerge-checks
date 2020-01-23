@@ -22,6 +22,7 @@ import os
 import re
 import socket
 import time
+import urllib
 from typing import Optional
 
 import pathspec
@@ -65,7 +66,7 @@ class PhabTalk:
     def dryrun(self):
         return self._phab is None
 
-    def _get_revision_id(self, diff: str):
+    def get_revision_id(self, diff: str):
         """Get the revision ID for a diff from Phabricator."""
         if self.dryrun:
             return None
@@ -77,7 +78,7 @@ class PhabTalk:
         """Add a comment to a differential based on the diff_id"""
         print('Sending comment to diff {}:'.format(diff_id))
         print(text)
-        self._comment_on_revision(self._get_revision_id(diff_id), text)
+        self._comment_on_revision(self.get_revision_id(diff_id), text)
 
     def _comment_on_revision(self, revision: str, text: str):
         """Add comment on a differential based on the revision id."""
@@ -222,6 +223,7 @@ def _add_clang_tidy(report: BuildReport, results_dir: str, results_url: str, wor
     pattern = '^{}/([^:]*):(\\d+):(\\d+): (.*): (.*)'.format(workspace)
     errors_count = 0
     warn_count = 0
+    inline_comments = 0
     present = (clang_tidy_file is not None) and os.path.exists(os.path.join(results_dir, clang_tidy_file))
     if not present:
         print('clang-tidy result {} is not found'.format(clang_tidy_file))
@@ -243,6 +245,8 @@ def _add_clang_tidy(report: BuildReport, results_dir: str, results_url: str, wor
             char_pos = match.group(3)
             severity = match.group(4)
             text = match.group(5)
+            text += '\n[[https://github.com/google/llvm-premerge-checks/blob/master/docs/clang_tidy.md#warning-is-not' \
+                    '-useful || not useful]] '
             if severity in ['warning', 'error']:
                 if severity == 'warning':
                     warn_count += 1
@@ -251,6 +255,7 @@ def _add_clang_tidy(report: BuildReport, results_dir: str, results_url: str, wor
                 if ignore.match_file(file_name):
                     print('{} is ignored by pattern and no comment will be added')
                 else:
+                    inline_comments += 1
                     report.addLint({
                         'name': 'clang-tidy',
                         'severity': 'warning',
@@ -263,8 +268,11 @@ def _add_clang_tidy(report: BuildReport, results_dir: str, results_url: str, wor
     success = errors_count + warn_count == 0
     comment = section_title('clang-tidy', success, present)
     if not success:
-        comment += 'clang-tidy found [[ {}/{} | {} errors and {} warnings]].'\
-            .format(results_url, clang_tidy_file, errors_count, warn_count)
+        comment += "clang-tidy found [[ {}/{} | {} errors and {} warnings]]. {} of them are added as review comments " \
+                   "below ([[https://github.com/google/llvm-premerge-checks/blob/master/docs/clang_tidy.md#review" \
+                   "-comments || why?]])." \
+            .format(results_url, clang_tidy_file, errors_count, warn_count, inline_comments)
+
     report.comments.append(comment)
     report.success = success and report.success
 
@@ -375,7 +383,16 @@ def main():
                     args.clang_tidy_ignore)
     _add_clang_format(report, args.results_dir, args.results_url, args.clang_format_patch)
     _add_links_to_artifacts(report, args.results_dir, args.results_url)
+
     p = PhabTalk(args.conduit_token, args.host, args.dryrun)
+    title = 'Issue with build for {} ({})'.format(p.get_revision_id(args.diff_id), args.diff_id)
+    report.comments.append(
+        '//Pre-merge checks is in beta. [[ https://github.com/google/llvm-premerge-checks/issues/new?assignees'
+        '=&labels=bug&template=bug_report.md&title={} | Report issue]]. '
+        'Please [[ https://reviews.llvm.org/project/update/78/join/ || join beta ]] or '
+        '[[ https://github.com/google/llvm-premerge-checks/issues/new?assignees=&labels=enhancement&template'
+        '=&title=enable%20checks%20for%20{{PATH}} || enable it for your project ]].//'.format(
+            urllib.parse.quote(title)))
     p.submit_report(args.diff_id, args.ph_id, report, args.buildresult)
 
 
