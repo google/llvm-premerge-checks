@@ -1,6 +1,6 @@
 FROM debian:testing
 
-RUN echo "deb [trusted=yes] http://apt.llvm.org/buster/ llvm-toolchain-buster main\n$(cat /etc/apt/sources.list)" > /etc/apt/sources.list;\ # add LLVM 10 deb pkg to sources
+RUN echo "deb [trusted=yes] http://apt.llvm.org/buster/ llvm-toolchain-buster main\n$(cat /etc/apt/sources.list)" > /etc/apt/sources.list;\
     apt-get update ;\
     apt-get install -y --no-install-recommends locales \
         cmake ninja-build git ca-certificates clang lld ccache python3 build-essential \

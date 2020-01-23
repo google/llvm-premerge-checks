@@ -25,6 +25,6 @@ IMAGE_NAME="${1%/}"
 QUALIFIED_NAME="${GCR_HOSTNAME}/${GCP_PROJECT}/${IMAGE_NAME}"
 
 cd "${DIR}/${IMAGE_NAME}"
-docker build -t --no-cache ${IMAGE_NAME} .
+docker build --no-cache -t ${IMAGE_NAME} .
 docker tag ${IMAGE_NAME} ${QUALIFIED_NAME}
 docker push ${QUALIFIED_NAME}
