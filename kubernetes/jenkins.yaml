@@ -151,18 +151,18 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: agent-debian-testing-clang8-ssd
+  name: agent-debian-testing-ssd
   namespace: jenkins
 spec:
   replicas: 2
   template:
     metadata:
       labels:
-        app: agent-debian-testing-clang8-ssd
+        app: agent-debian-testing-ssd
     spec:
       containers:
       - name: agent-debian-testing-clang8
-        image: gcr.io/llvm-premerge-checks/agent-debian-testing-clang8-ssd    
+        image: gcr.io/llvm-premerge-checks/agent-debian-testing-ssd
         ports:
         - containerPort: 22
         resources:
