@@ -246,7 +246,7 @@ def _add_clang_tidy(report: BuildReport, results_dir: str, results_url: str, wor
             severity = match.group(4)
             text = match.group(5)
             text += '\n[[https://github.com/google/llvm-premerge-checks/blob/master/docs/clang_tidy.md#warning-is-not' \
-                    '-useful || not useful]] '
+                    '-useful | not useful]] '
             if severity in ['warning', 'error']:
                 if severity == 'warning':
                     warn_count += 1
@@ -270,7 +270,7 @@ def _add_clang_tidy(report: BuildReport, results_dir: str, results_url: str, wor
     if not success:
         comment += "clang-tidy found [[ {}/{} | {} errors and {} warnings]]. {} of them are added as review comments " \
                    "below ([[https://github.com/google/llvm-premerge-checks/blob/master/docs/clang_tidy.md#review" \
-                   "-comments || why?]])." \
+                   "-comments | why?]])." \
             .format(results_url, clang_tidy_file, errors_count, warn_count, inline_comments)
 
     report.comments.append(comment)
@@ -389,9 +389,9 @@ def main():
     report.comments.append(
         '//Pre-merge checks is in beta. [[ https://github.com/google/llvm-premerge-checks/issues/new?assignees'
         '=&labels=bug&template=bug_report.md&title={} | Report issue]]. '
-        'Please [[ https://reviews.llvm.org/project/update/78/join/ || join beta ]] or '
+        'Please [[ https://reviews.llvm.org/project/update/78/join/ | join beta ]] or '
         '[[ https://github.com/google/llvm-premerge-checks/issues/new?assignees=&labels=enhancement&template'
-        '=&title=enable%20checks%20for%20{{PATH}} || enable it for your project ]].//'.format(
+        '=&title=enable%20checks%20for%20{{PATH}} | enable it for your project ]].//'.format(
             urllib.parse.quote(title)))
     p.submit_report(args.diff_id, args.ph_id, report, args.buildresult)
 
