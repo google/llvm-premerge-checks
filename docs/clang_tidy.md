@@ -22,7 +22,7 @@ specifically whitelisted for comments.
 That is done to avoid potential noise when a file already contains a number of warnings.
 
 If your are confident that some files are in good shape already, please
-[whitelist them](..scripts/clang-tidy-comments.ignore).
+[whitelist them](../scripts/clang-tidy-comments.ignore).
 
 ----
 
