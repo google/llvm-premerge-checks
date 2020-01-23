@@ -48,6 +48,7 @@ pipeline {
                 echo "getting llvm-project... "
                 dir("llvm-project")
                 {
+                    bat "rd /s/q build"
                     git url: 'https://github.com/llvm/llvm-project.git'
                 }
                 powershell "New-Item -ItemType Directory -Force -Path ${RESULT_DIR}"
