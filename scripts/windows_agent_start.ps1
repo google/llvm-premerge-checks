@@ -12,9 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-$IMAGE="gcr.io/llvm-premerge-checks/agent-windows-jenkins"
+# Pull and start the Docker container for a Windows agent.
+# To setup a Windows agent see docs/playbooks.md
 
-# check for new images on every start
-docker pull $IMAGE:latest
-docker run $IMAGE
-docker run -v D:\:C:\ws -v C:\credentials:C:\credentials -e PARENT_HOSTNAME=$env:computername $IMAGE
+$NAME="agent-windows-jenkins"
+$IMAGE="gcr.io/llvm-premerge-checks/${NAME}"
+
+docker pull ${IMAGE}:latest
+docker stop ${NAME}
+docker run `
+    -v D:\:C:\ws `
+    -v C:\credentials:C:\credentials `
+    -e PARENT_HOSTNAME=$env:computername `
+    --restart unless-stopped `
+    --name ${NAME} `
+    ${IMAGE}
