@@ -18,8 +18,9 @@
 $NAME="agent-windows-jenkins"
 $IMAGE="gcr.io/llvm-premerge-checks/${NAME}"
 
-docker pull ${IMAGE}:latest
+docker pull ${IMAGE}
 docker stop ${NAME}
+docker rm ${NAME}
 docker run `
     -v D:\:C:\ws `
     -v C:\credentials:C:\credentials `
