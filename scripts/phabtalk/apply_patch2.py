@@ -21,7 +21,7 @@ import sys
 from typing import List, Optional, Tuple
 
 from phabricator import Phabricator
-from git import Repo
+from git import Repo, GitCommandError
 
 class ApplyPatch:
     """Apply a diff from Phabricator on local working copy.
@@ -76,7 +76,12 @@ class ApplyPatch:
         try:
             revision_id, dependencies, base_revision = self._get_dependencies()
             print('Checking out {}...'.format(base_revision))
-            self.repo.git.checkout(base_revision)
+            try:
+                self.repo.git.checkout(base_revision)
+            except GitCommandError:
+                print('ERROR checking out revision {}. It`s not in the '
+                      'repository. Using master instead.'.format(base_revision))
+                self.repo.git.checkout('master')                
             print('Revision is {}'.format(self.repo.head.commit.hexsha))
             print('git reset, git cleanup...')
             self.repo.git.reset('--hard')
