@@ -46,7 +46,18 @@ pipeline {
                     currentBuild.displayName += " D${drev_id}"
                     currentBuild.description = "<a href='https://reviews.llvm.org/D${drev_id}'>D${drev_id}</a>"
                 }
-                sh 'dpkg -l' // Report versions of the installed packages.
+                 // Report versions of the installed packages.
+                 sh '''
+                    echo Versions of various tools:
+                    echo clang --version
+                    clang --version
+                    echo clang-tidy --version
+                    clang-tidy --version
+                    echo ld.lld --version
+                    ld.lld --version
+                    dpkg -l
+                    '''
+                
             }
         }
         stage("git checkout"){
