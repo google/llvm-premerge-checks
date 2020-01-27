@@ -33,6 +33,7 @@ cmake -GNinja ../llvm -DCMAKE_BUILD_TYPE=Release -D LLVM_ENABLE_LLD=ON \
 RETURN_CODE="${PIPESTATUS[0]}"
 set -e
 
+rm -f "$WORKSPACE/compile_commands.json"
 ln -s "$WORKSPACE"/build/compile_commands.json "$WORKSPACE"
 cp CMakeCache.txt ${TARGET_DIR}
 

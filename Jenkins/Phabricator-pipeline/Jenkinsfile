@@ -46,16 +46,25 @@ pipeline {
                     currentBuild.displayName += " D${drev_id}"
                     currentBuild.description = "<a href='https://reviews.llvm.org/D${drev_id}'>D${drev_id}</a>"
                 }
-                // Report versions of the installed packages.
-                sh 'dpkg -l'
-                sh 'clang --version'
-                sh 'python --version'
+                 // Report versions of the installed packages.
+                 sh '''
+                    echo Versions of various tools:
+                    echo clang --version
+                    clang --version
+                    echo clang-tidy --version
+                    clang-tidy --version
+                    echo ld.lld --version
+                    ld.lld --version
+                    dpkg -l
+                    '''
+                
             }
         }
         stage("git checkout"){
             steps {
                 git url: 'https://github.com/llvm/llvm-project.git'
                 sh 'git clean -fdx'
+                sh 'git show -s'
                 sh 'mkdir -p llvm-premerge-checks'
                 dir("llvm-premerge-checks")
                 {
@@ -149,6 +158,7 @@ pipeline {
                 --buildresult ${currentBuild.result} \
                 --clang-format-patch "clang-format.patch" \
                 --clang-tidy-result "clang-tidy.txt" \
+                --clang-tidy-ignore "${SCRIPT_DIR}/clang-tidy-comments.ignore" \
                 --results-dir "${TARGET_DIR}" \
                 --results-url "${RESULT_URL}"
                 """

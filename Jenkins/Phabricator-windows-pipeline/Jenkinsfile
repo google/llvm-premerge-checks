@@ -48,6 +48,8 @@ pipeline {
                 echo "getting llvm-project... "
                 dir("llvm-project")
                 {
+                    bat ""
+                    bat 'if exist "build" rd /s/q "build"'
                     git url: 'https://github.com/llvm/llvm-project.git'
                 }
                 powershell "New-Item -ItemType Directory -Force -Path ${RESULT_DIR}"
@@ -91,15 +93,17 @@ pipeline {
                 // gather all result files in a folder, then upload everything to
                 // Google Cloud Storage
                 powershell """
-                    # get the console log
+                    Write-Host "Getting the console log..."
                     Invoke-WebRequest -OutFile console-log.txt -uri "http://jenkins.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText" -ErrorAction "Continue"
-
-                    Copy-Item "${LLVM_DIR}\\build\\CMakeCache.txt"
-                    Copy-Item "${LLVM_DIR}\\build\\test-results.xml"
                     
-                    # upload files
+                    Write-Host "Copying build artefacts..."
+                    Copy-Item "${LLVM_DIR}\\build\\CMakeCache.txt" -ErrorAction SilentlyContinue
+                    Copy-Item "${LLVM_DIR}\\build\\test-results.xml" -ErrorAction SilentlyContinue
+                    
+                    Write-Host "Uploading results to GCS..."
                     \$ErrorActionPreference = 'SilentlyContinue'
                     gsutil cp -Z *.* gs://llvm-premerge-checks/results/${MY_BUILD_ID}/
+                    Write-Host "Done."
                 """
             }
             // doesn't find junit results, not sure why...

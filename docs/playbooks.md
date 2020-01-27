@@ -6,11 +6,14 @@
 General remarks:
 * GCP does not route any traffic to your services unless the service is "healthy". It might take a few minutes after startup before the services is classified as healthy. Until then you will only see some generic error message.
 
-These are the steps to set up the build server on a clean infrastructure:
+These are the steps to set up the build server on a clean infrastructure:  
 1. Configure the tools on your local machine:
     ```bash
     ./local_setup.sh
     ```
+   If you not running docker under your user, you might need to
+   `sudo gcloud auth login --no-launch-browser && gcloud auth configure-docker`
+   before running other commands under sudo.
 1. Delete the old cluster, if it still exists:
     ```bash
     cd kubernetes/cluster
@@ -120,13 +123,21 @@ To spawn a new windows agent:
 1. In the RDP session: run these commands in the CMD window to start the docker container:
 ```cmd
 powershell 
-Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/kubernetes/windows_agent_bootstrap.ps1' -OutFile windows_agent_bootstrap.ps1
+Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/windows_agent_bootstrap.ps1' -OutFile windows_agent_bootstrap.ps1
+.\windows_agent_bootstrap.ps1
+```
+1. Wait for the machine to reboot, then login again and store the `gsutil` credentials in `build-agent-results_key`.
+TODO: add documentation on how to create these.
+1. run this script to start containers:
+```cmd
+powershell 
+Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/windows_agent_start.ps1' -OutFile windows_agent_bootstrap.ps1
 .\windows_agent_bootstrap.ps1
 ```
 
 ## Testing scripts locally
 
-Build and run agent docker image `sudo ./containers/build_run.sh agent-debian-testing-clang8-ssd /bin/bash`.
+Build and run agent docker image `sudo ./containers/build_run.sh agent-debian-testing-ssd /bin/bash`.
 
 Within a container set environment variables similar to [pipeline](https://github.com/google/llvm-premerge-checks/blob/master/Jenkins/Phabricator-pipeline/Jenkinsfile).
 

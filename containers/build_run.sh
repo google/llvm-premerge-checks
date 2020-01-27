@@ -14,7 +14,7 @@
 # limitations under the License.
 
 # Starts a new instances of a docker image. Example:
-# sudo build_run.sh agent-debian-testing-clang8-ssd /bin/bash
+# sudo build_run.sh agent-debian-testing-ssd /bin/bash
 
 set -eux
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"

@@ -22,8 +22,10 @@ import os
 import re
 import socket
 import time
+import urllib
 from typing import Optional
 
+import pathspec
 from lxml import etree
 from phabricator import Phabricator
 
@@ -48,6 +50,7 @@ class BuildReport:
             self.lint[key] = []
         self.lint[key].append(m)
 
+
 class PhabTalk:
     """Talk to Phabricator to upload build results.
        See https://secure.phabricator.com/conduit/method/harbormaster.sendmessage/
@@ -63,7 +66,7 @@ class PhabTalk:
     def dryrun(self):
         return self._phab is None
 
-    def _get_revision_id(self, diff: str):
+    def get_revision_id(self, diff: str):
         """Get the revision ID for a diff from Phabricator."""
         if self.dryrun:
             return None
@@ -75,7 +78,7 @@ class PhabTalk:
         """Add a comment to a differential based on the diff_id"""
         print('Sending comment to diff {}:'.format(diff_id))
         print(text)
-        self._comment_on_revision(self._get_revision_id(diff_id), text)
+        self._comment_on_revision(self.get_revision_id(diff_id), text)
 
     def _comment_on_revision(self, revision: str, text: str):
         """Add comment on a differential based on the revision id."""
@@ -213,18 +216,26 @@ def _add_clang_format(report: BuildReport, results_dir: str,
     report.success = success and report.success
 
 
-def _add_clang_tidy(report: BuildReport, results_dir: str, results_url: str, workspace: str, clang_tidy_file: str):
+def _add_clang_tidy(report: BuildReport, results_dir: str, results_url: str, workspace: str, clang_tidy_file: str,
+                    clang_tidy_ignore: str):
     # Typical message looks like
     # [..]/clang/include/clang/AST/DeclCXX.h:3058:20: error: no member named 'LifetimeExtendedTemporary' in 'clang::Decl' [clang-diagnostic-error]
-
     pattern = '^{}/([^:]*):(\\d+):(\\d+): (.*): (.*)'.format(workspace)
-    success = True
+    errors_count = 0
+    warn_count = 0
+    inline_comments = 0
     present = (clang_tidy_file is not None) and os.path.exists(os.path.join(results_dir, clang_tidy_file))
     if not present:
         print('clang-tidy result {} is not found'.format(clang_tidy_file))
         report.comments.append(section_title('clang-tidy', False, False))
         return
-
+    present = (clang_tidy_ignore is not None) and os.path.exists(clang_tidy_ignore)
+    if not present:
+        print('clang-tidy ignore file {} is not found'.format(clang_tidy_ignore))
+        report.comments.append(section_title('clang-tidy', False, False))
+        return
+    ignore = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern,
+                                          open(clang_tidy_ignore, 'r').readlines())
     p = os.path.join(results_dir, clang_tidy_file)
     for line in open(p, 'r'):
         match = re.search(pattern, line)
@@ -234,21 +245,34 @@ def _add_clang_tidy(report: BuildReport, results_dir: str, results_url: str, wor
             char_pos = match.group(3)
             severity = match.group(4)
             text = match.group(5)
+            text += '\n[[https://github.com/google/llvm-premerge-checks/blob/master/docs/clang_tidy.md#warning-is-not' \
+                    '-useful | not useful]] '
             if severity in ['warning', 'error']:
-                success = False
-                report.addLint({
-                    'name': 'clang-tidy',
-                    'severity': 'warning',
-                    'code': 'clang-tidy',
-                    'path': file_name,
-                    'line': int(line_pos),
-                    'char': int(char_pos),
-                    'description': '{}: {}'.format(severity, text),
-                })
-
+                if severity == 'warning':
+                    warn_count += 1
+                if severity == 'error':
+                    errors_count += 1
+                if ignore.match_file(file_name):
+                    print('{} is ignored by pattern and no comment will be added'.format(file_name))
+                else:
+                    inline_comments += 1
+                    report.addLint({
+                        'name': 'clang-tidy',
+                        'severity': 'warning',
+                        'code': 'clang-tidy',
+                        'path': file_name,
+                        'line': int(line_pos),
+                        'char': int(char_pos),
+                        'description': '{}: {}'.format(severity, text),
+                    })
+    success = errors_count + warn_count == 0
     comment = section_title('clang-tidy', success, present)
     if not success:
-        comment += 'Please fix [[ {}/{} | clang-tidy findings ]].'.format(results_url, clang_tidy_file)
+        comment += "clang-tidy found [[ {}/{} | {} errors and {} warnings]]. {} of them are added as review comments " \
+                   "below ([[https://github.com/google/llvm-premerge-checks/blob/master/docs/clang_tidy.md#review" \
+                   "-comments | why?]])." \
+            .format(results_url, clang_tidy_file, errors_count, warn_count, inline_comments)
+
     report.comments.append(comment)
     report.success = success and report.success
 
@@ -355,10 +379,20 @@ def main():
             report.success = False
 
     _add_test_results(report, args.results_dir, args.test_result_file)
-    _add_clang_tidy(report, args.results_dir, args.results_url, args.workspace, args.clang_tidy_result)
+    _add_clang_tidy(report, args.results_dir, args.results_url, args.workspace, args.clang_tidy_result,
+                    args.clang_tidy_ignore)
     _add_clang_format(report, args.results_dir, args.results_url, args.clang_format_patch)
     _add_links_to_artifacts(report, args.results_dir, args.results_url)
+
     p = PhabTalk(args.conduit_token, args.host, args.dryrun)
+    title = 'Issue with build for {} ({})'.format(p.get_revision_id(args.diff_id), args.diff_id)
+    report.comments.append(
+        '//Pre-merge checks is in beta. [[ https://github.com/google/llvm-premerge-checks/issues/new?assignees'
+        '=&labels=bug&template=bug_report.md&title={} | Report issue]]. '
+        'Please [[ https://reviews.llvm.org/project/update/78/join/ | join beta ]] or '
+        '[[ https://github.com/google/llvm-premerge-checks/issues/new?assignees=&labels=enhancement&template'
+        '=&title=enable%20checks%20for%20{{PATH}} | enable it for your project ]].//'.format(
+            urllib.parse.quote(title)))
     p.submit_report(args.diff_id, args.ph_id, report, args.buildresult)
 
 
@@ -380,6 +414,9 @@ def _parse_args():
     parser.add_argument('--clang-tidy-result', type=str, default=None,
                         dest='clang_tidy_result',
                         help="path to diff produced by git-clang-tidy, relative to results-dir")
+    parser.add_argument('--clang-tidy-ignore', type=str, default=None,
+                        dest='clang_tidy_ignore',
+                        help="path to file with patters to exclude commenting on for clang-tidy findings")
     parser.add_argument('--results-dir', type=str, default=None, required=True,
                         dest='results_dir',
                         help="directory of all build artifacts")

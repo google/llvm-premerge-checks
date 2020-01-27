@@ -1,4 +1,4 @@
-#!/bin/env python3
+#!/usr/bin/env python3
 # Copyright 2019 Google LLC
 #
 # Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
@@ -87,6 +87,8 @@ class ApplyPatch:
                 'master branch instead...'.format(self.git_hash)]
             subprocess.check_call('git checkout master', stdout=sys.stdout, 
                 stderr=sys.stderr, shell=True)
+        subprocess.check_call('git show -s', stdout=sys.stdout,
+                              stderr=sys.stderr, shell=True)
         print('git checkout completed.')
 
     def _apply_patch(self):
