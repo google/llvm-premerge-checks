@@ -1,6 +1,7 @@
 # This mapping is only used to determine which projects need to be rebuild.
 # E.g. all builds are still in-tree, so 'llvm' will always be included in the
 # built projects.
+
 dependencies:
   llvm: []
   clang:
@@ -36,6 +37,7 @@ dependencies:
 
 # List of all projects in the LLVM monorepository. This list is taken from
 # llvm/CMakeLists.txt in "set(LLVM_ALL_PROJECTS ..."
+
 allprojects:
   - clang
   - clang-tools-extra

@@ -29,6 +29,9 @@ from typing import Dict, List, Set, Tuple
 from unidiff import PatchSet
 import yaml
 
+# TODO: We could also try to avoid running tests for llvm for projects that 
+# only need various cmake scripts and don't actually depend on llvm (e.g. 
+# libcxx does not need to run llvm tests, but may still need to include llvm).
 
 class ChooseProjects:
     
@@ -67,7 +70,7 @@ class ChooseProjects:
             return 0
 
         affected_projects = self.get_affected_projects(changed_projects)
-        print(';'.join(affected_projects))
+        print(';'.join(sorted(affected_projects)))
         return 0
 
 
