@@ -1,6 +1,0 @@
-{
-    "clang-extra-tools": ["clang"],
-    "clang" : ["llvm"],
-    "mlir" : ["llvm"],
-    "llvm" : ["libc", "libcxx"]
-}

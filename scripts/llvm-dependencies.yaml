@@ -1,0 +1,57 @@
+# This mapping is only used to determine which projects need to be rebuild.
+# E.g. all builds are still in-tree, so 'llvm' will always be included in the
+# built projects.
+dependencies:
+  llvm: []
+  clang:
+    - llvm
+  clang-tools-extra:
+    - clang
+    - llvm
+  # FIXME: "compiler-rt" depends on "llvm" only for configuration, right?
+  #        it means we can miss breakages in configuration changes.
+  #        Same for libcxx, libc and other projects that don't have 'llvm'
+  #        as a dependency.
+  compiler-rt: []
+  libc: []
+  # FIXME: not sure about 'libcxx' and 'libcxxabi'
+  libcxx: []
+  libcxxabi: []
+  libclc: []
+  libunwind: []
+  lld:  
+    - llvm
+  lldb: 
+    - clang
+    - llvm
+  llgo: 
+    - llvm
+  mlir: 
+    - llvm
+  openmp: []
+  parallel-libs: []
+  polly: 
+    - llvm
+  pstl: []
+
+# List of all projects in the LLVM monorepository. This list is taken from
+# llvm/CMakeLists.txt in "set(LLVM_ALL_PROJECTS ..."
+allprojects:
+  - clang
+  - clang-tools-extra
+  - compiler-rt
+  - debuginfo-tests
+  - libc
+  - libclc
+  - libcxx
+  - libcxxabi
+  - libunwind
+  - lld
+  - lldb
+  - llgo
+  - mlir
+  - openmp
+  - parallel-libs
+  - polly
+  - pstl
+  - llvm
