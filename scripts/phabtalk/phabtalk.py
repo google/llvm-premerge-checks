@@ -23,7 +23,7 @@ import re
 import socket
 import time
 import urllib
-from typing import Optional
+from typing import Optional, List, Dict
 
 import pathspec
 from lxml import etree
@@ -66,7 +66,7 @@ class PhabTalk:
     def dryrun(self):
         return self._phab is None
 
-    def get_revision_id(self, diff: str):
+    def get_revision_id(self, diff: str) -> Optional[str]:
         """Get the revision ID for a diff from Phabricator."""
         if self.dryrun:
             return None
@@ -78,7 +78,9 @@ class PhabTalk:
         """Add a comment to a differential based on the diff_id"""
         print('Sending comment to diff {}:'.format(diff_id))
         print(text)
-        self._comment_on_revision(self.get_revision_id(diff_id), text)
+        revision_id = self.get_revision_id(diff_id)
+        if revision_id is not None:
+            self._comment_on_revision(revision_id, text)
 
     def _comment_on_revision(self, revision: str, text: str):
         """Add comment on a differential based on the revision id."""
@@ -144,7 +146,7 @@ class PhabTalk:
             _try_call(lambda: self._comment_on_diff(diff_id, '\n\n'.join(report.comments)))
 
 
-def _parse_patch(patch) -> []:
+def _parse_patch(patch) -> List[Dict[str,str]]:
     """Extract the changed lines from `patch` file.
     The return value is a list of dictionaries {filename, line, diff}.
     Diff must be generated with -U0 (no context lines).
