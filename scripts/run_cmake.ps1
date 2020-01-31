@@ -25,7 +25,7 @@ Invoke-CmdScript "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools
 # call CMake
 Invoke-Call -ScriptBlock {
   cmake ..\llvm -G Ninja -DCMAKE_BUILD_TYPE=Release  `
-         -D LLVM_ENABLE_PROJECTS="clang;clang-tools-extra" `
+         -D LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;libcxx;libcxxabi;lld;libunwind;mlir" `
          -D LLVM_ENABLE_ASSERTIONS=ON `
          -DLLVM_LIT_ARGS="-v --xunit-xml-output test-results.xml" `
          -D LLVM_ENABLE_DIA_SDK=OFF
