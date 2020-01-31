@@ -12,7 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+param (
+  [Parameter(Mandatory=$false)][string]$projects="default"
+)
+
 . ${PSScriptRoot}\common.ps1
+
+# set LLVM_ENABLE_PROJECTS to default value
+# if -DetectProjects is set the projects are detected based on the files
+# that were modified in the working copy
+if ($projects -eq "default") {
+  $LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;libcxx;libcxxabi;lld;libunwind;mlir"
+} elseif ($projects -eq "detect") {
+  $LLVM_ENABLE_PROJECTS = (git diff | python ${PSScriptRoot}\choose_projects.py . ) | Out-String
+} else {
+  $LLVM_ENABLE_PROJECTS=$projects
+}
+
+Write-Output "Setting LLVM_ENABLE_PROJECTS=${LLVM_ENABLE_PROJECTS}"
 
 # Delete and re-create build folder
 Remove-Item build -Recurse -ErrorAction Ignore
@@ -25,7 +42,7 @@ Invoke-CmdScript "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools
 # call CMake
 Invoke-Call -ScriptBlock {
   cmake ..\llvm -G Ninja -DCMAKE_BUILD_TYPE=Release  `
-         -D LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;libcxx;libcxxabi;lld;libunwind;mlir" `
+         -D LLVM_ENABLE_PROJECTS="${LLVM_ENABLE_PROJECTS}" `
          -D LLVM_ENABLE_ASSERTIONS=ON `
          -DLLVM_LIT_ARGS="-v --xunit-xml-output test-results.xml" `
          -D LLVM_ENABLE_DIA_SDK=OFF
