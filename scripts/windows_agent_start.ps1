@@ -18,9 +18,14 @@
 $NAME="agent-windows-jenkins"
 $IMAGE="gcr.io/llvm-premerge-checks/${NAME}"
 
+Write-Output "Pulling new image..."
 docker pull ${IMAGE}
+
+Write-Output "Stopping old container..."
 docker stop ${NAME}
 docker rm ${NAME}
+
+Write-Output "Starting container..."
 docker run `
     -v D:\:C:\ws `
     -v C:\credentials:C:\credentials `
