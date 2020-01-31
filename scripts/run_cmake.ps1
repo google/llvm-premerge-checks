@@ -25,6 +25,11 @@ if ($projects -eq "default") {
   $LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;libcxx;libcxxabi;lld;libunwind;mlir"
 } elseif ($projects -eq "detect") {
   $LLVM_ENABLE_PROJECTS = (git diff | python ${PSScriptRoot}\choose_projects.py . ) | Out-String
+  $LLVM_ENABLE_PROJECTS = $LLVM_ENABLE_PROJECTS.replace("`n","").replace("`r","")
+  if ($LLVM_ENABLE_PROJECTS -eq "") {
+    Write-Error "Error detecting the affected projects."
+    exit 1
+  }
 } else {
   $LLVM_ENABLE_PROJECTS=$projects
 }
@@ -40,6 +45,7 @@ Push-Location build
 Invoke-CmdScript "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64
 
 # call CMake
+$ErrorActionPreference="Continue"
 Invoke-Call -ScriptBlock {
   cmake ..\llvm -G Ninja -DCMAKE_BUILD_TYPE=Release  `
          -D LLVM_ENABLE_PROJECTS="${LLVM_ENABLE_PROJECTS}" `

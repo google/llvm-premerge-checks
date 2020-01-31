@@ -27,13 +27,18 @@ dependencies:
     - llvm
   llgo: 
     - llvm
+    - clang
   mlir: 
     - llvm
-  openmp: []
+  openmp:
+    - clang
   parallel-libs: []
   polly: 
     - llvm
   pstl: []
+  debuginfo-tests:
+    - clang
+    - lld
 
 # List of all projects in the LLVM monorepository. This list is taken from
 # llvm/CMakeLists.txt in "set(LLVM_ALL_PROJECTS ..."
@@ -57,3 +62,9 @@ allprojects:
   - polly
   - pstl
   - llvm
+
+# projects excluded from automatic configuration as they could not be built
+excludedProjects:
+# no working with Visual Studio Compiler on Windows
+  - lldb
+  - llgo

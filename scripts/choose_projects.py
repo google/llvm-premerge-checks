@@ -43,6 +43,7 @@ class ChooseProjects:
         self.llvm_dir = llvm_dir
         self.usages = dict()   # type: Dict[str,List[str]]
         self.all_projects = [] # type: List[str]
+        self.excluded_projects = set() # type: Set[str]
         self._load_config()
 
 
@@ -54,6 +55,7 @@ class ChooseProjects:
             for used in used_list:
                 self.usages.setdefault(used,[]).append(user)
         self.all_projects = config['allprojects']
+        self.excluded_projects = set(config['excludedProjects'])
 
     def run(self):
         llvm_dir = os.path.abspath(os.path.expanduser(args.llvmdir))
@@ -70,6 +72,7 @@ class ChooseProjects:
             return 0
 
         affected_projects = self.get_affected_projects(changed_projects)
+        affected_projects = affected_projects - self.excluded_projects
         print(';'.join(sorted(affected_projects)))
         return 0
 
