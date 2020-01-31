@@ -23,14 +23,16 @@ RUN choco install -y cmake --version 3.15.4
 RUN choco install -y python3
 RUN choco install -y ninja
 RUN choco install -y gnuwin
-RUN pip install psutil    
+# install perl, required for OpenMP
+RUN choco install -y strawberryperl 
+RUN pip install psutil
 
 # configure Python encoding
 ENV PYTHONIOENCODING=UTF-8
 
 # update the path variable    
 RUN powershell -NoProfile -InputFormat None  -Command `
-    $path = $env:path + ';c:\Program Files (x86)\GnuWin32\bin;C:\Program Files\CMake\bin'; `
+    $path = $env:path + ';c:\Program Files (x86)\GnuWin32\bin;C:\Program Files\CMake\bin;C:\Strawberry\perl\bin'; `
     Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\' -Name Path -Value $path
 
 # use this folder to store the worksapce'
