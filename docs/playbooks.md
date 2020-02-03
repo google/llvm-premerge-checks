@@ -130,8 +130,8 @@ Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-c
 TODO: add documentation on how to create these.
 1. run this script to start containers:
 ```cmd
-powershell 
-Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/windows_agent_start.ps1' -OutFile windows_agent_bootstrap.ps1
+powershell Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/windows_agent_start.ps1' -OutFile windows_agent_bootstrap.ps1
+
 .\windows_agent_bootstrap.ps1
 ```
 
