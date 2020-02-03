@@ -31,8 +31,16 @@ gcloud container clusters create $GCP_CLUSTER --zone $GCP_ZONE \
 gcloud container node-pools create jenkins-agents --cluster $GCP_CLUSTER --zone $GCP_ZONE \
     --machine-type=n1-standard-32 --num-nodes=2 --local-ssd-count=1
 
+# created separate cluster for windows, as we need "ip-alias" enabled
+# this can't be changed in a running cluster...
+gcloud beta container clusters create $GCP_CLUSTER_WINDOWS \
+  --enable-ip-alias \
+  --num-nodes=1 \
+  --release-channel=rapid \
+  --enable-private-nodes
+
 # Windows agents with local ssd
-gcloud container node-pools create windows-pool --cluster $GCP_CLUSTER \
+gcloud container node-pools create windows-pool --cluster $GCP_CLUSTER_WINDOWS \
     --image-type=WINDOWS_SAC --no-enable-autoupgrade \
     --machine-type=n1-standard-16 --local-ssd-count=1
 
