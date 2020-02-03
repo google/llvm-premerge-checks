@@ -65,7 +65,8 @@ allprojects:
 
 # projects excluded from automatic configuration as they could not be built
 excludedProjects:
-# no working with Visual Studio Compiler on Windows
+# These projects are not working with Visual Studio Compiler on Windows
   - lldb
   - llgo
   - libunwind
+  - libcxxabi
