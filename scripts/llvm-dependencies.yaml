@@ -68,3 +68,4 @@ excludedProjects:
 # no working with Visual Studio Compiler on Windows
   - lldb
   - llgo
+  - libunwind
