@@ -70,7 +70,10 @@ pipeline {
         stage('CMake') {
             steps {
                 dir("${LLVM_DIR}"){
-                    powershell "${SCRIPT_DIR}/run_cmake.ps1 -projects detect"
+                    // TODO(kuhnel): disabling because of broken dependencies: 
+                    // https://jenkins.llvm-merge-guard.org/job/amd64_windows_vs2017/690/execution/node/53/log/
+                    //powershell "${SCRIPT_DIR}/run_cmake.ps1 -projects detect"
+                    powershell "${SCRIPT_DIR}/run_cmake.ps1"
                 }
             }
         }
