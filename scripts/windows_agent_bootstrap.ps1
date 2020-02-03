@@ -40,6 +40,7 @@ choco install -y gcloudsdk --ignore-checksums
 gcloud auth docker
 
 # move docker folder to SSD to get better IO performance
+New-Item -Path "D:\" -Name "Docker" -ItemType "directory"
 cmd /C "mklink /j C:\ProgramData\Docker D:\docker"
 
 # Reboot
