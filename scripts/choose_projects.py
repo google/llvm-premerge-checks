@@ -41,6 +41,7 @@ class ChooseProjects:
 
     def __init__(self, llvm_dir: str):
         self.llvm_dir = llvm_dir
+        self.dependencies = dict() # type: Dict[str,List[str]]
         self.usages = dict()   # type: Dict[str,List[str]]
         self.all_projects = [] # type: List[str]
         self.excluded_projects = set() # type: Set[str]
@@ -51,7 +52,8 @@ class ChooseProjects:
         logging.info('loading project config from {}'.format(self.DEPENDENCIES_FILE))
         with open(self.DEPENDENCIES_FILE) as dependencies_file:
             config = yaml.load(dependencies_file, Loader=yaml.SafeLoader)
-        for user, used_list in config['dependencies'].items():
+        self.dependencies = config['dependencies']
+        for user, used_list in self.dependencies.items():
             for used in used_list:
                 self.usages.setdefault(used,[]).append(user)
         self.all_projects = config['allprojects']
@@ -72,6 +74,7 @@ class ChooseProjects:
             return 0
 
         affected_projects = self.get_affected_projects(changed_projects)
+        affected_projects = self.add_dependencies(affected_projects)
         affected_projects = affected_projects - self.excluded_projects
         print(';'.join(sorted(affected_projects)))
         return 0
@@ -131,6 +134,23 @@ class ChooseProjects:
 
         return affected_projects
 
+
+    def add_dependencies(self, projects: Set[str]):
+        """Return projects and their dependencies.
+
+        All all dependencies to `projects` so that they can be built.
+        """
+        result = set(projects)
+        last_len = -1
+        while len(result) != last_len:
+            last_len = len(result)
+            changes = set()
+            for project in result:
+                if project in self.dependencies:
+                    changes.update(self.dependencies[project])
+            print(changes)
+            result.update(changes)
+        return result
 
 if __name__ == "__main__":
     logging.basicConfig(filename='choose_projects.log', level=logging.INFO)
