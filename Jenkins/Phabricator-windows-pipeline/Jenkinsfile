@@ -105,7 +105,7 @@ pipeline {
                     
                     Write-Host "Uploading results to GCS..."
                     \$ErrorActionPreference = 'Continue'
-                    gsutil cp -Z -c *.* gs://llvm-premerge-checks/results/${MY_BUILD_ID}/
+                    gsutil cp *.* gs://llvm-premerge-checks/results/${MY_BUILD_ID}/
                     Write-Host "Done."
                 """
             }
