@@ -135,7 +135,7 @@ class ChooseProjects:
         return affected_projects
 
 
-    def add_dependencies(self, projects: Set[str]):
+    def add_dependencies(self, projects: Set[str]) -> Set[str]:
         """Return projects and their dependencies.
 
         All all dependencies to `projects` so that they can be built.
@@ -148,7 +148,6 @@ class ChooseProjects:
             for project in result:
                 if project in self.dependencies:
                     changes.update(self.dependencies[project])
-            print(changes)
             result.update(changes)
         return result
 
