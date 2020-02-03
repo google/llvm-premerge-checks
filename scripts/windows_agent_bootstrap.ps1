@@ -28,6 +28,10 @@ iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.p
 choco feature disable --name showDownloadProgress
 choco install -y git
 
+# move docker folder to SSD to get better IO performance
+New-Item -Path "D:\" -Name "Docker" -ItemType "directory"
+cmd /C "mklink /j C:\ProgramData\Docker D:\docker"
+
 # install Docker
 Install-PackageProvider -Name NuGet -Force
 Install-Module -Name DockerMsftProvider -Repository PSGallery -Force
@@ -37,11 +41,6 @@ Set-Service -Name docker  -StartupType Automatic
 # install gcloud and authenticate access to gcr.io registry
 # TODO: find a better way to install the Google Cloud SDK, avoid ingoring the checksum
 choco install -y gcloudsdk --ignore-checksums
-gcloud auth docker
-
-# move docker folder to SSD to get better IO performance
-New-Item -Path "D:\" -Name "Docker" -ItemType "directory"
-cmd /C "mklink /j C:\ProgramData\Docker D:\docker"
 
 # Reboot
 Restart-Computer -Force
