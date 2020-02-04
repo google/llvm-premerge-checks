@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import argparse
 import json
 import os
@@ -23,6 +24,7 @@ from typing import List, Optional, Tuple
 from phabricator import Phabricator
 from git import Repo, GitCommandError
 
+
 class ApplyPatch:
     """Apply a diff from Phabricator on local working copy.
 
@@ -30,29 +32,26 @@ class ApplyPatch:
     that have already landed, but could not be identified by `arc patch`.
 
     For a given diff_id, this class will get the dependencies listed on Phabricator.
-    For each dependency D it wil check, if D has already landed by looking 
-    for the id of D in the gif history. If D has not landed, it will download 
-    the patch for D and try to apply it locally. Once this class has applied all 
-    dependencies, it will apply the diff itself.
-
+    For each dependency D it will check the diff history:
+    - if D has already landed, skip it.
+    - If D has not landed, it will download the patch for D and try to apply it locally.
+    Once this class has applied all dependencies, it will apply the diff itself.
 
     This script must be called from the root folder of a local checkout of 
     https://github.com/llvm/llvm-project
     """
 
-    def __init__(self, diff_id:str, comment_file_path: str, token: str, url: str, store_json_diff: str):
-        # TODO: turn os.environ parameter into command line arguments
-        # this would be much clearer and easier for testing
+    def __init__(self, diff_id: int, comment_file_path: str, token: str, url: str, store_json_diff: str, git_hash: str):
         self.comment_file_path = comment_file_path
-        self.conduit_token = token   # type: Optional[str]
+        self.conduit_token = token  # type: Optional[str]
         self.host = url  # type: Optional[str]
         self._load_arcrc()
-        self.diff_id = diff_id  # type: str
-        self.diff_json_path = store_json_diff   # type: str
+        self.diff_id = diff_id  # type: int
+        self.diff_json_path = store_json_diff  # type: str
         if not self.host.endswith('/api/'):
             self.host += '/api/'
         self.phab = self._create_phab()
-        self.git_hash = None  # type: Optional[str]
+        self.git_hash = git_hash  # type: Optional[str]
         self.msg = []  # type: List[str]
         self.repo = Repo(os.getcwd())  # type: Repo
 
@@ -75,13 +74,16 @@ class ApplyPatch:
 
         try:
             revision_id, dependencies, base_revision = self._get_dependencies()
+            if self.git_hash is not None:
+                print('Using base revision provided by command line')
+                base_revision = self.git_hash
             print('Checking out {}...'.format(base_revision))
             try:
                 self.repo.git.checkout(base_revision)
             except GitCommandError:
                 print('ERROR checking out revision {}. It`s not in the '
                       'repository. Using master instead.'.format(base_revision))
-                self.repo.git.checkout('master')                
+                self.repo.git.checkout('master')
             print('Revision is {}'.format(self.repo.head.commit.hexsha))
             print('git reset, git cleanup...')
             self.repo.git.reset('--hard')
@@ -94,6 +96,7 @@ class ApplyPatch:
                 print('  These are missing on master: {}'.format(diff_list_to_str(missing)))
                 for revision in missing:
                     self._apply_revision(revision)
+                print('All depended diffs are applied')
             self._apply_diff(self.diff_id, revision_id)
             print('done.')
         finally:
@@ -104,7 +107,7 @@ class ApplyPatch:
         phab.update_interfaces()
         return phab
 
-    def _get_diff(self, diff_id: str):
+    def _get_diff(self, diff_id: int):
         """Get a diff from Phabricator based on it's diff id."""
         return self.phab.differential.getdiff(diff_id=diff_id)
 
@@ -112,18 +115,17 @@ class ApplyPatch:
         """Get a revision from Phabricator based on its revision id."""
         return self.phab.differential.query(ids=[revision_id])[0]
 
-    def _get_revisions(self, *, phids: str = None):
+    def _get_revisions(self, *, phids: List[str] = None):
         """Get a list of revisions from Phabricator based on their PH-IDs."""
         if phids is None:
-            raise InputError('no arguments given')
-        if phids == []:
+            raise Exception('_get_revisions phids is None')
+        if not phids:
             # Handle an empty query locally. Otherwise the connection
             # will time out.
             return []
         return self.phab.differential.query(phids=phids)
 
-
-    def _get_dependencies(self) -> Tuple[int,List[int],str]:
+    def _get_dependencies(self) -> Tuple[int, List[int], str]:
         """Get all dependencies for the diff."""
         diff = self._get_diff(self.diff_id)
         revision_id = int(diff.revisionID)
@@ -145,7 +147,7 @@ class ApplyPatch:
         print('Applying diff {} for revision {}...'.format(diff_id, diff_to_str(revision_id)))
         diff = self.phab.differential.getrawdiff(diffID=diff_id).response
         proc = subprocess.run('patch -p1', input=diff, shell=True, text=True,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if proc.returncode != 0:
             raise Exception('Applying patch failed:\n{}'.format(proc.stdout + proc.stderr))
 
@@ -181,7 +183,7 @@ class ApplyPatch:
         """Check which of the dependencies have already landed on the current branch."""
         landed_deps = []
         missing_deps = []
-        for dependency in dependencies:            
+        for dependency in dependencies:
             if diff_to_str(dependency) in self._get_landed_revisions():
                 landed_deps.append(dependency)
             else:
@@ -201,12 +203,14 @@ def diff_list_to_str(diffs: List[int]) -> str:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Apply Phabricator patch to working directory.')
-    parser.add_argument('diff_id', type=str)
+    parser.add_argument('diff_id', type=int)
+    # TODO: instead of --comment-file use stdout / stderr.
     parser.add_argument('--comment-file', type=str, dest='comment_file_path', default=None)
-    parser.add_argument('--token', type=str, default=None)
-    parser.add_argument('--url', type=str, default=None)
+    parser.add_argument('--token', type=str, default=None, help='Conduit API token')
+    parser.add_argument('--url', type=str, default=None, help='Phabricator URL')
     parser.add_argument('--store-json-diff', dest='store_json_diff', type=str, default=None)
+    parser.add_argument('--commit', dest='commit', type=str, default=None,
+                        help='Use this commit as a base. By default tool tries to pick the base commit itself')
     args = parser.parse_args()
     patcher = ApplyPatch(args.diff_id, args.comment_file_path, args.token, args.url, args.store_json_diff)
     patcher.run()
-
