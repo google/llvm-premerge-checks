@@ -15,11 +15,13 @@
 # Pull and start the Docker container for a Windows agent.
 # To setup a Windows agent see docs/playbooks.md
 
+# TODO: add parameter to bootstrap buildkite or jenkins
+
 $NAME="agent-windows-jenkins"
 $IMAGE="gcr.io/llvm-premerge-checks/${NAME}"
 
 Write-Output "Authenticating docker..."
-echo "y`n" | gcloud auth configure-docker
+Write-Output "y`n" | gcloud auth configure-docker
 
 Write-Output "Pulling new image..."
 docker pull ${IMAGE}
