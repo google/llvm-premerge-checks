@@ -27,7 +27,8 @@ Get-Content "${ROOT_DIR}/k8s_config" | Foreach-Object{
 
 New-Variable -Name QUALIFIED_NAME -Value "${GCR_HOSTNAME}/${GCP_PROJECT}/${IMAGE_NAME}"
 
-Set-Location "$PSScriptRoot\$IMAGE_NAME"
+Push-Location "$PSScriptRoot\$IMAGE_NAME"
 docker build -t $IMAGE_NAME .
 docker tag $IMAGE_NAME $QUALIFIED_NAME
 docker push $QUALIFIED_NAME
+Pop-Location
