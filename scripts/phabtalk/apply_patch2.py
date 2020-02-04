@@ -41,13 +41,12 @@ class ApplyPatch:
     https://github.com/llvm/llvm-project
     """
 
-    def __init__(self, diff_id: int, comment_file_path: str, token: str, url: str, store_json_diff: str, git_hash: str):
+    def __init__(self, diff_id: int, comment_file_path: str, token: str, url: str, git_hash: str):
         self.comment_file_path = comment_file_path
         self.conduit_token = token  # type: Optional[str]
         self.host = url  # type: Optional[str]
         self._load_arcrc()
         self.diff_id = diff_id  # type: int
-        self.diff_json_path = store_json_diff  # type: str
         if not self.host.endswith('/api/'):
             self.host += '/api/'
         self.phab = self._create_phab()
@@ -145,6 +144,7 @@ class ApplyPatch:
     def _apply_diff(self, diff_id: int, revision_id: int):
         """Download and apply a diff to the local working copy."""
         print('Applying diff {} for revision {}...'.format(diff_id, diff_to_str(revision_id)))
+        # TODO: print diff or URL to it
         diff = self.phab.differential.getrawdiff(diffID=diff_id).response
         proc = subprocess.run('patch -p1', input=diff, shell=True, text=True,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -208,9 +208,8 @@ if __name__ == "__main__":
     parser.add_argument('--comment-file', type=str, dest='comment_file_path', default=None)
     parser.add_argument('--token', type=str, default=None, help='Conduit API token')
     parser.add_argument('--url', type=str, default=None, help='Phabricator URL')
-    parser.add_argument('--store-json-diff', dest='store_json_diff', type=str, default=None)
     parser.add_argument('--commit', dest='commit', type=str, default=None,
                         help='Use this commit as a base. By default tool tries to pick the base commit itself')
     args = parser.parse_args()
-    patcher = ApplyPatch(args.diff_id, args.comment_file_path, args.token, args.url, args.store_json_diff)
+    patcher = ApplyPatch(args.diff_id, args.comment_file_path, args.token, args.url, args.commit)
     patcher.run()
