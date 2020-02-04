@@ -70,3 +70,7 @@ excludedProjects:
   - llgo
   - libunwind
   - libcxxabi
+
+defaultProjects:
+  linux: clang;clang-tools-extra;libcxx;libcxxabi;lld;libunwind;mlir
+  windows: clang;clang-tools-extra;lld;mlir
