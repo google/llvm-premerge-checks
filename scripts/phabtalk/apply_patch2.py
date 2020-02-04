@@ -145,7 +145,7 @@ class ApplyPatch:
         """Download and apply a diff to the local working copy."""
         print('Applying diff {} for revision {}...'.format(diff_id, diff_to_str(revision_id)))
         # TODO: print diff or URL to it
-        diff = self.phab.differential.getrawdiff(diffID=diff_id).response
+        diff = self.phab.differential.getrawdiff(diffID=str(diff_id)).response
         proc = subprocess.run('patch -p1', input=diff, shell=True, text=True,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if proc.returncode != 0:
