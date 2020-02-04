@@ -44,6 +44,11 @@ Push-Location build
 # load Vistual Studio environment variables
 Invoke-CmdScript "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64
 
+# Make sure we're using the Vistual Studio compiler and linker
+$env:CC=cl
+$env:CXX=cl
+$env:LD=link
+
 # call CMake
 $ErrorActionPreference="Continue"
 Invoke-Call -ScriptBlock {
