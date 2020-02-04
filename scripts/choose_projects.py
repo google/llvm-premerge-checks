@@ -41,6 +41,7 @@ class ChooseProjects:
 
     def __init__(self, llvm_dir: str):
         self.llvm_dir = llvm_dir
+        self.defaultProjects = dict() # type: Dict[str, Dict[str, str]]
         self.dependencies = dict() # type: Dict[str,List[str]]
         self.usages = dict()   # type: Dict[str,List[str]]
         self.all_projects = [] # type: List[str]

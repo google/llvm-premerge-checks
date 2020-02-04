@@ -23,7 +23,7 @@ param (
 # that were modified in the working copy
 if ($projects -eq "default") {
   # TODO: make this configurable per OS/compiler/...
-  $LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;libcxx;lld;mlir"
+  $LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;lld;mlir"
 } elseif ($projects -eq "detect") {
   $LLVM_ENABLE_PROJECTS = (git diff | python ${PSScriptRoot}\choose_projects.py . ) | Out-String
   $LLVM_ENABLE_PROJECTS = $LLVM_ENABLE_PROJECTS.replace("`n","").replace("`r","")
