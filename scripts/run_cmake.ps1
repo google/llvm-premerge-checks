@@ -22,7 +22,7 @@ param (
 # if -DetectProjects is set the projects are detected based on the files
 # that were modified in the working copy
 if ($projects -eq "default") {
-  # TODO: make this configurable per OS/compiler/...
+  # These are the default projects for windows
   $LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;lld;mlir"
 } elseif ($projects -eq "detect") {
   $LLVM_ENABLE_PROJECTS = (git diff | python ${PSScriptRoot}\choose_projects.py . ) | Out-String
