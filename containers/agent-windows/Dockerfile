@@ -24,7 +24,7 @@ RUN choco install -y python3
 RUN choco install -y ninja
 RUN choco install -y gnuwin
 # install perl, required for OpenMP
-RUN choco install -y strawberryperl 
+# RUN choco install -y strawberryperl 
 RUN pip install psutil
 
 # configure Python encoding
