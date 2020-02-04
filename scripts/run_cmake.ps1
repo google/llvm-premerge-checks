@@ -23,7 +23,8 @@ param (
 # that were modified in the working copy
 if ($projects -eq "default") {
   # These are the default projects for windows
-  $LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;lld;mlir"
+  # stripped: ;libcxx;libc;lld;mlir;compiler-rt;libcxxabi
+  $LLVM_ENABLE_PROJECTS="clang;clang-tools-extra"
 } elseif ($projects -eq "detect") {
   $LLVM_ENABLE_PROJECTS = (git diff | python ${PSScriptRoot}\choose_projects.py . ) | Out-String
   $LLVM_ENABLE_PROJECTS = $LLVM_ENABLE_PROJECTS.replace("`n","").replace("`r","")
