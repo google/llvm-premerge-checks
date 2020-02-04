@@ -70,6 +70,7 @@ excludedProjects:
   - llgo
   - libunwind
   - libcxxabi
+  - openmp # blacklisting as kuhnel has trouble with the Perl installation
 
 defaultProjects:
   linux: clang;clang-tools-extra;libcxx;libcxxabi;lld;libunwind;mlir
