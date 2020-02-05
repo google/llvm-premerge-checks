@@ -101,10 +101,12 @@ pipeline {
                     Fire & Forget: Do not wait for the job to finish, 
                         ingore the results
                 */
+                /*
                 build job: 'amd64_windows_vs2017', propagate: false, wait: false, parameters: [
                     [$class: 'StringParameterValue', name: 'DIFF_ID', value: "$DIFF_ID"],
                     [$class: 'StringParameterValue', name: 'PHID', value: "$PHID"],
                     ]
+                    */
             }
         }
         stage('ninja check-all') {
