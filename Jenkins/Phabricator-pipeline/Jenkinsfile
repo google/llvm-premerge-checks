@@ -63,6 +63,7 @@ pipeline {
         stage("git checkout"){
             steps {
                 git url: 'https://github.com/llvm/llvm-project.git'
+                sh 'git reset --hard origin/master'  // To remove any local commits to master.
                 sh 'git clean -fdx'
                 sh 'git show -s'
                 sh 'mkdir -p llvm-premerge-checks'
@@ -77,7 +78,8 @@ pipeline {
         }
         stage('arc patch'){
             steps {
-                sh "python3 ${SCRIPT_DIR}/phabtalk/apply_patch.py --comment-file ${PHAB_LOG}"
+//                 sh "python3 ${SCRIPT_DIR}/phabtalk/apply_patch.py --comment-file ${PHAB_LOG}"
+                sh "${SCRIPT_DIR}/phabtalk/apply_patch2.py ${DIFF_ID} --token ${CONDUIT_TOKEN} --url ${PHABRICATOR_HOST} --comment-file ${PHAB_LOG}"
             }
         }
         stage('CMake') {
