@@ -23,4 +23,4 @@ Write-Output "--- ninja all"
 Write-Output "--- ninja check-all"
 & "${PSScriptRoot}\run_ninja.ps1" check-all
 
-Write-Output --- done
+Write-Output "--- done"
