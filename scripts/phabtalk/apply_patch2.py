@@ -18,7 +18,6 @@ import json
 import os
 import re
 import subprocess
-import sys
 from typing import List, Optional, Tuple
 
 from phabricator import Phabricator
@@ -50,7 +49,7 @@ class ApplyPatch:
         if not self.host.endswith('/api/'):
             self.host += '/api/'
         self.phab = self._create_phab()
-        self.git_hash = git_hash  # type: Optional[str]
+        self.base_revision = git_hash  # type: Optional[str]
         self.msg = []  # type: List[str]
         self.repo = Repo(os.getcwd())  # type: Repo
 
@@ -72,10 +71,12 @@ class ApplyPatch:
         """
 
         try:
-            revision_id, dependencies, base_revision = self._get_dependencies()
-            if self.git_hash is not None:
-                print('Using base revision provided by command line')
-                base_revision = self.git_hash
+            revision_id, dependencies, base_revision = self._get_dependencies(self.diff_id)
+            dependencies.reverse()  # Arrange deps in chronological order.
+            if self.base_revision is not None:
+                print('Using base revision provided by command line\n{} instead of resolved\n{}'.format(
+                    self.base_revision, base_revision))
+                base_revision = self.base_revision
             print('Checking out {}...'.format(base_revision))
             try:
                 self.repo.git.checkout(base_revision)
@@ -91,10 +92,14 @@ class ApplyPatch:
             if len(dependencies) > 0:
                 print('This diff depends on: {}'.format(diff_list_to_str(dependencies)))
                 missing, landed = self._get_missing_landed_dependencies(dependencies)
-                print('  These have already landed: {}'.format(diff_list_to_str(landed)))
-                print('  These are missing on master: {}'.format(diff_list_to_str(missing)))
-                for revision in missing:
-                    self._apply_revision(revision)
+                print('  Already landed: {}'.format(diff_list_to_str(landed)))
+                print('  Will be applied: {}'.format(diff_list_to_str(missing)))
+                if missing:
+                    for revision in missing:
+                        self._apply_revision(revision)
+                    self.repo.config_writer().set_value("user", "name", "myusername").release()
+                    self.repo.config_writer().set_value("user", "email", "myemail@example.com").release()
+                    self.repo.git.commit('-a', '-m', 'dependencies')
                 print('All depended diffs are applied')
             self._apply_diff(self.diff_id, revision_id)
             print('done.')
@@ -124,9 +129,12 @@ class ApplyPatch:
             return []
         return self.phab.differential.query(phids=phids)
 
-    def _get_dependencies(self) -> Tuple[int, List[int], str]:
-        """Get all dependencies for the diff."""
-        diff = self._get_diff(self.diff_id)
+    def _get_dependencies(self, diff_id) -> Tuple[int, List[int], str]:
+        """Get all dependencies for the diff.
+        They are listed in reverse chronological order - from most recent to least recent."""
+
+        print('Getting dependencies of {}'.format(diff_id))
+        diff = self._get_diff(diff_id)
         revision_id = int(diff.revisionID)
         revision = self._get_revision(revision_id)
         base_revision = diff['sourceControlBaseRevision']
@@ -134,12 +142,14 @@ class ApplyPatch:
             base_revision = 'master'
         dependency_ids = revision['auxiliary']['phabricator:depends-on']
         revisions = self._get_revisions(phids=dependency_ids)
-        diff_ids = [int(rev['id']) for rev in revisions]
-        # It seems Phabricator lists the dependencies in the opposite order,
-        # so we reverse the order before returning the list, so that they
-        # can be applied in this order
-        diff_ids.reverse()
-        return revision_id, diff_ids, base_revision
+        result = []
+        # Recursively resolve dependencies of those diffs.
+        for r in revisions:
+            _, sub, _ = self._get_dependencies(r['diffs'][0])
+            result.append(r['id'])
+            result.extend(sub)
+
+        return revision_id, result, base_revision
 
     def _apply_diff(self, diff_id: int, revision_id: int):
         """Download and apply a diff to the local working copy."""
@@ -173,10 +183,17 @@ class ApplyPatch:
     def _get_landed_revisions(self, limit: int = 1000):
         """Get list of landed revisions from current git branch."""
         diff_regex = re.compile(r'^Differential Revision: https:\/\/reviews\.llvm\.org\/(.*)$', re.MULTILINE)
-        for commit in self.repo.iter_commits("master", max_count=limit):
+        earliest_commit = None
+        rev = self.base_revision
+        if rev is None:
+            rev = 'master'
+        for commit in self.repo.iter_commits(rev, max_count=limit):
+            earliest_commit = commit
             result = diff_regex.search(commit.message)
             if result is not None:
                 yield result.group(1)
+        if earliest_commit is not None:
+            print('Earliest analyzed commit in history', earliest_commit.hexsha, earliest_commit.committed_datetime)
         return
 
     def _get_missing_landed_dependencies(self, dependencies: List[int]) -> Tuple[List[int], List[int]]:
