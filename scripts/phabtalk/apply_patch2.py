@@ -104,6 +104,7 @@ class ApplyPatch:
                     self.repo.git.commit('-a', '-m', 'dependencies')
                 print('All depended diffs are applied')
             self._apply_diff(self.diff_id, revision_id)
+            self.repo.git.add('-u', '.')
             print('done.')
         finally:
             self._write_error_message()
