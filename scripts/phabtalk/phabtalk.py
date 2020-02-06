@@ -23,6 +23,7 @@ import re
 import socket
 import time
 import urllib
+import uuid
 from typing import Optional, List, Dict
 
 import pathspec
@@ -145,6 +146,15 @@ class PhabTalk:
         if len(report.comments) > 0:
             _try_call(lambda: self._comment_on_diff(diff_id, '\n\n'.join(report.comments)))
 
+    def add_artifact(self, phid: str, file: str, name: str, results_url: str):
+        _try_call(lambda: self._phab.harbormaster.createartifact(
+            buildTargetPHID=phid,
+            artifactKey=str(uuid.uuid4()),
+            artifactType='uri',
+            artifactData={'uri': '{}/{}'.format(results_url, file),
+                          'ui.external': True,
+                          'name': name}))
+
 
 def _parse_patch(patch) -> List[Dict[str,str]]:
     """Extract the changed lines from `patch` file.
@@ -190,7 +200,7 @@ def _parse_patch(patch) -> List[Dict[str,str]]:
 
 
 def _add_clang_format(report: BuildReport, results_dir: str,
-                      results_url: str, clang_format_patch: str):
+                      results_url: str, clang_format_patch: str, pt: PhabTalk, ph_id: str):
     """Populates results from diff produced by clang format."""
     present = (clang_format_patch is not None) and os.path.exists(os.path.join(results_dir, clang_format_patch))
     if not present:
@@ -198,6 +208,8 @@ def _add_clang_format(report: BuildReport, results_dir: str,
         report.comments.append(section_title('clang-format', False, False))
         return
     p = os.path.join(results_dir, clang_format_patch)
+    if os.stat(p).st_size != 0:
+        pt.add_artifact(ph_id, clang_format_patch, "clang-format", results_url)
     diffs = _parse_patch(open(p, 'r'))
     success = len(diffs) == 0
     for d in diffs:
@@ -219,7 +231,7 @@ def _add_clang_format(report: BuildReport, results_dir: str,
 
 
 def _add_clang_tidy(report: BuildReport, results_dir: str, results_url: str, workspace: str, clang_tidy_file: str,
-                    clang_tidy_ignore: str):
+                    clang_tidy_ignore: str, pt: PhabTalk, ph_id: str):
     # Typical message looks like
     # [..]/clang/include/clang/AST/DeclCXX.h:3058:20: error: no member named 'LifetimeExtendedTemporary' in 'clang::Decl' [clang-diagnostic-error]
     pattern = '^{}/([^:]*):(\\d+):(\\d+): (.*): (.*)'.format(workspace)
@@ -236,9 +248,11 @@ def _add_clang_tidy(report: BuildReport, results_dir: str, results_url: str, wor
         print('clang-tidy ignore file {} is not found'.format(clang_tidy_ignore))
         report.comments.append(section_title('clang-tidy', False, False))
         return
+    p = os.path.join(results_dir, clang_tidy_file)
+    if os.stat(p).st_size != 0:
+        pt.add_artifact(ph_id, clang_tidy_file, "clang-tidy", results_url)
     ignore = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern,
                                           open(clang_tidy_ignore, 'r').readlines())
-    p = os.path.join(results_dir, clang_tidy_file)
     for line in open(p, 'r'):
         match = re.search(pattern, line)
         if match:
@@ -380,13 +394,17 @@ def main():
         else:
             report.success = False
 
+    p = PhabTalk(args.conduit_token, args.host, args.dryrun)
     _add_test_results(report, args.results_dir, args.test_result_file)
     _add_clang_tidy(report, args.results_dir, args.results_url, args.workspace, args.clang_tidy_result,
-                    args.clang_tidy_ignore)
-    _add_clang_format(report, args.results_dir, args.results_url, args.clang_format_patch)
+                    args.clang_tidy_ignore, p, args.ph_id)
+    _add_clang_format(report, args.results_dir, args.results_url, args.clang_format_patch, p, args.ph_id)
     _add_links_to_artifacts(report, args.results_dir, args.results_url)
 
-    p = PhabTalk(args.conduit_token, args.host, args.dryrun)
+    with open(os.path.join(args.results_dir, 'summary.html'), 'w') as f:
+        f.write('<html><body>Build summary:<br/><a href="clang-tidy.txt">clang-tidy</a></body></html>')
+    p.add_artifact(args.ph_id, 'summary.html', 'summary', args.results_url)
+
     title = 'Issue with build for {} ({})'.format(p.get_revision_id(args.diff_id), args.diff_id)
     report.comments.append(
         '//Pre-merge checks is in beta. [[ https://github.com/google/llvm-premerge-checks/issues/new?assignees'
