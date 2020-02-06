@@ -8,6 +8,9 @@ FROM gcr.io/llvm-premerge-checks/agent-windows
 # Supply your agent token via the arguement "-token <mytoken" when building the image
 ARG token
 ENV BUILDKITE_BUILD_PATH=C:\ws\bk
+
+#TODO(kuhnel): use the host machine name in the agent name.
+# This needs to be set during run time in the start_agent.ps1 script.
 ENV BUILDKITE_AGENT_NAME=win-vs17
 
 COPY start_agent.ps1 C:\scripts\
