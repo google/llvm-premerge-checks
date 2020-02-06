@@ -16,8 +16,11 @@ $JENKINS_SERVER="jenkins.local"
 
 $AGENT_ROOT="C:\ws"
 
+# TODO(kuhnel): The autentication does not work!
+# trying to copy the .boto file instead
 # authenticate gsutil
-Write-Output "C:\credentials\build-agent-results_key.json`nllvm-premerge-checks`n`n" | gsutil config -e
+# Write-Output "C:\credentials\build-agent-results_key.json`nllvm-premerge-checks`n`n" | gsutil config -e
+Copy-Item "C:\credentials\.boto" "C:\Users\ContainerAdministrator\.boto"
 
 $env:TEMP="${$AGENT_ROOT}\TEMP"
 $env:TMP="${env:TEMP}"
