@@ -17,7 +17,9 @@ import argparse
 import json
 import os
 import re
+import socket
 import subprocess
+import time
 from typing import List, Optional, Tuple
 
 from phabricator import Phabricator
@@ -113,11 +115,11 @@ class ApplyPatch:
 
     def _get_diff(self, diff_id: int):
         """Get a diff from Phabricator based on it's diff id."""
-        return self.phab.differential.getdiff(diff_id=diff_id)
+        return try_call(lambda: self.phab.differential.getdiff(diff_id=diff_id))
 
     def _get_revision(self, revision_id: int):
         """Get a revision from Phabricator based on its revision id."""
-        return self.phab.differential.query(ids=[revision_id])[0]
+        return try_call(lambda: self.phab.differential.query(ids=[revision_id])[0])
 
     def _get_revisions(self, *, phids: List[str] = None):
         """Get a list of revisions from Phabricator based on their PH-IDs."""
@@ -127,7 +129,7 @@ class ApplyPatch:
             # Handle an empty query locally. Otherwise the connection
             # will time out.
             return []
-        return self.phab.differential.query(phids=phids)
+        return try_call(lambda: self.phab.differential.query(phids=phids))
 
     def _get_dependencies(self, diff_id) -> Tuple[int, List[int], str]:
         """Get all dependencies for the diff.
@@ -155,7 +157,7 @@ class ApplyPatch:
         """Download and apply a diff to the local working copy."""
         print('Applying diff {} for revision {}...'.format(diff_id, diff_to_str(revision_id)))
         # TODO: print diff or URL to it
-        diff = self.phab.differential.getrawdiff(diffID=str(diff_id)).response
+        diff = try_call(lambda: self.phab.differential.getrawdiff(diffID=str(diff_id)).response)
         proc = subprocess.run('patch -p1', input=diff, shell=True, text=True,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if proc.returncode != 0:
@@ -216,6 +218,21 @@ def diff_to_str(diff: int) -> str:
 def diff_list_to_str(diffs: List[int]) -> str:
     """Convert list of diff ids to a comma separated list, prefixed with "D"."""
     return ', '.join([diff_to_str(d) for d in diffs])
+
+
+def try_call(call):
+    """Tries to call function several times retrying on socked.timeout."""
+    c = 0
+    while True:
+        try:
+            return call()
+        except socket.timeout as e:
+            c += 1
+            if c > 5:
+                print('Connection to Pharicator failed, giving up: {}'.format(e))
+                raise
+            print('Connection to Pharicator failed, retrying: {}'.format(e))
+            time.sleep(c * 10)
 
 
 if __name__ == "__main__":
