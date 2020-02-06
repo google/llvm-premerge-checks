@@ -32,7 +32,7 @@ set -e
 echo "ninja ${CMD} completed ======================================"
 if test -f "test-results.xml" ; then
   echo "copying test_results.xml to ${TARGET_DIR}"
-  du "test_results.xml"
+  du "test-results.xml"
   cp test-results.xml "${TARGET_DIR}"
 fi
 
