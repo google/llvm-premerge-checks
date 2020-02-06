@@ -17,6 +17,9 @@ RUN powershell -NoProfile -InputFormat None -Command `
 RUN pip install gsutil
 VOLUME C:\credentials
 
+# configure gsutil
+COPY .boto  "C:\Users\ContainerAdministrator\.boto"
+
 # install python dependencies for the scripts
 RUN pip install -r https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/requirements.txt
 
