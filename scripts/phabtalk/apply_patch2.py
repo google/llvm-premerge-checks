@@ -111,7 +111,7 @@ class ApplyPatch:
 
     def _create_phab(self):
         phab = Phabricator(token=self.conduit_token, host=self.host)
-        phab.update_interfaces()
+        try_call(lambda: phab.update_interfaces())
         return phab
 
     def _get_diff(self, diff_id: int):
