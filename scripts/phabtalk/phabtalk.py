@@ -367,14 +367,14 @@ class BuildReport:
                 self.unit.append(test_result)
 
         comment = section_title('Unit tests', success, True)
-        comment += '{} tests passed, {} failed and {} were skipped.\n'.format(
+        comment += '{} tests passed, {} failed and {} were skipped.<br/>'.format(
             self.test_stats['pass'],
             self.test_stats['fail'],
             self.test_stats['skip'],
         )
         for test_case in self.unit:
             if test_case['result'] == 'fail':
-                comment += '    failed: {}/{}\n'.format(test_case['namespace'], test_case['name'])
+                comment += '    failed: {}/{}<br/>'.format(test_case['namespace'], test_case['name'])
         self.comments.append(comment)
         self.success = success and self.success
 
@@ -457,6 +457,7 @@ def main():
                         help="public URL to access results directory")
     parser.add_argument('--workspace', type=str, required=True, help="path to workspace")
     args = parser.parse_args()
+
     reporter = BuildReport(args)
     reporter.final_report()
 
