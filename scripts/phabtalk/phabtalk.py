@@ -191,6 +191,7 @@ class BuildReport:
         self.results_dir = args.results_dir  # type: str
         self.results_url = args.results_url  # type: str
         self.workspace = args.workspace  # type: str
+        self.failure_messages = args.failures  # type: str
 
         self.api = PhabTalk(args.conduit_token, args.host, args.dryrun)
 
@@ -237,7 +238,13 @@ class BuildReport:
             '=&title=enable%20checks%20for%20{{PATH}}">enable it for your project</a>'.format(
                 urllib.parse.quote(title)))
         with open(os.path.join(self.results_dir, 'summary.html'), 'w') as f:
-            f.write('<html><head><style>body { font-family: monospace; margin: 16px; }</style></head><body>')
+            f.write('<html><head><style>'
+                    'body { font-family: monospace; margin: 16px; }\n'
+                    '.failure {color:red;}'
+                    '</style></head><body>')
+            if self.failure_messages and len(self.failure_messages) > 0:
+                for s in self.failure_messages.split('\n'):
+                    f.write('<p class="failure">{}</p>'.format(s))
             f.write('<p>' + '</p><p>'.join(self.comments) + '</p>')
             f.write('</body></html>')
             self.api.add_artifact(self.ph_id, 'summary.html', 'summary', self.results_url)
@@ -456,6 +463,7 @@ def main():
                         dest='results_url',
                         help="public URL to access results directory")
     parser.add_argument('--workspace', type=str, required=True, help="path to workspace")
+    parser.add_argument('--failures', type=str, default=None, help="optional failure messages separated by newline")
     args = parser.parse_args()
 
     reporter = BuildReport(args)

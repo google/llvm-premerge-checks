@@ -13,6 +13,7 @@
 // limitations under the License.
 
 def success = true
+def failure_message = ""
 
 pipeline {
     agent { label 'linux' }
@@ -72,15 +73,23 @@ pipeline {
         }
         stage('arc patch'){
             steps {
+                success = false
+                failure_message = "Failed to apply patch"
                 sh "${SCRIPT_DIR}/phabtalk/apply_patch2.py ${DIFF_ID} --token ${CONDUIT_TOKEN} --url ${PHABRICATOR_HOST} --comment-file ${PHAB_LOG}"
+                success = true
+                failure_message = ""
             }
         }
         stage('CMake') {
             steps {
+                success = false
+                failure_message = "Failed to run cmake"
                 sh 'rm -rf build || true'
                 sh 'mkdir -p build'
                 sh 'mkdir -p "${TARGET_DIR}"'
                 sh "${SCRIPT_DIR}/run_cmake.sh"
+                success = true
+                failure_message = ""
             }
         }
         stage('ninja all') {
@@ -90,6 +99,7 @@ pipeline {
                         sh(script: "${SCRIPT_DIR}/run_ninja.sh all")
                     } catch (e) {
                           success = false;
+                          failure_message = "'ninja all' failed" // append as build might already be broken
                           echo e.toString()
                     }
                 }
@@ -116,6 +126,7 @@ pipeline {
                         sh(script: "${SCRIPT_DIR}/run_ninja.sh check-all")
                     } catch (e) {
                         success = false;
+                        failure_message += "\n'ninja check-all' failed" // append as build might already be broken
                         echo e.toString()
                     }
                 }
@@ -123,7 +134,15 @@ pipeline {
         }
         stage('linters') {
             steps {
-                sh "${SCRIPT_DIR}/lint.sh"
+                script {
+                    try {
+                      sh(script: "${SCRIPT_DIR}/lint.sh")
+                    } catch (e) {
+                        success = false;
+                        failure_message += "\nFailed to run linters" // append as build might already be broken
+                        echo e.toString()
+                    }
+                }
             }
         }
     }
@@ -160,7 +179,8 @@ pipeline {
                 --clang-tidy-result "clang-tidy.txt" \
                 --clang-tidy-ignore "${SCRIPT_DIR}/clang-tidy-comments.ignore" \
                 --results-dir "${TARGET_DIR}" \
-                --results-url "${RESULT_URL}"
+                --results-url "${RESULT_URL}" \
+                --failures "${failure_message}"
                 """
         }
     }    
