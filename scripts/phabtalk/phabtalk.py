@@ -231,7 +231,7 @@ class BuildReport:
 
         title = 'Issue with build for {} ({})'.format(self.api.get_revision_id(self.diff_id), self.diff_id)
         self.comments.append(
-            'Pre-merge checks is in beta. <a href="https://github.com/google/llvm-premerge-checks/issues/new?assignees'
+            'Pre-merge checks is in beta <a href="https://github.com/google/llvm-premerge-checks/issues/new?assignees'
             '=&labels=bug&template=bug_report.md&title={}">report issue</a>.<br/>'
             'Please <a href="https://reviews.llvm.org/project/update/78/join/">join beta</a> or '
             '<a href="https://github.com/google/llvm-premerge-checks/issues/new?assignees=&labels=enhancement&template'
@@ -240,7 +240,8 @@ class BuildReport:
         with open(os.path.join(self.results_dir, 'summary.html'), 'w') as f:
             f.write('<html><head><style>'
                     'body { font-family: monospace; margin: 16px; }\n'
-                    '.failure {color:red;}'
+                    '.failure {color:red;}\n'
+                    '.success {color:green;}\n'
                     '</style></head><body>')
             if self.failure_messages and len(self.failure_messages) > 0:
                 for s in self.failure_messages.split('\n'):
@@ -379,9 +380,11 @@ class BuildReport:
             self.test_stats['fail'],
             self.test_stats['skip'],
         )
+        if not success:
+            comment += 'Failures:<br/>'
         for test_case in self.unit:
             if test_case['result'] == 'fail':
-                comment += '    failed: {}/{}<br/>'.format(test_case['namespace'], test_case['name'])
+                comment += '{}/{}<br/>'.format(test_case['namespace'], test_case['name'])
         self.comments.append(comment)
         self.success = success and self.success
 
@@ -411,12 +414,12 @@ def _test_case_status(test_case) -> str:
 
 
 def section_title(title: str, ok: bool, present: bool) -> str:
-    icon = '[?]'
     result = 'unknown'
+    c = ''
     if present:
-        icon = '[V]' if ok else '[X]'
+        c = 'success' if ok else 'failure'
         result = 'pass' if ok else 'fail'
-    return '{} {}: {}. '.format(icon, title, result)
+    return '{} <span class="{}">{}</span>. '.format(title, c, result)
 
 
 def _try_call(call):
