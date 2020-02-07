@@ -73,23 +73,31 @@ pipeline {
         }
         stage('arc patch'){
             steps {
-                success = false
-                failure_message = "Failed to apply patch"
+                script {
+                    success = false
+                    failure_message = "Failed to apply patch"
+                }
                 sh "${SCRIPT_DIR}/phabtalk/apply_patch2.py ${DIFF_ID} --token ${CONDUIT_TOKEN} --url ${PHABRICATOR_HOST} --comment-file ${PHAB_LOG}"
-                success = true
-                failure_message = ""
+                script {
+                    success = true
+                    failure_message = ""
+                }
             }
         }
         stage('CMake') {
             steps {
-                success = false
-                failure_message = "Failed to run cmake"
+                script {
+                    success = false
+                    failure_message = "Failed to run cmake"
+                }
                 sh 'rm -rf build || true'
                 sh 'mkdir -p build'
                 sh 'mkdir -p "${TARGET_DIR}"'
                 sh "${SCRIPT_DIR}/run_cmake.sh"
-                success = true
-                failure_message = ""
+                script {
+                    success = true
+                    failure_message = ""
+                }
             }
         }
         stage('ninja all') {
