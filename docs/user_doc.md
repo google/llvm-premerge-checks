@@ -11,7 +11,7 @@ The *checks* comprise of these steps:
 1. Run the test suite -- `ninja check-all`
 1. Run clang-format and clang-tidy on the diff.
 
-The checks are executed on one platform (Debian Testing on amd64 with the clang-8 tool chain) at the moment. The plan is to add more platforms, in the future.
+The checks are executed on one platform (Debian Testing on amd64 with the clang-8 tool chain) at the moment. We're in the process of adding builds and Test for Windows (amd64, Visual Studio 2017). The plan is to add more platforms, in the future.
 
 The CI system checks the patches **before** a user merges them to the master branch. This way bugs in a patch are contained during the code review stage and do not pollute the master branch. The more bugs the CI system can catch during the code review phase, the more stable and bug-free the master branch will become.
 
