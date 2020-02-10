@@ -100,6 +100,7 @@ pipeline {
                     Invoke-WebRequest -OutFile console-log.txt -uri "http://jenkins.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText" -ErrorAction "Continue"
                     
                     Write-Host "Copying build artefacts..."
+                    Copy-Item "${LLVM_DIR}\\choose_projects.log" -ErrorAction Continue
                     Copy-Item "${LLVM_DIR}\\build\\CMakeCache.txt" -ErrorAction Continue
                     Copy-Item "${LLVM_DIR}\\build\\test-results.xml" -ErrorAction Continue
                     
