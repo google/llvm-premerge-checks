@@ -25,7 +25,7 @@ if ($projects -eq "default") {
   # These are the default projects for windows
   $LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;libcxx;libc;lld;mlir;libcxxabi"
 } elseif ($projects -eq "detect") {
-  $LLVM_ENABLE_PROJECTS = (git diff | python ${PSScriptRoot}\choose_projects.py . ) | Out-String
+  $LLVM_ENABLE_PROJECTS = (git diff HEAD~1 | python ${PSScriptRoot}\choose_projects.py . ) | Out-String
   $LLVM_ENABLE_PROJECTS = $LLVM_ENABLE_PROJECTS.replace("`n","").replace("`r","")
   if ($LLVM_ENABLE_PROJECTS -eq "") {
     Write-Error "Error detecting the affected projects."
