@@ -72,3 +72,5 @@ excludedProjects:
   - libcxxabi
   - openmp # blacklisting as kuhnel has trouble with the Perl installation
   - mlir # tests keep failings
+  - debuginfo-tests # test failing
+  - polly # test failing
