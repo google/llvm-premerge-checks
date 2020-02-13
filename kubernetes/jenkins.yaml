@@ -70,7 +70,7 @@ spec:
       hostname: jenkins-master
       containers:
       - name: master
-        image: gcr.io/llvm-premerge-checks/jenkins-master
+        image: jenkins/jenkins:lts
         ports:
         - containerPort: 8080
         - containerPort: 50000
