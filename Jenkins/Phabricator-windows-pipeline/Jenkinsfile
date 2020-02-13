@@ -93,8 +93,7 @@ pipeline {
         always { 
             echo "Uploading logs to ${RESULT_URL} ..."
             dir("${env.RESULT_DIR}") {
-                // gather all result files in a folder, then upload everything to
-                // Google Cloud Storage
+                // gather all result files in a folder
                 powershell """
                     Write-Host "Getting the console log..."
                     Invoke-WebRequest -OutFile console-log.txt -uri "http://jenkins.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText" -ErrorAction "Continue"
@@ -103,15 +102,10 @@ pipeline {
                     Copy-Item "${LLVM_DIR}\\choose_projects.log" -ErrorAction Continue
                     Copy-Item "${LLVM_DIR}\\build\\CMakeCache.txt" -ErrorAction Continue
                     Copy-Item "${LLVM_DIR}\\build\\test-results.xml" -ErrorAction Continue
-                    
-                    Write-Host "Uploading results to GCS..."
-                    \$ErrorActionPreference = 'Continue'
-                    gsutil cp *.* gs://llvm-premerge-checks/results/${MY_BUILD_ID}/
-                    Write-Host "Done."
-                """
+                """                               
             }
             /// send results to Phabricator
-            bat """ python ${SCRIPT_DIR}/phabtalk/phabtalk.py "${PHID}" "${DIFF_ID}" \
+            bat """python ${SCRIPT_DIR}/phabtalk/phabtalk.py "${PHID}" "${DIFF_ID}" \
                 --workspace "${LLVM_DIR}" \
                 --conduit-token "${CONDUIT_TOKEN}" \
                 --test-result-file "test-results.xml" \
@@ -121,7 +115,16 @@ pipeline {
                 --results-url "${RESULT_URL}" \
                 --failures "${failure_message}"
                 """            
-        }
-    } 
-
+            dir("${env.RESULT_DIR}") {
+                // upload results to
+                // Google Cloud Storage
+                powershell """
+                    Write-Host "Uploading results to GCS..."
+                    \$ErrorActionPreference = 'Continue'
+                    gsutil cp *.* gs://llvm-premerge-checks/results/${MY_BUILD_ID}/
+                    Write-Host "Done."
+                """
+            }
+        } 
+    }
 }
