@@ -109,7 +109,14 @@ pipeline {
             echo "Sending build feedback to Phabricator..."
             bat """
                 echo on
-                python ${SCRIPT_DIR}/phabtalk/phabtalk.py "${PHID}" "${DIFF_ID}" --workspace "${LLVM_DIR}" --conduit-token "${CONDUIT_TOKEN}" --test-result-file "test-results.xml" --host "${PHABRICATOR_HOST}/api/" --buildresult ${currentBuild.result} --results-dir "${RESULT_DIR}" --results-url "${RESULT_URL}" --failures "${failure_message}"
+                python ${SCRIPT_DIR}/phabtalk/phabtalk.py "${PHID}" "${DIFF_ID}" ^
+                    --workspace "${LLVM_DIR}" ^
+                    --conduit-token "${CONDUIT_TOKEN}" ^
+                    --test-result-file "test-results.xml" ^
+                    --host "${PHABRICATOR_HOST}/api/" ^
+                    --results-dir "${RESULT_DIR}" ^
+                    --results-url "${RESULT_URL}" ^
+                    --failures "${failure_message}"
                 """            
             dir("${RESULT_DIR}") {
                 // upload results to
