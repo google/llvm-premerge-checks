@@ -263,7 +263,9 @@ class BuildReport:
 
     def add_clang_format(self):
         """Populates results from diff produced by clang format."""
-        present = (self.clang_format_patch is not None) and os.path.exists(
+        if self.clang_format_patch is None:
+            return
+        present = os.path.exists(
             os.path.join(self.results_dir, self.clang_format_patch))
         if not present:
             print('clang-format result {} is not found'.format(self.clang_format_patch))
@@ -294,11 +296,13 @@ class BuildReport:
     def add_clang_tidy(self):
         # Typical message looks like
         # [..]/clang/include/clang/AST/DeclCXX.h:3058:20: error: no member named 'LifetimeExtendedTemporary' in 'clang::Decl' [clang-diagnostic-error]
+        if self.clang_tidy_result is None:
+            return
         pattern = '^{}/([^:]*):(\\d+):(\\d+): (.*): (.*)'.format(self.workspace)
         errors_count = 0
         warn_count = 0
         inline_comments = 0
-        present = (self.clang_tidy_result is not None) and os.path.exists(
+        present = os.path.exists(
             os.path.join(self.results_dir, self.clang_tidy_result))
         if not present:
             print('clang-tidy result {} is not found'.format(self.clang_tidy_result))
