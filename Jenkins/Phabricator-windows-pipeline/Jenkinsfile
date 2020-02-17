@@ -108,7 +108,6 @@ pipeline {
             /// send results to Phabricator
             echo "Sending build feedback to Phabricator..."
             bat """
-                echo on
                 python ${SCRIPT_DIR}/phabtalk/phabtalk.py "${PHID}" "${DIFF_ID}" ^
                     --workspace "${LLVM_DIR}" ^
                     --conduit-token "${CONDUIT_TOKEN}" ^
