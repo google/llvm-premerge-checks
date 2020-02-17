@@ -115,21 +115,32 @@ class PhabTalk:
             print('type: {}'.format(result_type))
             print('unit: {}'.format(unit))
             print('lint: {}'.format(lint_messages))
-        else:
-            _try_call(lambda: self._phab.harbormaster.sendmessage(
-                buildTargetPHID=phid,
-                type=result_type,
-                unit=unit,
-                lint=lint_messages))
+            return
+
+        _try_call(lambda: self._phab.harbormaster.sendmessage(
+            buildTargetPHID=phid,
+            type=result_type,
+            unit=unit,
+            lint=lint_messages))
 
     def add_artifact(self, phid: str, file: str, name: str, results_url: str):
+        artifactKey=str(uuid.uuid4()),
+        artifactType='uri',
+        artifactData={'uri': '{}/{}'.format(results_url, file),
+                        'ui.external': True,
+                        'name': name}
+        if self.dryrun:
+            print('harbormaster.createartifact =================')
+            print('artifactKey: {}'.format(artifactKey))
+            print('artifactType: {}'.format(artifactType))
+            print('artifactData: {}'.format(artifactData))
+            return
+
         _try_call(lambda: self._phab.harbormaster.createartifact(
             buildTargetPHID=phid,
-            artifactKey=str(uuid.uuid4()),
-            artifactType='uri',
-            artifactData={'uri': '{}/{}'.format(results_url, file),
-                          'ui.external': True,
-                          'name': name}))
+            artifactKey=artifactKey,
+            artifactType=artifactType,
+            artifactData=artifactData))
 
 
 def _parse_patch(patch) -> List[Dict[str, str]]:
@@ -215,10 +226,10 @@ class BuildReport:
     def final_report(self):
         if self.buildresult is not None:
             print('Jenkins result: {}'.format(self.buildresult))
-        if self.buildresult.lower() == 'success':
-            pass
-        elif self.buildresult.lower() == 'null':
-            self.working = True
+            if self.buildresult.lower() == 'success':
+                pass
+            elif self.buildresult.lower() == 'null':
+                self.working = True
         else:
             self.success = False
 
