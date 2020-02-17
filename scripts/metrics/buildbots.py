@@ -27,12 +27,9 @@ class BuildStats:
     Plain data object.
     """
 
-    successful = 0  # type: int
-    failed = 0      # type: int
-
     def __init__(self, successful:int = 0, failed:int = 0):
-        self.successful = successful
-        self.failed = failed
+        self.successful = successful  # type: int
+        self.failed = failed          # type: int
 
     def add(self, success: bool):
         if success:
