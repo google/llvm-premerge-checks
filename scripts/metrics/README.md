@@ -12,7 +12,8 @@ shall be collected as time series, so that we can see changes over time.
       afterwards. This would indicate that a bug was found and fixed during 
       the code review phase.
     * Number of reverts on master. This indicates that something was broken on
-      master that slipped through the pre-merge tests.
+      master that slipped through the pre-merge tests or was submitted without
+      any review.
 
 * Users and behavior - Interesting to see and useful to adapt our approach.
     * Percentage of commits to master that went through Phabricator.
@@ -48,12 +49,14 @@ shall be collected as time series, so that we can see changes over time.
 
 We need to find solutions for these parts:
 * Collect the data (regularly).
-* Store the time series somewhere .
+* Store the time series somewhere.
 * Create & display charts.
 
 Some ideas for this:
 * bunch of scripts:
-    * run a bunch of scripts manually to generate the metrics every now and then
+    * Run a bunch of scripts manually to generate the metrics every now and 
+      then. Phabricator already has a database and most entries there have 
+      timestamps. So we could also reconstruct the history from that.
     * TODO: Figure out if we can collect the most important metrics this way. 
       This requires that we can reconstruct historic values from the current
       logs/git/database/... entries.
@@ -66,6 +69,7 @@ Some ideas for this:
     * Store the data on Prometheus 
     * Visualize with Grafana 
     * host all tools ourselves
-* GCP:
-    * TODO: figure out if GCP already provides a solution for this,
-      e.g. Stackdriver
+* Stackdriver on GCP:
+    * TODO: figure out if we can get all the required data into Stackdriver
+* Jupyter notebooks:
+    * TODO: figure out how that works
