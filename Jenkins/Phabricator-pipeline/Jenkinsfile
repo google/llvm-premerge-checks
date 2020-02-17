@@ -111,20 +111,6 @@ pipeline {
                           echo e.toString()
                     }
                 }
-                /* To test the windows builds:
-                    If the linux compile succeed, trigger a windows build.
-                    This does NOT give any feedback on Phabricator on the 
-                    windows build.
-                    
-                    Fire & Forget: Do not wait for the job to finish, 
-                        ingore the results
-                */
-                /*
-                build job: 'amd64_windows_vs2017', propagate: false, wait: false, parameters: [
-                    [$class: 'StringParameterValue', name: 'DIFF_ID', value: "$DIFF_ID"],
-                    [$class: 'StringParameterValue', name: 'PHID', value: "$PHID"],
-                    ]
-                    */
             }
         }
         stage('ninja check-all') {
