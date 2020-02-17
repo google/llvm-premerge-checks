@@ -124,8 +124,8 @@ class PhabTalk:
             lint=lint_messages))
 
     def add_artifact(self, phid: str, file: str, name: str, results_url: str):
-        artifactKey=str(uuid.uuid4()),
-        artifactType='uri',
+        artifactKey=str(uuid.uuid4())
+        artifactType='uri'
         artifactData={'uri': '{}/{}'.format(results_url, file),
                         'ui.external': True,
                         'name': name}
