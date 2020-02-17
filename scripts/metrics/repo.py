@@ -18,6 +18,7 @@ from time import timezone
 import git
 from typing import Dict
 from google.cloud import monitoring_v3
+import re
 
 from datetime import tzinfo
 
@@ -26,30 +27,42 @@ GCP_PROJECT_ID = 'llvm-premerge-checks'
 class RepoStats:
 
     def __init__(self):
-        self.commits = 0  # type: int
-        self.reverts = 0  # type: int
+        self.commits = 0   # type: int
+        self.reverts = 0   # type: int
+        self.reviewed = 0  # type: int
 
     @property
     def percent_reverted(self) -> float:
         return 100.0 * self.reverts / self.commits
 
+    @property
+    def percent_reviewed(self) -> float:
+        return 100.0 * self.reviewed / (self.commits - self.reverts)
+
     def __str__(self):
         return "\n".join([
-            "commits: {}".format(self.commits),
-            "reverts: {}".format(self.reverts),
+            "commits:  {}".format(self.commits),
+            "reverts:  {}".format(self.reverts),
+            "reviewed: {}".format(self.reviewed),
             "percent reverted: {:0.1f}".format(self.percent_reverted),
+            "percent reviewed: {:0.1f}".format(self.percent_reviewed),
             ])
 
 def get_reverts_per_day(repo_path: str, max_age: datetime.datetime) -> RepoStats:
     stats = RepoStats()
     repo = git.Repo(repo_path)
     repo.git.fetch()
+    diff_regex = re.compile(r'^Differential Revision: https:\/\/reviews\.llvm\.org\/(.*)$', re.MULTILINE)
+
     for commit in repo.iter_commits('master'):
         if commit.committed_datetime < max_age:
             break
         stats.commits += 1
-        if commit.summary.startswith('Revert'):
+        if commit.message.startswith('Revert'):
             stats.reverts += 1
+        if diff_regex.search(commit.message) is not None:
+            stats.reviewed += 1
+
     return stats
 
 
@@ -62,6 +75,8 @@ def gcp_write_data(project_id: str, stats: RepoStats, now:datetime.datetime):
         ["reverts", stats.reverts],
         ["commits", stats.commits],
         ["percent_reverted", stats.percent_reverted],
+        ["reviewed", stats.reviewed],
+        ["percent_reviewed", stats.percent_reviewed],
     ]:
         series = monitoring_v3.types.TimeSeries()
         series.metric.type = 'custom.googleapis.com/repository_{}'.format(desc_type)
@@ -78,4 +93,5 @@ if __name__ == '__main__':
     # TODO: make path configurable
     stats = get_reverts_per_day('~/git/llvm-project', max_age)
     print(stats)
+    # TODO: add `dryrun` parameter
     gcp_write_data(GCP_PROJECT_ID, stats, now)
