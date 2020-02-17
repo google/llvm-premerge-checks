@@ -159,7 +159,7 @@ class ApplyPatch:
         print('Applying diff {} for revision {}...'.format(diff_id, diff_to_str(revision_id)))
         # TODO: print diff or URL to it
         diff = try_call(lambda: self.phab.differential.getrawdiff(diffID=str(diff_id)).response)
-        proc = subprocess.run('patch -p1', input=diff, shell=True, text=True,
+        proc = subprocess.run('git apply --ignore-whitespace -', input=diff, shell=True, text=True,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if proc.returncode != 0:
             raise Exception('Applying patch failed:\n{}'.format(proc.stdout + proc.stderr))
