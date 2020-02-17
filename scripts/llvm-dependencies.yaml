@@ -55,7 +55,6 @@ allprojects:
   - libunwind
   - lld
   - lldb
-  - llgo
   - mlir
   - openmp
   - parallel-libs
