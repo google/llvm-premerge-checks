@@ -5,15 +5,16 @@ a set of metrics. This doc will summarize the metrics and tools. All of the data
 shall be collected as time series, so that we can see changes over time.
 
 * Impact - The metrics we ultimately want to improve
-    * Percentage of [build-bot build](http://lab.llvm.org:8011/) on master failing.
+    * Percentage of [build-bot build](http://lab.llvm.org:8011/) on master 
+      failing. (Buildbot_percentage_failing)
     * Time to fix a broken master build: Time between start of failing builds 
-      until the build is fixed.
+      until the build is fixed. (BuildBot_time_to_fix)
     * Percentage of Revisions on Phabricator where a broken build was fixed 
       afterwards. This would indicate that a bug was found and fixed during 
-      the code review phase.
+      the code review phase. (Premerge_fixes)
     * Number of reverts on master. This indicates that something was broken on
       master that slipped through the pre-merge tests or was submitted without
-      any review.
+      any review. (Upstream_reverts)
 
 * Users and behavior - Interesting to see and useful to adapt our approach.
     * Percentage of commits to master that went through Phabricator.
@@ -44,6 +45,13 @@ shall be collected as time series, so that we can see changes over time.
       public access to the metrics (numbers and charts). 
     * Send out alerts/notifications.
     * Show live data in charts.
+
+
+# Data sources
+
+This section will explain where we can get the data from.
+
+* build bot statistics
 
 # Solution
 
