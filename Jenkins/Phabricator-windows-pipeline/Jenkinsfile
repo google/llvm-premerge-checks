@@ -92,30 +92,33 @@ pipeline {
     post { 
         always { 
             echo "Uploading logs to ${RESULT_URL} ..."
-            dir("${env.RESULT_DIR}") {
+            dir("${RESULT_DIR}") {
                 // gather all result files in a folder
                 powershell """
+                    \$ErrorActionPreference = 'Continue'
                     Write-Host "Getting the console log..."
                     Invoke-WebRequest -OutFile console-log.txt -uri "http://jenkins.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText" -ErrorAction "Continue"
                     
                     Write-Host "Copying build artefacts..."
-                    Copy-Item "${LLVM_DIR}\\choose_projects.log" -ErrorAction Continue
-                    Copy-Item "${LLVM_DIR}\\build\\CMakeCache.txt" -ErrorAction Continue
-                    Copy-Item "${LLVM_DIR}\\build\\test-results.xml" -ErrorAction Continue
+                    Copy-Item "${LLVM_DIR}\\choose_projects.log"
+                    Copy-Item "${LLVM_DIR}\\build\\CMakeCache.txt"
+                    Copy-Item "${LLVM_DIR}\\build\\test-results.xml"
                 """                               
             }
             /// send results to Phabricator
-            bat """python ${SCRIPT_DIR}/phabtalk/phabtalk.py "${PHID}" "${DIFF_ID}" \
-                --workspace "${LLVM_DIR}" \
-                --conduit-token "${CONDUIT_TOKEN}" \
-                --test-result-file "test-results.xml" \
-                --host "${PHABRICATOR_HOST}/api/" \
-                --buildresult ${currentBuild.result} \
-                --results-dir "${env.RESULT_DIR}" \
-                --results-url "${RESULT_URL}" \
+            echo "Sending build feedback to Phabricator..."
+            bat """
+                python ${SCRIPT_DIR}/phabtalk/phabtalk.py "${PHID}" "${DIFF_ID}" ^
+                --workspace "${LLVM_DIR}" ^
+                --conduit-token "${CONDUIT_TOKEN}" ^
+                --test-result-file "test-results.xml" ^
+                --host "${PHABRICATOR_HOST}/api/" ^
+                --buildresult ${currentBuild.result} ^
+                --results-dir "${RESULT_DIR}" ^
+                --results-url "${RESULT_URL}" ^
                 --failures "${failure_message}"
                 """            
-            dir("${env.RESULT_DIR}") {
+            dir("${RESULT_DIR}") {
                 // upload results to
                 // Google Cloud Storage
                 powershell """
@@ -125,6 +128,7 @@ pipeline {
                     Write-Host "Done."
                 """
             }
+            echo "Done."
         } 
     }
 }
