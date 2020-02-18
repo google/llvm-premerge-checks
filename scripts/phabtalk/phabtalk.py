@@ -233,7 +233,16 @@ class BuildReport:
         else:
             self.success = False
 
-        self.add_test_results()
+        try:
+            self.add_test_results()
+        except etree.XMLSyntaxError:
+            # Sometimes we get an incomplete XML file.
+            # In this case: 
+            #   - fail the build (the safe thing to do)
+            #   - continue so the user gets some feedback.
+            print('Error parsing {}. Invalid XML syntax!'.format(self.test_result_file))
+            self.success = False
+
         self.add_clang_tidy()
         self.add_clang_format()
         self.api.update_build_status(self.diff_id, self.ph_id, self.working, self.success, self.lint, self.unit)
