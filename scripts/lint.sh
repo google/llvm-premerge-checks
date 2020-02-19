@@ -32,6 +32,6 @@ set -e
 git checkout -- .
 
 # clang-tidy
-git diff -U0 HEAD | "${SCRIPT_DIR}/ignore_diff.py" "${SCRIPT_DIR}/clang-tidy.ignore" | clang-tidy-diff -p1 -quiet > "${TARGET_DIR}"/clang-tidy.txt
+git diff -U0 HEAD | "${SCRIPT_DIR}/ignore_diff.py" "${SCRIPT_DIR}/clang-tidy.ignore" | clang-tidy-diff -p1 -quiet | sed '${/^[[:space:]]*$/d;}' > "${TARGET_DIR}"/clang-tidy.txt
 
 echo "linters completed ======================================"

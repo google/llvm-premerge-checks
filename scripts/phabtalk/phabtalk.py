@@ -323,7 +323,7 @@ class BuildReport:
             self.comments.append(section_title('clang-tidy', False, False))
             return
         p = os.path.join(self.results_dir, self.clang_tidy_result)
-        if os.stat(p).st_size > 4:
+        if os.stat(p).st_size > 0:
             self.api.add_artifact(self.ph_id, self.clang_tidy_result, "clang-tidy", self.results_url)
         ignore = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern,
                                               open(self.clang_tidy_ignore, 'r').readlines())
