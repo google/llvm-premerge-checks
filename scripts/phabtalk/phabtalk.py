@@ -124,9 +124,9 @@ class PhabTalk:
             lint=lint_messages))
 
     def add_artifact(self, phid: str, file: str, name: str, results_url: str):
-        artifactKey=str(uuid.uuid4())
-        artifactType='uri'
-        artifactData={'uri': '{}/{}'.format(results_url, file),
+        artifactKey = str(uuid.uuid4())
+        artifactType = 'uri'
+        artifactData = {'uri': '{}/{}'.format(results_url, file),
                         'ui.external': True,
                         'name': name}
         if self.dryrun:
@@ -203,9 +203,11 @@ class BuildReport:
         self.results_url = args.results_url  # type: str
         self.workspace = args.workspace  # type: str
         self.failure_messages = args.failures  # type: str
+        self.name = args.name  # type: str
 
         self.api = PhabTalk(args.conduit_token, args.host, args.dryrun)
 
+        self.revision_id = self.api.get_revision_id(self.diff_id)
         self.comments = []
         self.success = True
         self.working = False
@@ -263,12 +265,14 @@ class BuildReport:
                     '.failure {color:red;}\n'
                     '.success {color:green;}\n'
                     '</style></head><body>')
+            f.write('<h1>Build result for diff <a href="https://reviews.llvm.org/{0}">{0}</a> {1} at {2}</h1>'.format(
+                self.revision_id, self.diff_id, self.name))
             if self.failure_messages and len(self.failure_messages) > 0:
                 for s in self.failure_messages.split('\n'):
                     f.write('<p class="failure">{}</p>'.format(s))
             f.write('<p>' + '</p><p>'.join(self.comments) + '</p>')
             f.write('</body></html>')
-            self.api.add_artifact(self.ph_id, 'summary.html', 'summary', self.results_url)
+            self.api.add_artifact(self.ph_id, 'summary.html', 'summary ' + self.name, self.results_url)
 
     def add_clang_format(self):
         """Populates results from diff produced by clang format."""
@@ -282,7 +286,7 @@ class BuildReport:
             return
         p = os.path.join(self.results_dir, self.clang_format_patch)
         if os.stat(p).st_size != 0:
-            self.api.add_artifact(self.ph_id, self.clang_format_patch, "clang-format", self.results_url)
+            self.api.add_artifact(self.ph_id, self.clang_format_patch, 'clang-format ' + self.name, self.results_url)
         diffs = _parse_patch(open(p, 'r'))
         success = len(diffs) == 0
         for d in diffs:
@@ -324,7 +328,7 @@ class BuildReport:
             return
         p = os.path.join(self.results_dir, self.clang_tidy_result)
         if os.stat(p).st_size > 0:
-            self.api.add_artifact(self.ph_id, self.clang_tidy_result, "clang-tidy", self.results_url)
+            self.api.add_artifact(self.ph_id, self.clang_tidy_result, 'clang-tidy ' + self.name, self.results_url)
         ignore = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern,
                                               open(self.clang_tidy_ignore, 'r').readlines())
         for line in open(p, 'r'):
@@ -491,6 +495,7 @@ def main():
                         help="public URL to access results directory")
     parser.add_argument('--workspace', type=str, required=True, help="path to workspace")
     parser.add_argument('--failures', type=str, default=None, help="optional failure messages separated by newline")
+    parser.add_argument('--name', type=str, default='', help="optional name of the build bot")
     args = parser.parse_args()
 
     reporter = BuildReport(args)
