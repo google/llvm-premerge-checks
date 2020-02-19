@@ -40,7 +40,7 @@ class PhabTalk:
         self._phab = None  # type: Optional[Phabricator]
         if not dryrun:
             self._phab = Phabricator(token=token, host=host)
-            self._phab.update_interfaces()
+            _try_call(self._phab.update_interfaces)
 
     @property
     def dryrun(self):
