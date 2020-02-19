@@ -162,7 +162,8 @@ pipeline {
                     --results-dir "${RESULT_DIR}" ^
                     --results-url "${RESULT_URL}" ^
                     --failures "${failure_message}" ^
-                    --buildresult ${currentBuild.result}
+                    --buildresult ${currentBuild.result} ^
+                    --name "windows"
                 """            
             dir("${RESULT_DIR}") {
                 // upload results to
