@@ -17,7 +17,13 @@
 
 # TODO: add parameter to bootstrap buildkite or jenkins
 
-$NAME="agent-windows-jenkins"
+param(
+    [Parameter(Mandatory=$true)]
+    [ValidateSet("buildkite", "jenkins")]
+    [string]$master
+)
+
+$NAME="agent-windows-${master}"
 $IMAGE="gcr.io/llvm-premerge-checks/${NAME}"
 
 Write-Output "Authenticating docker..."
