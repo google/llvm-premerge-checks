@@ -19,7 +19,6 @@
 
 param(
     [Parameter(Mandatory=$true)]
-    [ValidateSet("buildkite", "jenkins")]
     [string]$master
 )
 
