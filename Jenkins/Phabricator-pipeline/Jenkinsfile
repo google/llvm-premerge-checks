@@ -174,7 +174,8 @@ pipeline {
                 --clang-tidy-ignore "${SCRIPT_DIR}/clang-tidy-comments.ignore" \
                 --results-dir "${TARGET_DIR}" \
                 --results-url "${RESULT_URL}" \
-                --failures "${failure_message}"
+                --failures "${failure_message}" \
+                --name "linux"
                 """
         }
     }    

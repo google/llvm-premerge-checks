@@ -16,7 +16,7 @@
 import datetime
 from time import timezone
 import git
-from typing import Dict
+from typing import Dict, Optional
 from google.cloud import monitoring_v3
 import re
 
@@ -32,21 +32,35 @@ class RepoStats:
         self.reviewed = 0  # type: int
 
     @property
-    def percent_reverted(self) -> float:
-        return 100.0 * self.reverts / self.commits
+    def percent_reverted(self) -> Optional[float]:
+        try:
+            return 100.0 * self.reverts / self.commits
+        except ZeroDivisionError:
+            return None
 
     @property
-    def percent_reviewed(self) -> float:
-        return 100.0 * self.reviewed / (self.commits - self.reverts)
+    def percent_reviewed(self) -> Optional[float]:
+        try:
+            return 100.0 * self.reviewed / (self.commits - self.reverts)
+        except ZeroDivisionError:
+            return None
 
     def __str__(self):
-        return "\n".join([
+        results = [
             "commits:  {}".format(self.commits),
             "reverts:  {}".format(self.reverts),
             "reviewed: {}".format(self.reviewed),
-            "percent reverted: {:0.1f}".format(self.percent_reverted),
-            "percent reviewed: {:0.1f}".format(self.percent_reviewed),
-            ])
+        ]
+        try:
+            results.append("percent reverted: {:0.1f}".format(self.percent_reverted))
+        except TypeError:
+            pass
+        try:
+            results.append("percent reverted: {:0.1f}".format(self.percent_reverted))
+        except TypeError:
+            pass
+
+        return "\n".join(results)
 
 def get_reverts_per_day(repo_path: str, max_age: datetime.datetime) -> RepoStats:
     stats = RepoStats()
@@ -78,6 +92,9 @@ def gcp_write_data(project_id: str, stats: RepoStats, now:datetime.datetime):
         ["reviewed", stats.reviewed],
         ["percent_reviewed", stats.percent_reviewed],
     ]:
+        if value is None:
+            continue
+
         series = monitoring_v3.types.TimeSeries()
         series.metric.type = 'custom.googleapis.com/repository_{}'.format(desc_type)
         series.resource.type = 'global'
