@@ -28,7 +28,10 @@ Get-Content "${ROOT_DIR}/k8s_config" | Foreach-Object{
 New-Variable -Name QUALIFIED_NAME -Value "${GCR_HOSTNAME}/${GCP_PROJECT}/${IMAGE_NAME}"
 
 Push-Location "$PSScriptRoot\$IMAGE_NAME"
-docker build -t $IMAGE_NAME .
+
+# TODO: get current Windows version number from host via "cmd /c ver"
+# to solve these issues: https://stackoverflow.com/questions/43123851/unable-to-run-cygwin-in-windows-docker-container/52273489#52273489
+docker build -t $IMAGE_NAME --build-arg version=10.0.17763.1039 .
 docker tag $IMAGE_NAME $QUALIFIED_NAME
 docker push $QUALIFIED_NAME
 Pop-Location
