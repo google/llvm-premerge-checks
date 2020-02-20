@@ -1,7 +1,8 @@
 # escape=`
 
 # use windows server core image
-FROM gcr.io/llvm-premerge-checks/agent-windows
+ARG agent_windows_version
+FROM gcr.io/llvm-premerge-checks/agent-windows:$agent_windows_version
 
 # install java
 RUN choco install -y openjdk
@@ -16,9 +17,6 @@ RUN powershell -NoProfile -InputFormat None -Command `
 # install gsutils to access Google Cloud Storage
 RUN pip install gsutil
 VOLUME C:\credentials
-
-# configure gsutil
-COPY .boto  "C:\Users\ContainerAdministrator\.boto"
 
 # install python dependencies for the scripts
 RUN pip install -r https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/requirements.txt

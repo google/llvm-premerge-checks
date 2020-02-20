@@ -1,7 +1,8 @@
 # escape=`
 
 # use windows server core image
-FROM gcr.io/llvm-premerge-checks/agent-windows
+ARG agent_windows_version
+FROM gcr.io/llvm-premerge-checks/agent-windows:${agent_windows_version}
 
 # install buildkite agent as described in the documentation
 # https://buildkite.com/docs/agent/v3/windows

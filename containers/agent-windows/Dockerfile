@@ -1,8 +1,8 @@
 # escape=`
 
 # use windows server core image
-ARG version=ltsc2019
-FROM mcr.microsoft.com/windows/servercore:$version
+ARG windows_version=ltsc2019
+FROM mcr.microsoft.com/windows/servercore:${windows_version}
 
 # install chocolately as package manager
 RUN powershell -NoProfile -InputFormat None -Command `

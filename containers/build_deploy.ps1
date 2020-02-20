@@ -17,21 +17,43 @@ param(
     [Parameter(Mandatory=$true)][string]$IMAGE_NAME
 )
 
-New-Variable -Name ROOT_DIR -Value (Get-Item $PSScriptRoot).Parent.FullName
+$ROOT_DIR=(Get-Item $PSScriptRoot).Parent.FullName
+. ${ROOT_DIR}\scripts\common.ps1
+$VERSION_FILE="VERSION"
 
 # get config options
-Get-Content "${ROOT_DIR}/k8s_config" | Foreach-Object{
-    $var = $_.Split('=')
-    New-Variable -Name $var[0] -Value $var[1]
+Get-Content "${ROOT_DIR}\k8s_config" | Foreach-Object{
+    if (! $_.StartsWith('#') ){
+        $var = $_.Split('=')
+        New-Variable -Name $var[0] -Value $var[1]
+    }
 }
 
-New-Variable -Name QUALIFIED_NAME -Value "${GCR_HOSTNAME}/${GCP_PROJECT}/${IMAGE_NAME}"
+$QUALIFIED_NAME="${GCR_HOSTNAME}/${GCP_PROJECT}/${IMAGE_NAME}"
 
 Push-Location "$PSScriptRoot\$IMAGE_NAME"
+$container_version=[int](Get-Content $VERSION_FILE)
+$container_version+=1
+$agent_windows_version=Get-Content "../agent-windows/$VERSION_FILE"
+
+Write-Host "Building ${IMAGE_NAME}:${container_version}..."
+Write-Host "Using windows-agent:${agent_windows_version}"
 
 # TODO: get current Windows version number from host via "cmd /c ver"
 # to solve these issues: https://stackoverflow.com/questions/43123851/unable-to-run-cygwin-in-windows-docker-container/52273489#52273489
-docker build -t $IMAGE_NAME --build-arg version=10.0.17763.1039 .
-docker tag $IMAGE_NAME $QUALIFIED_NAME
-docker push $QUALIFIED_NAME
+$windows_version="10.0.17763.1039"
+
+Invoke-Call -ScriptBlock {
+    docker build . `
+        -t ${IMAGE_NAME}:${container_version} `
+        --build-arg windows_version=$windows_version `
+        --build-arg agent_windows_version=$agent_windows_version
+    }
+Invoke-Call -ScriptBlock {
+    docker tag ${IMAGE_NAME}:${container_version} ${QUALIFIED_NAME}:${container_version}
+}
+Invoke-Call -ScriptBlock {
+    docker push ${QUALIFIED_NAME}:$container_version
+}
+$container_version | Out-File $VERSION_FILE
 Pop-Location
