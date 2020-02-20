@@ -19,6 +19,7 @@
 
 param(
     [Parameter(Mandatory=$true)]
+    [ValidateSet("buildkite", "jenkins")]
     [string]$master
 )
 
@@ -36,7 +37,7 @@ docker stop ${NAME}
 docker rm ${NAME}
 
 Write-Output "Starting container..."
-docker run `
+docker run -d `
     -v D:\:C:\ws `
     -v C:\credentials:C:\credentials `
     -e PARENT_HOSTNAME=$env:computername `
