@@ -37,15 +37,17 @@ $container_version+=1
 $agent_windows_version=Get-Content "../agent-windows/$VERSION_FILE"
 
 Write-Host "Building ${IMAGE_NAME}:${container_version}..."
-Write-Host "Using windows-agent:${agent_windows_version}"
+Write-Host "Using windows-agent ${agent_windows_version}"
 
 # TODO: get current Windows version number from host via "cmd /c ver"
 # to solve these issues: https://stackoverflow.com/questions/43123851/unable-to-run-cygwin-in-windows-docker-container/52273489#52273489
 $windows_version="10.0.17763.1039"
+Write-Host "Using windows version ${windows_version}"
 
 Invoke-Call -ScriptBlock {
     docker build . `
         -t ${IMAGE_NAME}:${container_version} `
+        -t ${IMAGE_NAME}:latest `
         --build-arg windows_version=$windows_version `
         --build-arg agent_windows_version=$agent_windows_version
     }
@@ -53,7 +55,13 @@ Invoke-Call -ScriptBlock {
     docker tag ${IMAGE_NAME}:${container_version} ${QUALIFIED_NAME}:${container_version}
 }
 Invoke-Call -ScriptBlock {
+    docker tag ${IMAGE_NAME}:latest ${QUALIFIED_NAME}:latest
+}
+Invoke-Call -ScriptBlock {
     docker push ${QUALIFIED_NAME}:$container_version
+}
+Invoke-Call -ScriptBlock {
+    docker push ${QUALIFIED_NAME}:latest
 }
 $container_version | Out-File $VERSION_FILE
 Pop-Location
