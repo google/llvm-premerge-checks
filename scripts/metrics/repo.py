@@ -24,6 +24,7 @@ from datetime import tzinfo
 
 GCP_PROJECT_ID = 'llvm-premerge-checks'
 
+
 class RepoStats:
 
     def __init__(self):
@@ -61,6 +62,7 @@ class RepoStats:
             pass
 
         return "\n".join(results)
+
 
 def get_reverts_per_day(repo_path: str, max_age: datetime.datetime) -> RepoStats:
     stats = RepoStats()
