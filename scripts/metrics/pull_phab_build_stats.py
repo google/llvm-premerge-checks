@@ -48,6 +48,7 @@ class Revision(PhabResponse):
     def __init__(self, revision_dict):
         super().__init__(revision_dict)
         self.buildables = []  # type: List['Buildable']
+        self.diffs = []  # type: List['Diff']
 
     @property
     def status(self) -> str:
@@ -67,6 +68,18 @@ class Revision(PhabResponse):
     @property
     def was_premerge_tested(self) -> bool:
         return any((b.was_premerge_tested for b in self.builds))
+
+    @property
+    def repository_phid(self) -> str:
+        return self.revision_dict['fields']['repositoryPHID']
+
+    @property
+    def diff_phid(self) -> str:
+        return self.revision_dict['fields']['diffPHID']
+
+    @property
+    def all_diffs_have_refs(self) -> bool:
+        return not any(not d.has_refs for d in self.diffs)
 
 
 class Buildable(PhabResponse):
@@ -104,24 +117,41 @@ class Build(PhabResponse):
         return self.buildplan_phid == _PRE_MERGE_PHID
 
 
+class Diff(PhabResponse):
+
+    def __init__(self, revision_dict):
+        super().__init__(revision_dict)
+        self.revision = None  # type: Optional[Revision]
+
+    @property
+    def revison_phid(self) -> str:
+        return self.revision_dict['fields']['revisionPHID']
+
+    @property
+    def has_refs(self) -> bool:
+        return len(self.revision_dict['fields']['refs']) > 0
+
+
 class PhabBuildPuller:
 
     _REVISION_FILE = 'tmp/revisions.json'
     _BUILDABLE_FILE = 'tmp/buildables.json'
     _BUILD_FILE = 'tmp/build.json'
+    _DIFF_FILE = 'tmp/diffs.json'
     _PHAB_WEEKLY_METRICS_FILE = 'tmp/phabricator_week.csv'
 
     def __init__(self):
         self.conduit_token = None
         self.host = None
         self.phab = self._create_phab()
-        self.revisions = {}  # type: Dict[str,Revision]
-        self.buildables = {}  # type: Dict[str,Buildable]
-        self.builds = {}  # type: Dict[str,Build]
+        self.revisions = {}  # type: Dict[str, Revision]
+        self.buildables = {}  # type: Dict[str, Buildable]
+        self.builds = {}  # type: Dict[str, Build]
+        self.diffs = {}  # type: Dict[str, Diff]
 
     def _create_phab(self) -> phabricator.Phabricator:
         phab = phabricator.Phabricator(token=self.conduit_token, host=self.host)
-        #phab.update_interfaces()
+        phab.update_interfaces()
         return phab
 
     def _load_arcrc(self):
@@ -147,6 +177,9 @@ class PhabBuildPuller:
         if not os.path.isfile(self._BUILD_FILE):
             self.get_builds()
         self.parse_builds()
+        if not os.path.isfile(self._DIFF_FILE):
+            self.get_diffs()
+        self.parse_diffs()
         self.link_objects()
         self.compute_metrics()
 
@@ -179,7 +212,7 @@ class PhabBuildPuller:
         after = None
         while True:
             revisions = self.phab.harbormaster.querybuildables(
-                containerPHIDs=[r.phid for r in self.revisions], after=after)
+                containerPHIDs=[r.phid for r in self.revisions.values()], after=after)
             data.extend(revisions.response['data'])
             print('{} buildables...'.format(len(data)))
             after = revisions.response['cursor']['after']
@@ -193,7 +226,7 @@ class PhabBuildPuller:
         print('Downloading builds...')
         data = []
         constraints = {
-            'buildables': [r.phid for r in self.buildables]
+            'buildables': [r.phid for r in self.buildables.values()]
         }
         after = None
         while True:
@@ -206,6 +239,25 @@ class PhabBuildPuller:
                 break
         print('Number of buildables:', len(data))
         with open(self._BUILD_FILE, 'w') as json_file:
+            json.dump(data, json_file)
+
+    def get_diffs(self):
+        print('Downloading diffs...')
+        data = []
+        constraints = {
+            'revisionPHIDs': [r.phid for r in self.revisions.values()]
+        }
+        after = None
+        while True:
+            diffs = self.phab.differential.diff.search(
+                constraints=constraints, after=after)
+            data.extend(diffs.response['data'])
+            print('{} diffs...'.format(len(data)))
+            after = diffs.response['cursor']['after']
+            if after is None:
+                break
+        print('Number of diffs:', len(data))
+        with open(self._DIFF_FILE, 'w') as json_file:
             json.dump(data, json_file)
 
     def parse_revisions(self):
@@ -226,6 +278,12 @@ class PhabBuildPuller:
         self.builds = {b.phid: b for b in (Build(x) for x in build_dict)}
         print('Parsed {} builds.'.format(len(self.builds)))
 
+    def parse_diffs(self):
+        with open(self._DIFF_FILE) as diff_file:
+            diff_dict = json.load(diff_file)
+        self.diffs = {d.phid: d for d in (Diff(x) for x in diff_dict)}
+        print('Parsed {} diffs.'.format(len(self.diffs)))
+
     def link_objects(self):
         for build in (b for b in self.builds.values()):
             buildable = self.buildables[build.buildable_phid]
@@ -237,6 +295,11 @@ class PhabBuildPuller:
             revision.buildables.append(buildable)
             buildable.revision = revision
 
+        for diff in self.diffs.values():
+            revision = self.revisions[diff.revison_phid]
+            revision.diffs.append(diff)
+            diff.revision = revision
+
     def compute_metrics(self):
         days_dict = {}
         for revision in self.revisions.values():
@@ -245,20 +308,27 @@ class PhabBuildPuller:
             days_dict.setdefault(week, []).append(revision)
 
         csv_file = open(self._PHAB_WEEKLY_METRICS_FILE, 'w')
-        fieldnames = ['week', 'num_revisions', 'num_premt_revisions', 'precentage_premt_revisions', 'num_untested']
+        fieldnames = ['week', '# revisions', '# tested revisions', '% tested revisions', '# untested revisions',
+                      '# revisions without builds', '% revisions without builds', '# no repository set']
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames, dialect=csv.excel)
         writer.writeheader()
         for week in sorted(days_dict.keys()):
-            revisions = days_dict[week]
+            revisions = days_dict[week]  # type: List[Revision]
             num_revisions = len(revisions)
             num_premt_revisions = len([r for r in revisions if r.was_premerge_tested])
             precentage_premt_revisions = 100.0 * num_premt_revisions / num_revisions
+            num_no_build_triggered = len([r for r in revisions if len(r.builds) == 0])
+            percent_no_build_triggered = 100.0 * num_no_build_triggered / num_revisions
+            num_no_repo = len([r for r in revisions if r.repository_phid is None])
             writer.writerow({
                 'week': week,
-                'num_revisions': num_revisions,
-                'num_premt_revisions': num_premt_revisions,
-                'precentage_premt_revisions': precentage_premt_revisions,
-                'num_untested': num_revisions - num_premt_revisions,
+                '# revisions': num_revisions,
+                '# tested revisions': num_premt_revisions,
+                '% tested revisions': precentage_premt_revisions,
+                '# untested revisions': num_revisions - num_premt_revisions,
+                '# revisions without builds': num_no_build_triggered,
+                '% revisions without builds': percent_no_build_triggered,
+                '# no repository set': num_no_repo,
             })
 
 
