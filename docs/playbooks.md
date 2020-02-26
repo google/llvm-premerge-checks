@@ -142,3 +142,44 @@ Build and run agent docker image `sudo ./containers/build_run.sh agent-debian-te
 Within a container set environment variables similar to [pipeline](https://github.com/google/llvm-premerge-checks/blob/master/Jenkins/Phabricator-pipeline/Jenkinsfile).
 
 Additionally set `WORKSPACE`, `PHID` and `DIFF_ID` parameters. Set `CONDUIT_TOKEN` with your personal one from `https://reviews.llvm.org/settings/user/<USERNAME>/page/apitokens/`.
+
+
+# Phabricator integration
+
+The general flow for builds on Phabricator is:
+1. A user uploads a *Diff* (=patch) to a *Revision* (set of Diffs with comments and buildstatus, ... ).
+2. A *Herald* checks if one of the *rules* matches this event. 
+3. You can use the rules to trigger a *Build* in *Harbormaster*.
+4. Harbor sends an HTTP request to the Jenkins server.
+5. Jenkins executes the build. In the last step of the build, a script is uploading the results to Phabricator.
+6. Phabricator sets the build status and displays the results.
+
+## Herald
+
+We currently have these Herald rules to configure the builds:
+* Triggering builds for everyone:
+    * [H576](https://reviews.llvm.org/H576) This will only trigger for non-beta testers.
+* Triggering the beta-test builds:
+    * [H511](https://reviews.llvm.org/H511) or the beta testers, this is for testing new features.
+    * [H552](https://reviews.llvm.org/H552) for all changes to MLIR (archived)
+    * [H527](https://reviews.llvm.org/H527) for all changes to clang-extra-tools (archived)
+
+You can *archive* a rule to disable it.
+
+## Harbormaster
+
+We have these build plans in Harbormaster:
+* [Plan 4](https://reviews.llvm.org/harbormaster/plan/4/) Builds for everyone
+* [Plan 3](https://reviews.llvm.org/harbormaster/plan/3/) Builds for beta testers
+
+You can *disable* a build plan to stop it from building.
+
+## Per user Opt in/out
+
+You can also on a per-user bases opt in/out to premerge testing. 
+* To opt-in to pre-merge beta testing, add yourself to this project:
+https://reviews.llvm.org/project/view/78/
+* To opt-out of pre-merge testing entirely, add yourself to this project:
+https://reviews.llvm.org/project/view/83/
+
+These projects are checked in the Herald rules above.
