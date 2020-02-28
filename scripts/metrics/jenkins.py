@@ -19,12 +19,20 @@ class Build:
         self.duration = datetime.timedelta(milliseconds=build_dict['duration'])
 
     @property
-    def day(self) -> datetime.datetime:
+    def hour(self) -> datetime.datetime:
         return datetime.datetime(
             year=self.start_time.year,
             month=self.start_time.month,
             day=self.start_time.day,
             hour=self.start_time.hour,
+        )
+
+    @property
+    def day(self) -> datetime.datetime:
+        return datetime.datetime(
+            year=self.start_time.year,
+            month=self.start_time.month,
+            day=self.start_time.day,
         )
 
 
@@ -57,7 +65,8 @@ class JenkinsStatsReader:
         if not os.path.isfile(self._JENKINS_DAT_FILE):
             self.fetch_data()
         self.parse_data()
-        self.create_day_statistics()
+        self.create_statistics('hour')
+        self.create_statistics('day')
 
     def fetch_data(self):
         response = self._session.get(
@@ -73,23 +82,24 @@ class JenkinsStatsReader:
             self.builds[job_name] = [Build(job_name, b) for b in job['allBuilds']]
             print('{} has {} builds'.format(job_name, len(self.builds[job_name])))
 
-    def create_day_statistics(self):
-        build_day = {}
+    def create_statistics(self, group_by: str):
         # only look at Phab
         for job_name, builds in self.builds.items():
             print('Writing data for {}'.format(job_name))
+            # TODO: add success/failure rates
             fieldnames = ['date', '# builds', 'median duration', 'p90 duration', 'p95 duration', 'max duration']
-            csv_file = open('tmp/jenkins_{}.csv'.format(job_name), 'w')
+            csv_file = open('tmp/jenkins_{}_{}.csv'.format(job_name, group_by), 'w')
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames, dialect=csv.excel)
             writer.writeheader()
+            build_hist = {}
             for build in builds:
-                build_day.setdefault(build.day, []).append(build)
+                build_hist.setdefault(getattr(build, group_by), []).append(build)
 
-            for day in sorted(build_day.keys()):
-                builds = build_day[day]   # type: List[Build]
+            for key in sorted(build_hist.keys()):
+                builds = build_hist[key]   # type: List[Build]
                 durations = numpy.array([b.duration.seconds for b in builds])
                 writer.writerow({
-                    'date': day,
+                    'date': key,
                     '# builds': len(builds),
                     'median duration': numpy.median(durations)/60,
                     'p90 duration':  numpy.percentile(durations, 90)/60,
