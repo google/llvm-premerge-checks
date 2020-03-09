@@ -38,6 +38,7 @@ class MyCommit:
     def __init__(self, commit: git.Commit):
         self.chash = commit.hexsha  # type: str
         self.author = hash(commit.author.email + MyCommit.SALT)  # type: int
+        self.author_domain = commit.author.email.rsplit("@")[-1]  # type: str
         self.commiter = hash(commit.committer.email + MyCommit.SALT)  # type:int
         self.summary = commit.summary  # type: str
         self.date = datetime.datetime.fromtimestamp(
@@ -90,6 +91,7 @@ class RepoStats:
         self.commit_by_summary = dict()  # type: Dict[str, List[MyCommit]]
         self.commit_by_week = dict()  # type: Dict[str, List[MyCommit]]
         self.commit_by_author = dict()  # type: Dict[int, List[MyCommit]]
+        self.commit_by_author_domain = dict()  # type: Dict[int, List[MyCommit]]
 
     def parse_repo(self, git_dir: str, maxage: datetime.datetime):
         repo = git.Repo(git_dir)
@@ -102,6 +104,8 @@ class RepoStats:
                 .append(mycommit)
             self.commit_by_week.setdefault(mycommit.week, []).append(mycommit)
             self.commit_by_author.setdefault(mycommit.author, [])\
+                .append(mycommit)
+            self.commit_by_author_domain.setdefault(mycommit.author_domain, []) \
                 .append(mycommit)
 
         print('Read {} commits'.format(len(self.commit_by_hash)))
@@ -203,6 +207,22 @@ class RepoStats:
                 "percentage_reviewed": percentage_reviewed,
             })
 
+    def dump_author_domain_stats(self):
+        print('Number of authors: {}'.format(len(self.commit_by_author)))
+        fieldnames = ["author_domain", "num_commits", "num_committers"]
+        csvfile = open('tmp/llvm-project-author_domains.csv', 'w')
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames,
+                                dialect=csv.excel)
+        writer.writeheader()
+        for author_domain, commits in self.commit_by_author_domain.items():
+            num_commits = len(commits)
+            committers = set(c.author for c in commits)
+            writer.writerow({
+                "author_domain": author_domain,
+                "num_commits": num_commits,
+                "num_committers": len(committers),
+            })
+
 
 if __name__ == '__main__':
     max_age = datetime.datetime(year=2019, month=10, day=1,
@@ -214,3 +234,4 @@ if __name__ == '__main__':
     rs.dump_daily_stats()
     rs.dump_overall_stats()
     rs.dump_author_stats()
+    rs.dump_author_domain_stats()
