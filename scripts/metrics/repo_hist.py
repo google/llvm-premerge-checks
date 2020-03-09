@@ -38,8 +38,8 @@ class MyCommit:
     def __init__(self, commit: git.Commit):
         self.chash = commit.hexsha  # type: str
         self.author = hash(commit.author.email + MyCommit.SALT)  # type: int
-        self.author_domain = commit.author.email.rsplit("@")[-1]  # type: str
-        self.commiter = hash(commit.committer.email + MyCommit.SALT)  # type:int
+        self.author_domain = commit.author.email.rsplit("@")[-1].lower()  # type: str
+        self.commiter = hash(commit.committer.email.lower() + MyCommit.SALT)  # type:int
         self.summary = commit.summary  # type: str
         self.date = datetime.datetime.fromtimestamp(
             commit.committed_date)  # type: datetime.datetime
