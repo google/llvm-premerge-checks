@@ -26,7 +26,7 @@ LLVM community.
 # Work items
 
 This is the list (and order) of the work items for this idea.
-We will start with this on a fork of the LLVM repository.
+We will start with this on a fork of the LLVM repository running on my machine as cron job.
 Cancel the effort if some thinks would not work or the community objects.
 
 * [ ] For each Revision create a branch. Create a PR from that.
@@ -36,6 +36,7 @@ Cancel the effort if some thinks would not work or the community objects.
 * [ ] Also sync Revisions that do not trigger Harbormaster at the moment and provide feedback as 
 well.
 * [ ] Clean up old branches and PRs. 
+* [ ] Move service to the cloud, trigger it with every change on Phabricator.
 * [ ] Add more build machines to buildkite and move beta testers to new infrastructure.
 * [ ] Move all pre-merge tests to new infrastructure.
 
