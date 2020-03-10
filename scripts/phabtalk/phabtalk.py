@@ -337,11 +337,14 @@ class BuildReport:
             self.comments.append(section_title('clang-tidy', False, False))
             return
         p = os.path.join(self.results_dir, self.clang_tidy_result)
-        if os.stat(p).st_size > 0:
-            self.api.add_artifact(self.ph_id, self.clang_tidy_result, 'clang-tidy ' + self.name, self.results_url)
+        add_artifact = False
         ignore = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern,
                                               open(self.clang_tidy_ignore, 'r').readlines())
         for line in open(p, 'r'):
+            line = line.strip()
+            if len(line) == 0 or line == 'No relevant changes found.':
+                continue
+            add_artifact = True
             match = re.search(pattern, line)
             if match:
                 file_name = match.group(1)
@@ -370,6 +373,8 @@ class BuildReport:
                             'char': int(char_pos),
                             'description': '{}: {}'.format(severity, text),
                         })
+        if add_artifact:
+            self.api.add_artifact(self.ph_id, self.clang_tidy_result, 'clang-tidy ' + self.name, self.results_url)
         success = errors_count + warn_count == 0
         comment = section_title('clang-tidy', success, present)
         if not success:
