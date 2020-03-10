@@ -290,6 +290,16 @@ class BuildReport:
         diffs = _parse_patch(open(p, 'r'))
         success = len(diffs) == 0
         for d in diffs:
+            lines = d['diff'].splitlines(True)
+            m = 10  # max number of lines to report.
+            description = 'please reformat the code\n```\n'
+            n = len(lines)
+            cut = n > m + 1
+            if cut:
+                lines = lines[:m]
+            description += ''.join(lines) + '\n```'
+            if cut:
+                description += '\n{} diff lines are omitted. Please check full report.'.format(n - m)
             self.add_lint({
                 'name': 'clang-format',
                 'severity': 'autofix',
@@ -297,7 +307,7 @@ class BuildReport:
                 'path': d['filename'],
                 'line': d['line'],
                 'char': 1,
-                'description': 'please reformat the code\n```\n' + d['diff'] + '\n```',
+                'description': description,
             })
         comment = section_title('clang-format', success, present)
         if not success:
