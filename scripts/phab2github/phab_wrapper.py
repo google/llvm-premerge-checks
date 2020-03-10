@@ -45,12 +45,22 @@ class Revision:
     def __str__(self):
         return 'Revision {}: {} - ({})'.format(self.id, self.status,
                                     ','.join([str(d.id) for d in self.diffs]))
-
     @property
     def latest_diff(self):
         # TODO: make sure self.diffs is sorted
         return self.diffs[-1]
 
+    @property
+    def branch_name(self) -> str:
+        return 'phab-D{}'.format(self.id)
+
+    @property
+    def title(self) -> str:
+        return self.revision_dict['fields']['title']
+
+    @property
+    def summary(self) -> str:
+        return self.revision_dict['fields']['summary']
 
 class Diff:
     """A Phabricator diff."""
@@ -119,6 +129,8 @@ class PhabWrapper:
         revision_response = self.phab.differential.revision.search(
                 constraints=constraints)
         revisions = [Revision(r) for r in revision_response.response['data']]
+        # TODO: only taking the first 10 to speed things up
+        revisions = revisions[0:3]
         _LOGGER.info('Got {} revisions from the server'.format(len(revisions)))
         for revision in revisions:
             # TODO: batch-query diffs for all revisions, reduce number of
