@@ -432,6 +432,8 @@ class BuildReport:
         for f in os.listdir(self.results_dir):
             if f == 'summary.html':
                 continue
+            if f == 'console-log.txt':
+                self.api.add_artifact(self.ph_id, f, 'build log ' + self.name, self.results_url)
             p = os.path.join(self.results_dir, f)
             if not os.path.isfile(p):
                 continue
