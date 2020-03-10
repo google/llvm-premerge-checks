@@ -299,7 +299,10 @@ class BuildReport:
                 lines = lines[:m]
             description += ''.join(lines) + '\n```'
             if cut:
-                description += '\n{} diff lines are omitted. Please check full report.'.format(n - m)
+                description += '\n{} diff lines are omitted. See [full diff]({}/{}).'.format(
+                    n - m,
+                    self.results_url,
+                    self.clang_format_patch)
             self.add_lint({
                 'name': 'clang-format',
                 'severity': 'autofix',
