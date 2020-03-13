@@ -20,6 +20,9 @@ from phabricator import Phabricator
 from typing import List, Optional, Dict
 import datetime
 
+
+_BASE_URL = 'https://reviews.llvm.org'
+
 _LOGGER = logging.getLogger()
 
 
@@ -29,6 +32,7 @@ class Revision:
     def __init__(self, revision_dict: Dict):
         self.revision_dict = revision_dict
         self.diffs = []  # type : "Diff"
+        self.phab_url = '{}/D{}'.format(_BASE_URL, self.id)  # type: str
 
     @property
     def id(self) -> str:
@@ -44,11 +48,7 @@ class Revision:
 
     def __str__(self):
         return 'Revision {}: {} - ({})'.format(self.id, self.status,
-                                    ','.join([str(d.id) for d in self.diffs]))
-    @property
-    def latest_diff(self):
-        # TODO: make sure self.diffs is sorted
-        return self.diffs[-1]
+                                               ','.join([str(d.id) for d in self.diffs]))
 
     @property
     def branch_name(self) -> str:
@@ -59,8 +59,21 @@ class Revision:
         return self.revision_dict['fields']['title']
 
     @property
+    def pr_title(self) -> str:
+        return 'D{}: {}'.format(self.id, self.title)
+
+    @property
     def summary(self) -> str:
         return self.revision_dict['fields']['summary']
+
+    @property
+    def pr_summary(self) -> str:
+        return '{}\n\n{}'.format(self.summary, self.phab_url)
+
+    @property
+    def sorted_diffs(self) -> List["Diff"]:
+        return sorted(self.diffs, key=lambda d: d.id)
+
 
 class Diff:
     """A Phabricator diff."""
@@ -68,6 +81,7 @@ class Diff:
     def __init__(self, diff_dict: Dict, revision: Revision):
         self.diff_dict = diff_dict
         self.revision = revision
+        # TODO: check in git repo instead of using a flag
 
     @property
     def id(self) -> str:
@@ -86,6 +100,10 @@ class Diff:
             if ref['type'] == 'base':
                 return ref['identifier']
         return None
+
+    @property
+    def branch_name(self) -> str:
+        return 'phab-diff-{}'.format(self.id)
 
 
 class PhabWrapper:
@@ -124,13 +142,14 @@ class PhabWrapper:
         start_date = datetime.datetime.now() - datetime.timedelta(days=3)
         constraints = {
             'createdStart': int(start_date.timestamp())
+            #'ids': [76120]
         }
         # TODO: handle > 100 responses
         revision_response = self.phab.differential.revision.search(
                 constraints=constraints)
-        revisions = [Revision(r) for r in revision_response.response['data']]
+        revisions = [Revision(r, self.host) for r in revision_response.response['data']]
         # TODO: only taking the first 10 to speed things up
-        revisions = revisions[0:3]
+        revisions = revisions[0:10]
         _LOGGER.info('Got {} revisions from the server'.format(len(revisions)))
         for revision in revisions:
             # TODO: batch-query diffs for all revisions, reduce number of
@@ -141,15 +160,16 @@ class PhabWrapper:
 
     def _get_diffs(self, revision: Revision):
         """Get diffs for a revision from Phabricator."""
-        _LOGGER.info('Downloading diffs for {}...'.format(revision.id))
+        _LOGGER.info('Downloading diffs for Revision D{}...'.format(revision.id))
         constraints = {
             'revisionPHIDs': [revision.phid]
         }
         diff_response = self.phab.differential.diff.search(
             constraints=constraints)
         revision.diffs = [Diff(d, revision) for d in diff_response.response['data']]
+        _LOGGER.info(', '.join([str(d.id) for d in revision.diffs]))
 
     def get_raw_patch(self, diff: Diff) -> str:
         """Get raw patch for diff from Phabricator."""
-        _LOGGER.info('Downloading patch for {}...'.format(diff.id))
+        _LOGGER.info('Downloading patch for Diff {}...'.format(diff.id))
         return self.phab.differential.getrawdiff(diffID=str(diff.id)).response
