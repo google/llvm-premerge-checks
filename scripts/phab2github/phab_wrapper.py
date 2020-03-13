@@ -147,7 +147,7 @@ class PhabWrapper:
         # TODO: handle > 100 responses
         revision_response = self.phab.differential.revision.search(
                 constraints=constraints)
-        revisions = [Revision(r, self.host) for r in revision_response.response['data']]
+        revisions = [Revision(r) for r in revision_response.response['data']]
         # TODO: only taking the first 10 to speed things up
         revisions = revisions[0:10]
         _LOGGER.info('Got {} revisions from the server'.format(len(revisions)))

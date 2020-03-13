@@ -158,6 +158,7 @@ class Phab2Github:
 
     def apply_patch(self, diff: "Diff", raw_patch: str):
         """Apply a patch to the working copy."""
+        # TODO: impersonate the original author of the patch
         proc = subprocess.run('git apply --ignore-whitespace --whitespace=fix -', input=raw_patch, shell=True,
                               text=True, cwd=self.repo.working_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if proc.returncode != 0:
