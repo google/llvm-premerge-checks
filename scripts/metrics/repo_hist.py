@@ -81,7 +81,7 @@ class MyCommit:
 
     @property
     def week(self) -> str:
-        return '{}-w{}'.format(self.date.year, self.date.isocalendar()[1])
+        return '{}-w{:02d}'.format(self.date.year, self.date.isocalendar()[1])
 
 
 class RepoStats:

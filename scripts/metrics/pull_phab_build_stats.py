@@ -23,7 +23,9 @@ from typing import Dict, List, Optional
 import csv
 
 
-_PRE_MERGE_PHID = 'PHID-HMCP-bfkbtacsszhg3feydpo6'
+_PRE_MERGE_PHIDs = ['PHID-HMCP-bfkbtacsszhg3feydpo6',  # beta testers
+                    'PHID-HMCP-qbviyekvgirhhhvkzpsn'   # public pre-merge tests
+                    ]
 
 
 class PhabResponse:
@@ -81,6 +83,15 @@ class Revision(PhabResponse):
     def all_diffs_have_refs(self) -> bool:
         return not any(not d.has_refs for d in self.diffs)
 
+    @property
+    def day(self) -> datetime.date:
+        return datetime.date.fromtimestamp(self.created_date)
+
+    @property
+    def week(self) -> str:
+        day = self.day
+        return'{}-w{:02d}'.format(day.year, day.isocalendar()[1])
+
 
 class Buildable(PhabResponse):
 
@@ -114,7 +125,7 @@ class Build(PhabResponse):
 
     @property
     def was_premerge_tested(self) -> bool:
-        return self.buildplan_phid == _PRE_MERGE_PHID
+        return self.buildplan_phid in _PRE_MERGE_PHIDs
 
 
 class Diff(PhabResponse):
@@ -134,11 +145,11 @@ class Diff(PhabResponse):
 
 class PhabBuildPuller:
 
-    _REVISION_FILE = 'tmp/revisions.json'
-    _BUILDABLE_FILE = 'tmp/buildables.json'
-    _BUILD_FILE = 'tmp/build.json'
-    _DIFF_FILE = 'tmp/diffs.json'
-    _PHAB_WEEKLY_METRICS_FILE = 'tmp/phabricator_week.csv'
+    _REVISION_FILE = 'tmp/phab-revisions.json'
+    _BUILDABLE_FILE = 'tmp/phab-buildables.json'
+    _BUILD_FILE = 'tmp/phab-build.json'
+    _DIFF_FILE = 'tmp/phab-diffs.json'
+    _PHAB_WEEKLY_METRICS_FILE = 'tmp/phabricator_{}.csv'
 
     def __init__(self):
         self.conduit_token = None
@@ -181,7 +192,8 @@ class PhabBuildPuller:
             self.get_diffs()
         self.parse_diffs()
         self.link_objects()
-        self.compute_metrics()
+        self.compute_metrics('day', lambda r: r.day)
+        self.compute_metrics('week', lambda r: r.week)
 
     def get_revisions(self):
         print('Downloading revisions starting...')
@@ -300,20 +312,19 @@ class PhabBuildPuller:
             revision.diffs.append(diff)
             diff.revision = revision
 
-    def compute_metrics(self):
-        days_dict = {}
+    def compute_metrics(self, name: str, group_function):
+        print('Creating metrics for {}...'.format(name))
+        group_dict = {}
         for revision in self.revisions.values():
-            date = datetime.date.fromtimestamp(revision.created_date)
-            week = '{}-w{}'.format(date.year, date.isocalendar()[1])
-            days_dict.setdefault(week, []).append(revision)
+            group_dict.setdefault(group_function(revision), []).append(revision)
 
-        csv_file = open(self._PHAB_WEEKLY_METRICS_FILE, 'w')
-        fieldnames = ['week', '# revisions', '# tested revisions', '% tested revisions', '# untested revisions',
+        csv_file = open(self._PHAB_WEEKLY_METRICS_FILE.format(name), 'w')
+        fieldnames = [name, '# revisions', '# tested revisions', '% tested revisions', '# untested revisions',
                       '# revisions without builds', '% revisions without builds', '# no repository set']
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames, dialect=csv.excel)
         writer.writeheader()
-        for week in sorted(days_dict.keys()):
-            revisions = days_dict[week]  # type: List[Revision]
+        for group in sorted(group_dict.keys()):
+            revisions = group_dict[group]  # type: List[Revision]
             num_revisions = len(revisions)
             num_premt_revisions = len([r for r in revisions if r.was_premerge_tested])
             precentage_premt_revisions = 100.0 * num_premt_revisions / num_revisions
@@ -321,7 +332,7 @@ class PhabBuildPuller:
             percent_no_build_triggered = 100.0 * num_no_build_triggered / num_revisions
             num_no_repo = len([r for r in revisions if r.repository_phid is None])
             writer.writerow({
-                'week': week,
+                name: group,
                 '# revisions': num_revisions,
                 '# tested revisions': num_premt_revisions,
                 '% tested revisions': precentage_premt_revisions,
