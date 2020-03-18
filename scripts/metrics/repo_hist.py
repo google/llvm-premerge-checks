@@ -20,7 +20,7 @@ import datetime
 import git
 import re
 import os
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Set
 import random
 import string
 
@@ -36,6 +36,7 @@ class MyCommit:
         string.ascii_lowercase + string.ascii_uppercase + string.digits, k=16))
 
     def __init__(self, commit: git.Commit):
+        self.commit = commit
         self.chash = commit.hexsha  # type: str
         self.author = hash(commit.author.email + MyCommit.SALT)  # type: int
         self.author_domain = commit.author.email.rsplit("@")[-1].lower()  # type: str
@@ -83,19 +84,33 @@ class MyCommit:
     def week(self) -> str:
         return '{}-w{:02d}'.format(self.date.year, self.date.isocalendar()[1])
 
+    @staticmethod
+    def count_loc(diff_index: git.DiffIndex):
+        pass
+        # for diff in diff_index:
+            #print(diff.score)
+
+    @property
+    def modified_paths(self) -> Set[str]:
+        diff_index = self.commit.diff(self.commit.parents[0])
+
+        result = set(d.b_path for d in diff_index if d.b_path is not None)
+        result.update(d.a_path for d in diff_index if d.a_path is not None)
+        return result
+
 
 class RepoStats:
 
-    def __init__(self):
+    def __init__(self, git_dir: str):
+        self.repo = git.Repo(git_dir)
         self.commit_by_hash = dict()  # type: Dict[str, MyCommit]
         self.commit_by_summary = dict()  # type: Dict[str, List[MyCommit]]
         self.commit_by_week = dict()  # type: Dict[str, List[MyCommit]]
         self.commit_by_author = dict()  # type: Dict[int, List[MyCommit]]
         self.commit_by_author_domain = dict()  # type: Dict[int, List[MyCommit]]
 
-    def parse_repo(self, git_dir: str, maxage: datetime.datetime):
-        repo = git.Repo(git_dir)
-        for commit in repo.iter_commits('master'):
+    def parse_repo(self,  maxage: datetime.datetime):
+        for commit in self.repo.iter_commits('master'):
             if commit.committed_datetime < maxage:
                 break
             mycommit = MyCommit(commit)
@@ -107,7 +122,6 @@ class RepoStats:
                 .append(mycommit)
             self.commit_by_author_domain.setdefault(mycommit.author_domain, []) \
                 .append(mycommit)
-
         print('Read {} commits'.format(len(self.commit_by_hash)))
 
     def find_reverts(self):
@@ -125,11 +139,11 @@ class RepoStats:
             reverts += 1
         print('Found {} reverts'.format(reverts))
 
-    # TODO: try weekly stats, they might be smoother
     # https://stackoverflow.com/questions/2600775/how-to-get-week-number-in-python
     def dump_daily_stats(self):
         fieldnames = ["week", "num_commits", "num_reverts", "percentage_reverts",
-                      "num_reviewed", "percentage_reviewed"]
+                      "num_reviewed", "percentage_reviewed",
+                      "# reviewed & revert", "# !reviewed & !revert", "# !reviewed & revert", "# reviewed & !revert" ]
         csvfile = open('tmp/llvm-project-weekly.csv', 'w')
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames,
                                 dialect=csv.excel)
@@ -141,6 +155,10 @@ class RepoStats:
             percentage_reverts = 100.0*num_reverts / num_commits
             num_reviewed = len([c for c in commits if c.was_reviewed])
             percentage_reviewed = 100*num_reviewed / (num_commits - num_reverts)
+            num_reviewed_revert = len([c for c in commits if c.was_reviewed and c.is_revert])
+            num_reviewed_nrevert = len([c for c in commits if c.was_reviewed and not c.is_revert])
+            num_nreviewed_nrevert = len([c for c in commits if not c.was_reviewed and not c.is_revert])
+            num_nreviewed_revert = len([c for c in commits if not c.was_reviewed and c.is_revert])
             writer.writerow({
                 "week": week,
                 "num_commits": num_commits,
@@ -148,6 +166,10 @@ class RepoStats:
                 "percentage_reverts": percentage_reverts,
                 "num_reviewed": num_reviewed,
                 "percentage_reviewed": percentage_reviewed,
+                "# reviewed & revert" :num_reviewed_revert,
+                "# !reviewed & !revert": num_nreviewed_nrevert,
+                "# !reviewed & revert": num_nreviewed_revert,
+                "# reviewed & !revert": num_reviewed_nrevert,
             })
 
     def dump_overall_stats(self):
@@ -223,15 +245,45 @@ class RepoStats:
                 "num_committers": len(committers),
             })
 
+    def dump_unreviewed_paths(self, maxage: datetime.datetime):
+        # TODO: this is really slow. Maybe parallelize?
+        path_count = {
+            True: {},
+            False: {},
+        }  # type: Dict[bool, Dict[str, int]]
+        for commit in self.repo.iter_commits('master'):
+            if commit.committed_datetime < maxage:
+                break
+            mycommit = MyCommit(commit)
+            for prefix in set(p.split('/')[0] for p in mycommit.modified_paths):
+                path_count[mycommit.was_reviewed].setdefault(prefix, 0)
+                path_count[mycommit.was_reviewed][prefix] += 1
+        fieldnames = ['was_reviewed']
+        all_paths = set(path_count[True].keys())
+        all_paths.update(path_count[False].keys())
+        fieldnames.extend(sorted(all_paths))
+        csvfile = open('tmp/llvm-project-unreviewed-paths.csv', 'w')
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames,
+                                dialect=csv.excel)
+        writer.writeheader()
+        for reviewed in [True, False]:
+            row = {'was_reviewed': reviewed}
+            for path, count in path_count[reviewed].items():
+                row[path] = count
+            writer.writerow(row)
+        csvfile.close()
+
 
 if __name__ == '__main__':
     max_age = datetime.datetime(year=2019, month=10, day=1,
                                 tzinfo=datetime.timezone.utc)
-    rs = RepoStats()
+    rs = RepoStats(os.path.expanduser('~/git/llvm-project'))
     # TODO: make the path configurable, and `git clone/pull`
-    rs.parse_repo(os.path.expanduser('~/git/llvm-project'), max_age)
+    rs.parse_repo(max_age)
     rs.find_reverts()
     rs.dump_daily_stats()
     rs.dump_overall_stats()
     rs.dump_author_stats()
     rs.dump_author_domain_stats()
+    # disabled as it's quite slow
+    # rs.dump_unreviewed_paths(datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(days=100))
