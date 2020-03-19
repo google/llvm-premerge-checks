@@ -47,6 +47,7 @@ class MyCommit:
         self.phab_revision = self._get_revision(commit)  # type: Optional[str]
         self.reverts = None   # type: Optional[MyCommit]
         self.reverted_by = None   # type: Optional[MyCommit]
+        self._diff_index = None  # type: Optional[git.DiffIndex]
 
     @staticmethod
     def _get_revision(commit: git.Commit) -> Optional[str]:
@@ -84,19 +85,29 @@ class MyCommit:
     def week(self) -> str:
         return '{}-w{:02d}'.format(self.date.year, self.date.isocalendar()[1])
 
-    @staticmethod
-    def count_loc(diff_index: git.DiffIndex):
-        pass
-        # for diff in diff_index:
-            #print(diff.score)
+    @property
+    def diff_index(self) -> git.DiffIndex:
+        # expensive operation, cache the results
+        if self._diff_index is None:
+            self._diff_index = self.commit.diff(self.commit.parents[0], create_patch=True)
+        return self._diff_index
+
+    @property
+    def num_loc(self) -> int:
+        nloc = 0
+        for diff in self.diff_index:
+            nloc += str(diff.diff, encoding='utf8').count('\n')
+        return nloc
 
     @property
     def modified_paths(self) -> Set[str]:
-        diff_index = self.commit.diff(self.commit.parents[0])
-
-        result = set(d.b_path for d in diff_index if d.b_path is not None)
-        result.update(d.a_path for d in diff_index if d.a_path is not None)
+        result = set(d.b_path for d in self.diff_index if d.b_path is not None)
+        result.update(d.a_path for d in self.diff_index if d.a_path is not None)
         return result
+
+    @property
+    def modified_projects(self) -> Set[str]:
+        return set(p.split('/')[0] for p in self.modified_paths)
 
 
 class RepoStats:
@@ -107,7 +118,7 @@ class RepoStats:
         self.commit_by_summary = dict()  # type: Dict[str, List[MyCommit]]
         self.commit_by_week = dict()  # type: Dict[str, List[MyCommit]]
         self.commit_by_author = dict()  # type: Dict[int, List[MyCommit]]
-        self.commit_by_author_domain = dict()  # type: Dict[int, List[MyCommit]]
+        self.commit_by_author_domain = dict()  # type: Dict[str, List[MyCommit]]
 
     def parse_repo(self,  maxage: datetime.datetime):
         for commit in self.repo.iter_commits('master'):
@@ -143,7 +154,7 @@ class RepoStats:
     def dump_daily_stats(self):
         fieldnames = ["week", "num_commits", "num_reverts", "percentage_reverts",
                       "num_reviewed", "percentage_reviewed",
-                      "# reviewed & revert", "# !reviewed & !revert", "# !reviewed & revert", "# reviewed & !revert" ]
+                      "# reviewed & revert", "# !reviewed & !revert", "# !reviewed & revert", "# reviewed & !revert"]
         csvfile = open('tmp/llvm-project-weekly.csv', 'w')
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames,
                                 dialect=csv.excel)
@@ -166,7 +177,7 @@ class RepoStats:
                 "percentage_reverts": percentage_reverts,
                 "num_reviewed": num_reviewed,
                 "percentage_reviewed": percentage_reviewed,
-                "# reviewed & revert" :num_reviewed_revert,
+                "# reviewed & revert": num_reviewed_revert,
                 "# !reviewed & !revert": num_nreviewed_nrevert,
                 "# !reviewed & revert": num_nreviewed_revert,
                 "# reviewed & !revert": num_reviewed_nrevert,
@@ -273,10 +284,90 @@ class RepoStats:
             writer.writerow(row)
         csvfile.close()
 
+    def dump_loc_commits(self, maxage: datetime.datetime):
+        # TODO: this is really slow. Maybe parallelize?
+        buckets = list(range(0, 2001, 100))
+        review_dict = {
+            True: {b: 0 for b in buckets},
+            False: {b: 0 for b in buckets},
+        }  # type: Dict[bool, Dict[int, int]]
+        reverted_dict = {
+            True: {b: 0 for b in buckets},
+            False: {b: 0 for b in buckets},
+        }  # type: Dict[bool, Dict[int, int]]
+        for commit in self.repo.iter_commits('master'):
+            if commit.committed_datetime < maxage:
+                break
+            mycommit = self.commit_by_hash[commit.hexsha]
+            review_dict[mycommit.was_reviewed][self._find_bucket(mycommit.num_loc, buckets)] += 1
+            reverted_dict[mycommit.was_reverted][self._find_bucket(mycommit.num_loc, buckets)] += 1
+        fieldnames = ['was_reviewed']
+        for i in range(0, len(buckets)-1):
+            fieldnames.append('{}-{}'.format(buckets[i], buckets[i+1]-1))
+        fieldnames.append('>={}'.format(buckets[-1]))
+        csvfile = open('tmp/llvm-project-unreviewed-loc.csv', 'w')
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames,
+                                dialect=csv.excel)
+        writer.writeheader()
+        for reviewed in [True, False]:
+            row = {'was_reviewed': reviewed}
+            for i in range(0, len(buckets)):
+                row[fieldnames[i+1]] = review_dict[reviewed][buckets[i]]
+            writer.writerow(row)
+
+        writer.writerow({'was_reviewed': 'reverted'})
+        for reverted in [True, False]:
+            row = {'was_reviewed': reverted}
+            for i in range(0, len(buckets)):
+                row[fieldnames[i+1]] = reverted_dict[reverted][buckets[i]]
+            writer.writerow(row)
+        csvfile.close()
+
+    @staticmethod
+    def _find_bucket(number: int, buckets: List[int]) -> int:
+        for bucket in buckets:
+            if number < bucket:
+                return bucket
+        return buckets[-1]
+
+    def export_commits(self):
+
+        print('starting export...')
+        csvfile = open('tmp/llvm-project-export.csv', 'w')
+        fieldnames = ['timestamp', 'hash', 'reviewed', 'was_reverted', 'is_revert', '# LOC changed',
+                      'modified projects',  'author domain', 'revision']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames,
+                                dialect=csv.excel)
+        writer.writeheader()
+        # did not work with multiprocessing.map, gave recursion error from gitpython...
+        # so using normal map function
+        for row in map(_create_row, self.commit_by_hash.values()):
+            writer.writerow(row)
+        csvfile.close()
+
+
+def _create_row(mycommit: MyCommit) -> Dict:
+    try:
+        return {
+            'timestamp': mycommit.date.isoformat(),
+            'hash': mycommit.chash,
+            'reviewed': mycommit.was_reviewed,
+            'was_reverted': mycommit.was_reverted,
+            'is_revert': mycommit.is_revert,
+            '# LOC changed': mycommit.num_loc,
+            'modified projects': (';'.join(mycommit.modified_projects)),
+            'author domain': mycommit.author_domain,
+            'revision': mycommit.phab_revision if mycommit.phab_revision is not None else "",
+        }
+    except Exception as e:
+        print(e)
+        return {}
+
 
 if __name__ == '__main__':
     max_age = datetime.datetime(year=2019, month=10, day=1,
                                 tzinfo=datetime.timezone.utc)
+    now = datetime.datetime.now(tz=datetime.timezone.utc)
     rs = RepoStats(os.path.expanduser('~/git/llvm-project'))
     # TODO: make the path configurable, and `git clone/pull`
     rs.parse_repo(max_age)
@@ -286,4 +377,7 @@ if __name__ == '__main__':
     rs.dump_author_stats()
     rs.dump_author_domain_stats()
     # disabled as it's quite slow
-    # rs.dump_unreviewed_paths(datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(days=100))
+    # rs.dump_unreviewed_paths(now - datetime.timedelta(days=100))
+    # rs.dump_loc_commits(now - datetime.timedelta(days=100))
+    rs.export_commits()
+    print('Done.')
