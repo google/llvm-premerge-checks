@@ -27,6 +27,8 @@ pipeline {
             PHAB_LOG = "${WORKSPACE}/build/.phabricator-comment"
             SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
             BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
+            // TODO: replace result dir with Google Cloud Storage, 
+            // TODO: create local result folder that is uploaded to GCS later, as on Windows
             TARGET_DIR = "/mnt/nfs/results/${BUILD_ID}"
             RESULT_URL = "http://results.llvm-merge-guard.org/${BUILD_ID}"
             DIFF_JSON = "${WORKSPACE}/build/diff.json"
@@ -35,6 +37,7 @@ pipeline {
         stage("build info"){
             steps {
                 echo "Building diff ${DIFF_ID} with PHID ${PHID}"
+                // TODO: replace this scripting by submitting the Revision from Phabricator as additional Parameter
                 script {
                     def revision_phid = sh(script:
                         'echo \'{"constraints":{"ids":[' + DIFF_ID + ']}}\' | '+
@@ -73,6 +76,7 @@ pipeline {
         }
         stage('arc patch'){
             steps {
+                //TODO: Why are we using pre/post variables and not try/catch as in `ninja all`?
                 script {
                     success = false
                     failure_message = "Failed to apply patch"
@@ -93,6 +97,8 @@ pipeline {
                 sh 'rm -rf build || true'
                 sh 'mkdir -p build'
                 sh 'mkdir -p "${TARGET_DIR}"'
+                // TODO: replace with Pyhton script for CMake that works on Linux and Windows
+                // TODO: Limit to projects affected by the change
                 sh "${SCRIPT_DIR}/run_cmake.sh"
                 script {
                     success = true
@@ -104,6 +110,7 @@ pipeline {
             steps {
                 script {
                     try {
+                        // TODO: replace with Python script that works on Linux and Windows
                         sh(script: "${SCRIPT_DIR}/run_ninja.sh all")
                     } catch (e) {
                           success = false;
@@ -114,6 +121,7 @@ pipeline {
             }
         }
         stage('ninja check-all') {
+            // TODO: do not trigger `ninja check-all` after `ninja all` has failed!
             steps {
                 script {
                     try {
