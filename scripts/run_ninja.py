@@ -29,6 +29,7 @@ def run_ninja(target: str, repo_path: str):
 
     subprocess.check_call(cmd, shell=True, cwd=build_dir)
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run ninja for LLVM.')
     parser.add_argument('target')
