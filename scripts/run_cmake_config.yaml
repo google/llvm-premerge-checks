@@ -1,4 +1,7 @@
-# environment variables
+# This file is used to configure the environment variables and define
+# the command line arguments for cmake
+
+# environment variables that are set per operating system
 environment:
   linux:
     CC: 'clang'
@@ -26,7 +29,7 @@ arguments:
   windows:
     - '-D LLVM_ENABLE_DIA_SDK=OFF'
 
-# if the automatic detection fails or is not used, these projects are
+# if the automatic project detection fails or is not used, these projects are
 # enabled
 default_projects:
   windows: 'clang;clang-tools-extra;libcxx;libc;lld;mlir;libcxxabi'

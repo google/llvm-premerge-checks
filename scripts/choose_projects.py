@@ -23,6 +23,7 @@ project dependency graph it will get the transitively affected projects.
 import argparse
 import logging
 import os
+import platform
 import sys
 from typing import Dict, List, Set, Tuple
 
@@ -30,8 +31,8 @@ from unidiff import PatchSet
 import yaml
 
 # TODO: We could also try to avoid running tests for llvm for projects that 
-# only need various cmake scripts and don't actually depend on llvm (e.g. 
-# libcxx does not need to run llvm tests, but may still need to include llvm).
+#   only need various cmake scripts and don't actually depend on llvm (e.g.
+#   libcxx does not need to run llvm tests, but may still need to include llvm).
 
 
 class ChooseProjects:
@@ -49,6 +50,7 @@ class ChooseProjects:
         self.usages = dict()   # type: Dict[str,List[str]]
         self.all_projects = []  # type: List[str]
         self.excluded_projects = set()  # type: Set[str]
+        self.operating_system = self._detect_os()  # type: str
         self._load_config()
 
     def _load_config(self):
@@ -60,7 +62,14 @@ class ChooseProjects:
             for used in used_list:
                 self.usages.setdefault(used, []).append(user)
         self.all_projects = config['allprojects']
-        self.excluded_projects = set(config['excludedProjects'])
+        self.excluded_projects = set(config['excludedProjects'][self.operating_system])
+
+    @staticmethod
+    def _detect_os() -> str:
+        """Detect the current operating system."""
+        if platform.system() == 'Windows':
+            return 'windows'
+        return 'linux'
 
     def choose_projects(self, patch: str = None) -> List[str]:
         llvm_dir = os.path.abspath(os.path.expanduser(self.llvm_dir))
