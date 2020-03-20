@@ -82,17 +82,10 @@ def _select_projects(config: Configuration, projects: str, repo_path: str) -> st
     return projects
 
 
-def _create_env(config: Configuration):
+def _create_env(config: Configuration) -> Dict[str, str]:
     """Generate the environment variables for cmake."""
     env = os.environ.copy()
-
-    for key, value in config.environment.items():
-        env[key] = value
-
-    # TODO: set ENV on windows:
-    # load Vistual Studio environment variables
-    # Invoke-CmdScript "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64
-
+    env.update(config.environment)
     return env
 
 
@@ -134,7 +127,12 @@ def run_cmake(projects: str, repo_path: str, config_file_path: str = None):
     llvm_enable_projects = _select_projects(config, projects, repo_path)
     arguments = _create_args(config, llvm_enable_projects)
     cmd = 'cmake ' + ' '.join(arguments)
-    print('Running Cmake:\n{}'.format(cmd))
+    
+    # On Windows: configure Visutal Studio before running cmake
+    if config.operating_system == OperatingSystem.Windows:
+        # FIXME: move this path to a config file
+        cmd = r'"C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64 && ' + cmd
+    
     subprocess.check_call(cmd, env=env, shell=True, cwd=build_dir)
 
 
