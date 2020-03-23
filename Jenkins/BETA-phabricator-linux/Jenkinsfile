@@ -20,35 +20,26 @@ pipeline {
     parameters {
         string(name: 'DIFF_ID')
         string(name: 'PHID')
+        string(name: 'REV_ID')
     }
     environment {
             CONDUIT_TOKEN = credentials('phabricator-conduit-token')
             PHABRICATOR_HOST = 'https://reviews.llvm.org'
-            PHAB_LOG = "${WORKSPACE}/build/.phabricator-comment"
+            LLVM_DIR = "${WORKSPACE}/llvm-project"
             SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
-            BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
-            // TODO: replace result dir with Google Cloud Storage, 
-            // TODO: create local result folder that is uploaded to GCS later, as on Windows
+            RESULT_DIR = "${WORKSPACE}/results"
+            PHAB_LOG = "${RESULT_DIR}/.phabricator-comment"
+            MY_BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
             TARGET_DIR = "/mnt/nfs/results/${BUILD_ID}"
             RESULT_URL = "http://results.llvm-merge-guard.org/${BUILD_ID}"
-            DIFF_JSON = "${WORKSPACE}/build/diff.json"
     }
     stages {
         stage("build info"){
             steps {
-                echo "Building diff ${DIFF_ID} with PHID ${PHID}"
-                // TODO: replace this scripting by submitting the Revision from Phabricator as additional Parameter
+                echo "Building diff ${DIFF_ID} with PHID ${PHID} for Revision ${REV_ID}"
                 script {
-                    def revision_phid = sh(script:
-                        'echo \'{"constraints":{"ids":[' + DIFF_ID + ']}}\' | '+
-                        'arc call-conduit --conduit-uri=$PHABRICATOR_HOST --conduit-token $CONDUIT_TOKEN differential.diff.search | ' +
-                        'jq -r ".response.data[0].fields.revisionPHID"', returnStdout: true).trim()
-                    def drev_id = sh(script:
-                        'echo \'{"constraints":{"phids":["' + revision_phid + '"]}}\' | ' +
-                        'arc call-conduit --conduit-uri=$PHABRICATOR_HOST --conduit-token $CONDUIT_TOKEN differential.revision.search | ' +
-                        'jq -r ".response.data[0].id"', returnStdout: true).trim()
-                    currentBuild.displayName += " D${drev_id}"
-                    currentBuild.description = "<a href='https://reviews.llvm.org/D${drev_id}'>D${drev_id}</a>"
+                    currentBuild.displayName += " D${REV_ID}"
+                    currentBuild.description = "<a href='https://reviews.llvm.org/D${REV_ID}'>D${REV_ID}</a>"
                 }
                  // Report versions of the installed packages.
                  sh '''
@@ -58,34 +49,25 @@ pipeline {
                     ld.lld --version
                     dpkg -l
                     '''
-                
             }
         }
-        stage("git checkout"){
+        stage("git checkout")
+        {
             steps {
-                git url: 'https://github.com/llvm/llvm-project.git'
-                sh 'git reset --hard origin/master'  // To remove any local commits to master.
-                sh 'git clean -fdx'
-                sh 'git show -s'
-                sh 'mkdir -p llvm-premerge-checks'
+                dir("${LLVM_DIR}")
+                {
+                    git url: 'https://github.com/llvm/llvm-project.git' branch: "phab-diff-${DIFF_ID}"
+                    sh 'git clean -fdx'
+                    sh 'git show -s'
+                }
                 dir("llvm-premerge-checks")
                 {
                     git url: 'https://github.com/google/llvm-premerge-checks.git'
                 }
-            }
-        }
-        stage('arc patch'){
-            steps {
-                //TODO: Why are we using pre/post variables and not try/catch as in `ninja all`?
-                script {
-                    success = false
-                    failure_message = "Failed to apply patch"
-                }
-                sh "${SCRIPT_DIR}/phabtalk/apply_patch2.py ${DIFF_ID} --token ${CONDUIT_TOKEN} --url ${PHABRICATOR_HOST} --comment-file ${PHAB_LOG}"
-                script {
-                    success = true
-                    failure_message = ""
-                }
+                sh """
+                  rm -rf ${RESULT_DIR}
+                  mkdir -p ${RESULT_DIR}
+                  """
             }
         }
         stage('CMake') {
@@ -94,23 +76,18 @@ pipeline {
                     success = false
                     failure_message = "Failed to run cmake"
                 }
-                sh 'rm -rf build || true'
-                sh 'mkdir -p build'
-                sh 'mkdir -p "${TARGET_DIR}"'
-                // TODO: replace with Pyhton script for CMake that works on Linux and Windows
-                // TODO: Limit to projects affected by the change
-                sh "${SCRIPT_DIR}/run_cmake.sh"
+                sh "${SCRIPT_DIR}/run_cmake.py --projects detect"
                 script {
                     success = true
                     failure_message = ""
                 }
             }
         }
+/*
         stage('ninja all') {
             steps {
                 script {
                     try {
-                        // TODO: replace with Python script that works on Linux and Windows
                         sh(script: "${SCRIPT_DIR}/run_ninja.sh all")
                     } catch (e) {
                           success = false;
@@ -121,7 +98,6 @@ pipeline {
             }
         }
         stage('ninja check-all') {
-            // TODO: do not trigger `ninja check-all` after `ninja all` has failed!
             steps {
                 script {
                     try {
@@ -147,6 +123,7 @@ pipeline {
                 }
             }
         }
+*/
     }
     post { 
         always {
@@ -158,23 +135,25 @@ pipeline {
                 }
             }
             echo "Console log is available at ${RESULT_URL}"
-            dir("${TARGET_DIR}") {
+            dir("${RESULT_DIR}") {
                 // copy console log to result folder
                 sh "wget -qO console-log.txt http://jenkins-ui.jenkins.svc.cluster.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText"
                 // keep a copy of the answer from Phabricator for debugging
                 // TODO: move all file copy operations here
                 sh """
                     set -eu
-                    if [ -f "${DIFF_JSON}" ]; then
-                        cp  ${DIFF_JSON} .
-                    fi
+                    cp ${LLVM_DIR}/build/CMakeCache.txt . || :
+                    cp ${LLVM_DIR}/test-results.xml . || :
+
+                    mkdir -p ${TARGET_DIR}
+                    cp * ${TARGET_DIR}
                 """
             }
             /// send results to Phabricator
             sh """${SCRIPT_DIR}/phabtalk/phabtalk.py "${PHID}" "${DIFF_ID}" \
                 --workspace "${WORKSPACE}" \
                 --conduit-token "${CONDUIT_TOKEN}" \
-                --test-result-file "test-results.xml" \
+                --test-result-file "${RESULT_DIR}/test-results.xml" \
                 --host "${PHABRICATOR_HOST}/api/" \
                 --buildresult ${currentBuild.result} \
                 --clang-format-patch "clang-format.patch" \
