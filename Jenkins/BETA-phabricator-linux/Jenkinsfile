@@ -41,14 +41,18 @@ pipeline {
                     currentBuild.displayName += " D${REV_ID}"
                     currentBuild.description = "<a href='https://reviews.llvm.org/D${REV_ID}'>D${REV_ID}</a>"
                 }
-                 // Report versions of the installed packages.
-                 sh '''
-                    echo Versions of various tools:
-                    clang --version
-                    clang-tidy --version
-                    ld.lld --version
-                    dpkg -l
-                    '''
+                sh """
+                  rm -rf ${RESULT_DIR}
+                  mkdir -p ${RESULT_DIR}
+                  """
+               // Report versions of the installed packages.
+               sh """
+                  echo Versions of various tools: > ${RESULT_DIR}/package_version.log
+                  clang --version >> ${RESULT_DIR}/package_version.log
+                  clang-tidy --version >> ${RESULT_DIR}/package_version.log
+                  ld.lld --version >> ${RESULT_DIR}/package_version.log
+                  dpkg -l >> ${RESULT_DIR}/package_version.log
+                  """
             }
         }
         stage("git checkout")
@@ -64,61 +68,70 @@ pipeline {
                 {
                     git url: 'https://github.com/google/llvm-premerge-checks.git'
                 }
-                sh """
-                  rm -rf ${RESULT_DIR}
-                  mkdir -p ${RESULT_DIR}
-                  """
             }
         }
         stage('CMake') {
             steps {
-                script {
-                    success = false
-                    failure_message = "Failed to run cmake"
-                }
-                sh "${SCRIPT_DIR}/run_cmake.py --projects detect"
-                script {
-                    success = true
-                    failure_message = ""
+                dir("${LLVM_DIR}")
+                {
+                    script {
+                        success = false
+                        failure_message = "Failed to run cmake"
+                    }
+                    sh "${SCRIPT_DIR}/run_cmake.py --projects detect"
+                    script {
+                        success = true
+                        failure_message = ""
+                    }
                 }
             }
         }
 /*
         stage('ninja all') {
             steps {
-                script {
-                    try {
-                        sh(script: "${SCRIPT_DIR}/run_ninja.sh all")
-                    } catch (e) {
-                          success = false;
-                          failure_message = "'ninja all' failed" // append as build might already be broken
-                          echo e.toString()
+                dir("${LLVM_DIR}")
+                {
+                    script {
+                        try {
+                            sh(script: "${SCRIPT_DIR}/run_ninja.sh all")
+                        } catch (e) {
+                              success = false;
+                              failure_message = "'ninja all' failed" // append as build might already be broken
+                              echo e.toString()
+                        }
                     }
                 }
             }
         }
         stage('ninja check-all') {
             steps {
-                script {
-                    try {
-                        sh(script: "${SCRIPT_DIR}/run_ninja.sh check-all")
-                    } catch (e) {
-                        success = false;
-                        failure_message += "\n'ninja check-all' failed" // append as build might already be broken
-                        echo e.toString()
+                dir("${LLVM_DIR}")
+                {
+                    script {
+                        try {
+                            sh(script: "${SCRIPT_DIR}/run_ninja.sh check-all")
+                        } catch (e) {
+                            success = false;
+                            failure_message += "\n'ninja check-all' failed" // append as build might already be broken
+                            echo e.toString()
+                        }
                     }
                 }
             }
         }
         stage('linters') {
             steps {
-                script {
-                    try {
-                      sh(script: "${SCRIPT_DIR}/lint.sh")
-                    } catch (e) {
-                        success = false;
-                        failure_message += "\nFailed to run linters" // append as build might already be broken
-                        echo e.toString()
+                dir("${LLVM_DIR}")
+                {
+
+                    script {
+                        try {
+                          sh(script: "${SCRIPT_DIR}/lint.sh")
+                        } catch (e) {
+                            success = false;
+                            failure_message += "\nFailed to run linters" // append as build might already be broken
+                            echo e.toString()
+                        }
                     }
                 }
             }
