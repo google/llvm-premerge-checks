@@ -23,7 +23,11 @@ import time
 from typing import List, Optional, Tuple
 
 from phabricator import Phabricator
-from git import Repo, GitCommandError
+from git import Repo, BadName
+
+
+# FIXME: maybe move to config file
+LLVM_GITHUB_URL = 'ssh://git@github.com/llvm/llvm-project'
 
 
 class ApplyPatch:
@@ -42,8 +46,10 @@ class ApplyPatch:
     https://github.com/llvm/llvm-project
     """
 
-    def __init__(self, diff_id: int, comment_file_path: str, token: str, url: str, git_hash: str):
+    def __init__(self, diff_id: int, comment_file_path: str, token: str, url: str, git_hash: str,
+                 push_branch: bool = False):
         self.comment_file_path = comment_file_path
+        self.push_branch = push_branch  # type: bool
         self.conduit_token = token  # type: Optional[str]
         self.host = url  # type: Optional[str]
         self._load_arcrc()
@@ -54,6 +60,11 @@ class ApplyPatch:
         self.base_revision = git_hash  # type: Optional[str]
         self.msg = []  # type: List[str]
         self.repo = Repo(os.getcwd())  # type: Repo
+
+    @property
+    def branch_name(self):
+        """Name used for the git branch."""
+        return 'phab-diff-{}'.format(self.diff_id)
 
     def _load_arcrc(self):
         """Load arc configuration from file if not set."""
@@ -73,20 +84,10 @@ class ApplyPatch:
         """
 
         try:
+            self._refresh_master()
             revision_id, dependencies, base_revision = self._get_dependencies(self.diff_id)
             dependencies.reverse()  # Arrange deps in chronological order.
-            if self.base_revision is not None:
-                print('Using base revision provided by command line\n{} instead of resolved\n{}'.format(
-                    self.base_revision, base_revision))
-                base_revision = self.base_revision
-            print('Checking out {}...'.format(base_revision))
-            try:
-                self.repo.git.checkout(base_revision)
-            except GitCommandError:
-                print('ERROR checking out revision {}. It`s not in the '
-                      'repository. Using master instead.'.format(base_revision))
-                self.repo.git.checkout('master')
-            print('Revision is {}'.format(self.repo.head.commit.hexsha))
+            self._create_branch(base_revision)
             print('git reset, git cleanup...')
             self.repo.git.reset('--hard')
             self.repo.git.clean('-fdx')
@@ -99,15 +100,69 @@ class ApplyPatch:
                 if missing:
                     for revision in missing:
                         self._apply_revision(revision)
+                    # FIXME: submit every Revision individually to get nicer history, use original user name
                     self.repo.config_writer().set_value("user", "name", "myusername").release()
                     self.repo.config_writer().set_value("user", "email", "myemail@example.com").release()
                     self.repo.git.commit('-a', '-m', 'dependencies')
                 print('All depended diffs are applied')
             self._apply_diff(self.diff_id, revision_id)
-            self.repo.git.add('-u', '.')
+            if self.push_branch:
+                self._commit_and_push()
+            else:
+                self.repo.git.add('-u', '.')
             print('done.')
         finally:
             self._write_error_message()
+
+    def _refresh_master(self):
+        """Update local git repo and origin.
+
+        As origin is disjoint from upstream, it needs to be updated by this script.
+        """
+        if not self.push_branch:
+            return
+
+        print('Syncing local, origin and upstream...')
+        self.repo.git.fetch('--all')
+        self.repo.git.checkout('master')
+        self.repo.git.reset('--hard')
+        self.repo.git.clean('-fdx')
+        if 'upstream' not in self.repo.remotes:
+            self.repo.create_remote('upstream', url=LLVM_GITHUB_URL)
+            self.repo.remotes.upstream.fetch()
+        self.repo.git.pull('upstream', 'master')
+        self.repo.git.push('origin', 'master')
+        print('refresh of master branch completed')
+
+    def _create_branch(self, base_revision: Optional[str]):
+        self.repo.git.fetch('--all')
+        if self.branch_name in self.repo.heads:
+            self.repo.delete_head('--force', self.branch_name)
+        if self.base_revision is not None:
+            print('Using base revision provided by command line\n{} instead of resolved\n{}'.format(
+                self.base_revision, base_revision))
+            base_revision = self.base_revision
+        try:
+            commit = self.repo.commit()
+        except BadName:
+            print('Revision {} not found in upstream repository, using master instead.'.format(base_revision))
+            commit = self.repo.heads['master']
+        new_branch = self.repo.create_head(self.branch_name, commit.hexsha)
+        self.repo.head.reference = new_branch
+        self.repo.head.reset(index=True, working_tree=True)
+        print('Base revision is {}'.format(self.repo.head.commit.hexsha))
+
+    def _commit_and_push(self):
+        """Commit the patch and push it to origin."""
+        if not self.push_branch:
+            return
+
+        self.repo.git.add('-A')
+        self.repo.index.commit(message='applying Diff {}'.format(
+            self.diff_id))
+        self.repo.git.push('--force', 'origin', self.branch_name)
+        print('Branch {} pushed to origin'.format(self.branch_name))
+        pass
 
     def _create_phab(self):
         phab = Phabricator(token=self.conduit_token, host=self.host)
@@ -245,6 +300,8 @@ if __name__ == "__main__":
     parser.add_argument('--url', type=str, default=None, help='Phabricator URL')
     parser.add_argument('--commit', dest='commit', type=str, default=None,
                         help='Use this commit as a base. By default tool tries to pick the base commit itself')
+    parser.add_argument('--push-branch', action='store_true', dest='push_branch',
+                        help='choose if branch shall be pushed to origin')
     args = parser.parse_args()
-    patcher = ApplyPatch(args.diff_id, args.comment_file_path, args.token, args.url, args.commit)
+    patcher = ApplyPatch(args.diff_id, args.comment_file_path, args.token, args.url, args.commit, args.push_branch)
     patcher.run()
