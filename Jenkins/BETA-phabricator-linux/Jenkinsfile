@@ -56,7 +56,7 @@ pipeline {
             steps {
                 dir("${LLVM_DIR}")
                 {
-                    git url: 'https://github.com/llvm/llvm-project.git' branch: "phab-diff-${DIFF_ID}"
+                    git url: 'https://github.com/llvm/llvm-project.git', branch: "phab-diff-${DIFF_ID}"
                     sh 'git clean -fdx'
                     sh 'git show -s'
                 }
