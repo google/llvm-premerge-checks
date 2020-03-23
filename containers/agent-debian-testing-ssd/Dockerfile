@@ -3,7 +3,7 @@ FROM debian:testing
 RUN echo "deb [trusted=yes] http://apt.llvm.org/buster/ llvm-toolchain-buster-10 main\n$(cat /etc/apt/sources.list)" > /etc/apt/sources.list;\
     apt-get update ;\
     apt-get install -y --no-install-recommends locales \
-        cmake ninja-build git ca-certificates clang lld ccache python3 build-essential \
+        cmake ninja-build git ca-certificates clang lld ccache python3 build-essential openssh-client\
         clang-tidy clang-format \
         python3-psutil arcanist zip wget \
         openjdk-11-jdk \
@@ -13,8 +13,6 @@ RUN echo "deb [trusted=yes] http://apt.llvm.org/buster/ llvm-toolchain-buster-10
 
 # Make python3 default (needed by git-clang-format and others).
 RUN rm -f /usr/bin/python && ln -s /usr/bin/python3 /usr/bin/python
-# required for openssh server
-RUN mkdir -p /run/sshd
 
 ARG user=jenkins
 ARG group=jenkins
@@ -30,6 +28,10 @@ RUN cd /scripts ;\
     mv swarm-client-3.17.jar swarm-client.jar 
 
 COPY start_agent.sh report_results.sh /scripts/
+
+# store SSH known hosts for github, required for ssh authentication
+RUN mkdir -p /home/${user}/.ssh
+COPY known_hosts /home/${user}/.ssh/known_hosts
 
 # install python dependencies for the scripts
 # ADD will checks that contentent of a file has changed.

@@ -15,6 +15,11 @@
 
 SSD_ROOT="/mnt/disks/ssd0"
 AGENT_ROOT="${SSD_ROOT}/agent"
+SSH_KEY_SOURCE="/github-ssh-key"
+SSH_KEY_TARGET="/home/jenkins/.ssh"
+
+# wipe the local cache on restart
+rm -rf "$SSD_ROOT"
 
 # prepare root folder for Jenkins agent
 mkdir -p "${AGENT_ROOT}"
@@ -24,7 +29,12 @@ chown -R jenkins:jenkins "${AGENT_ROOT}"
 mkdir -p "${CCACHE_PATH}"
 chown -R jenkins:jenkins "${CCACHE_PATH}"
 
-# TODO(kuhnel): wipe the disk(s) on startup
+# copy ssh keys to user jenkins
+mkdir -p ${SSH_KEY_TARGET}
+cp ${SSH_KEY_SOURCE}/* ${SSH_KEY_TARGET}
+chmod 700 ${SSH_KEY_TARGET}
+chmod 600 ${SSH_KEY_TARGET}/*
+chown -R jenkins:jenkins ${SSH_KEY_TARGET}
 
 # start swarm agent as user jenkins
 # description of arguments: https://wiki.jenkins.io/display/JENKINS/Swarm+Plugin

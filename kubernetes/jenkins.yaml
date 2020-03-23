@@ -177,6 +177,8 @@ spec:
           mountPath: /mnt/nfs          
         - name: ssd 
           mountPath: /mnt/disks/ssd0
+        - mountPath: /github-ssh-key
+          name: github-ssh-key
       volumes:
       - name: nfs-pvc
         persistentVolumeClaim:
@@ -186,5 +188,8 @@ spec:
           # directory location on host
           path: /mnt/disks/ssd0
           type: Directory          
+      - name: github-ssh-key
+        secret:
+          secretName: github-ssh-key
       nodeSelector:
         cloud.google.com/gke-nodepool: jenkins-agents
