@@ -125,6 +125,7 @@ def run_cmake(projects: str, repo_path: str, config_file_path: str = None):
 
     env = _create_env(config)
     llvm_enable_projects = _select_projects(config, projects, repo_path)
+    print('Enabled projects: {}'.format(llvm_enable_projects))
     arguments = _create_args(config, llvm_enable_projects)
     cmd = 'cmake ' + ' '.join(arguments)
     
@@ -134,6 +135,19 @@ def run_cmake(projects: str, repo_path: str, config_file_path: str = None):
         cmd = r'"C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64 && ' + cmd
     
     subprocess.check_call(cmd, env=env, shell=True, cwd=build_dir)
+
+    _link_compile_commands(config, repo_path, build_dir)
+
+
+def _link_compile_commands(config: Configuration, repo_path: str, build_dir: str):
+    """Link compile_commands.json from build to root dir"""
+    if config.operating_system != OperatingSystem.Linux:
+        return
+    source_path = os.path.join(build_dir, 'compile_commands.json')
+    target_path = os.path.join(repo_path, 'compile_commands.json')
+    if os.path.exists(target_path):
+        os.remove(target_path)
+    os.symlink(source_path, target_path)
 
 
 if __name__ == '__main__':
