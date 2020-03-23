@@ -23,6 +23,7 @@ project dependency graph it will get the transitively affected projects.
 import argparse
 import logging
 import os
+import platform
 import sys
 from typing import Dict, List, Set, Tuple
 
@@ -30,24 +31,27 @@ from unidiff import PatchSet
 import yaml
 
 # TODO: We could also try to avoid running tests for llvm for projects that 
-# only need various cmake scripts and don't actually depend on llvm (e.g. 
-# libcxx does not need to run llvm tests, but may still need to include llvm).
+#   only need various cmake scripts and don't actually depend on llvm (e.g.
+#   libcxx does not need to run llvm tests, but may still need to include llvm).
+
 
 class ChooseProjects:
     
     # file where dependencies are defined
     SCRIPT_DIR = os.path.dirname(__file__)
     DEPENDENCIES_FILE = os.path.join(SCRIPT_DIR, 'llvm-dependencies.yaml')
+    # projects used if anything goes wrong
+    FALLBACK_PROJECTS = ['all']
 
     def __init__(self, llvm_dir: str):
         self.llvm_dir = llvm_dir
-        self.defaultProjects = dict() # type: Dict[str, Dict[str, str]]
-        self.dependencies = dict() # type: Dict[str,List[str]]
+        self.defaultProjects = dict()  # type: Dict[str, Dict[str, str]]
+        self.dependencies = dict()  # type: Dict[str,List[str]]
         self.usages = dict()   # type: Dict[str,List[str]]
-        self.all_projects = [] # type: List[str]
-        self.excluded_projects = set() # type: Set[str]
+        self.all_projects = []  # type: List[str]
+        self.excluded_projects = set()  # type: Set[str]
+        self.operating_system = self._detect_os()  # type: str
         self._load_config()
-
 
     def _load_config(self):
         logging.info('loading project config from {}'.format(self.DEPENDENCIES_FILE))
@@ -56,30 +60,38 @@ class ChooseProjects:
         self.dependencies = config['dependencies']
         for user, used_list in self.dependencies.items():
             for used in used_list:
-                self.usages.setdefault(used,[]).append(user)
+                self.usages.setdefault(used, []).append(user)
         self.all_projects = config['allprojects']
-        self.excluded_projects = set(config['excludedProjects'])
+        self.excluded_projects = set(config['excludedProjects'][self.operating_system])
 
-    def run(self):
-        llvm_dir = os.path.abspath(os.path.expanduser(args.llvmdir))
+    @staticmethod
+    def _detect_os() -> str:
+        """Detect the current operating system."""
+        if platform.system() == 'Windows':
+            return 'windows'
+        return 'linux'
+
+    def choose_projects(self, patch: str = None) -> List[str]:
+        llvm_dir = os.path.abspath(os.path.expanduser(self.llvm_dir))
         logging.info('Scanning LLVM in {}'.format(llvm_dir))
         if not self.match_projects_dirs():
-            sys.exit(1)
-        changed_files = self.get_changed_files()
+            return self.FALLBACK_PROJECTS
+        changed_files = self.get_changed_files(patch)
         changed_projects, unmapped_changes = self.get_changed_projects(changed_files)
 
         if unmapped_changes:
             logging.warning('There were changes that could not be mapped to a project.'
                             'Building all projects instead!')
-            print('all')
-            return 0
+            return self.FALLBACK_PROJECTS
 
         affected_projects = self.get_affected_projects(changed_projects)
         affected_projects = self.add_dependencies(affected_projects)
         affected_projects = affected_projects - self.excluded_projects
-        print(';'.join(sorted(affected_projects)))
-        return 0
+        return sorted(affected_projects)
 
+    def run(self):
+        print(';'.join(self.choose_projects()))
+        return 0
 
     def match_projects_dirs(self) -> bool:
         """Make sure that all projects are folders in the LLVM dir.
@@ -91,23 +103,25 @@ class ChooseProjects:
                 logging.error('Project no found in LLVM root folder: {}'.format(project))
                 return False
         return True
-                
 
     @staticmethod
-    def get_changed_files() -> Set[str]:
+    def get_changed_files(patch_str: str = None) -> Set[str]:
         """get list of changed files from the patch from STDIN."""
-        patch = PatchSet(sys.stdin)
+        if patch_str is None:
+            patch_str = PatchSet(sys.stdin)
+        patch = PatchSet(patch_str)
+
         changed_files = set({f.path for f in patch.modified_files + patch.added_files + patch.removed_files})
 
         logging.info('Files modified by this patch:\n  ' + '\n  '.join(sorted(changed_files)))
         return changed_files
 
-    def get_changed_projects(self, changed_files: Set[str]) -> Tuple[Set[str],bool]:
+    def get_changed_projects(self, changed_files: Set[str]) -> Tuple[Set[str], bool]:
         """Get list of projects affected by the change."""
         changed_projects = set()
         unmapped_changes = False
         for changed_file in changed_files:
-            project = changed_file.split('/',maxsplit=1)
+            project = changed_file.split('/', maxsplit=1)
             if project is None or project[0] not in self.all_projects:
                 unmapped_changes = True
                 logging.warning('Could not map file to project: {}'.format(changed_file))
@@ -117,10 +131,10 @@ class ChooseProjects:
         logging.info('Projects directly modified by this patch:\n  ' + '\n  '.join(sorted(changed_projects)))
         return changed_projects, unmapped_changes
 
-
-    def get_affected_projects(self, changed_projects:Set[str]) -> Set[str]:
-        """Compute transitive closure of affected projects based on the dependencies between the projects."""
-        affected_projects=set(changed_projects)
+    def get_affected_projects(self, changed_projects: Set[str]) -> Set[str]:
+        """Compute transitive closure of affected projects based on the
+        dependencies between the projects."""
+        affected_projects = set(changed_projects)
         last_len = -1
         while len(affected_projects) != last_len:
             last_len = len(affected_projects)
@@ -134,7 +148,6 @@ class ChooseProjects:
         logging.info('  ' + '\n  '.join(sorted(affected_projects)))
 
         return affected_projects
-
 
     def add_dependencies(self, projects: Set[str]) -> Set[str]:
         """Return projects and their dependencies.
@@ -152,9 +165,11 @@ class ChooseProjects:
             result.update(changes)
         return result
 
+
 if __name__ == "__main__":
     logging.basicConfig(filename='choose_projects.log', level=logging.INFO)
-    parser = argparse.ArgumentParser(description='Compute the projects affected by a change.')
+    parser = argparse.ArgumentParser(
+        description='Compute the projects affected by a change.')
     parser.add_argument('llvmdir', default='.')
     args = parser.parse_args()
     chooser = ChooseProjects(args.llvmdir)

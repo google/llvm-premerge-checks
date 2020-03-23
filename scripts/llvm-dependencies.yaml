@@ -42,7 +42,6 @@ dependencies:
 
 # List of all projects in the LLVM monorepository. This list is taken from
 # llvm/CMakeLists.txt in "set(LLVM_ALL_PROJECTS ..."
-
 allprojects:
   - clang
   - clang-tools-extra
@@ -64,11 +63,14 @@ allprojects:
 
 # projects excluded from automatic configuration as they could not be built
 excludedProjects:
-# These projects are not working with Visual Studio Compiler on Windows
-  - lldb
-  - llgo
-  - libunwind
-  - libcxxabi
-  - openmp # blacklisting as kuhnel has trouble with the Perl installation
-  - debuginfo-tests # test failing
-  - polly # test failing
+  # These projects are not working with Visual Studio Compiler on Windows
+  windows:
+    - lldb
+    - llgo
+    - libunwind
+    - libcxxabi
+    - openmp # blacklisting as kuhnel has trouble with the Perl installation
+    - debuginfo-tests # test failing
+    - polly # test failing
+  # no projects are excluded on Linux
+  linux: []

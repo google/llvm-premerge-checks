@@ -1,0 +1,36 @@
+# This file is used to configure the environment variables and define
+# the command line arguments for cmake
+
+# environment variables that are set per operating system
+environment:
+  linux:
+    CC: 'clang'
+    CXX: 'clang++'
+    LD: 'LLD'
+  windows:
+    'CC': 'cl'
+    'CXX': 'cl'
+    'LD': 'link'
+
+# command line arguments for cmake
+arguments:
+  # command line arguments for all OS
+  general:
+    # LLVM path is set in script
+    # LLVM_ENABLE_PROJECTS is set in script
+    - '-G Ninja'
+    - '-D CMAKE_BUILD_TYPE=Release'
+    - '-D LLVM_ENABLE_ASSERTIONS=ON'
+    - '-D LLVM_LIT_ARGS="-v --xunit-xml-output test-results.xml"'
+  linux:
+    # CCACHE is enabled in script iff environment variable `CCACHE_PATH` is set
+    - '-D LLVM_ENABLE_LLD=ON'
+    - '-DCMAKE_CXX_FLAGS=-gmlt'
+  windows:
+    - '-D LLVM_ENABLE_DIA_SDK=OFF'
+
+# if the automatic project detection fails or is not used, these projects are
+# enabled
+default_projects:
+  windows: 'clang;clang-tools-extra;libcxx;libc;lld;mlir;libcxxabi'
+  linux:   'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir'
