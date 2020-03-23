@@ -30,8 +30,8 @@ pipeline {
             RESULT_DIR = "${WORKSPACE}/results"
             PHAB_LOG = "${RESULT_DIR}/.phabricator-comment"
             MY_BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
-            TARGET_DIR = "/mnt/nfs/results/${BUILD_ID}"
-            RESULT_URL = "http://results.llvm-merge-guard.org/${BUILD_ID}"
+            TARGET_DIR = "/mnt/nfs/results/${MY_BUILD_ID}"
+            RESULT_URL = "http://results.llvm-merge-guard.org/${MY_BUILD_ID}"
     }
     stages {
         stage("build info"){
