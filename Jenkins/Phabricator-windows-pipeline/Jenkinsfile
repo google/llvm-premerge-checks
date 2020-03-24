@@ -19,6 +19,7 @@ pipeline {
     parameters {
         string(name: 'DIFF_ID')
         string(name: 'PHID')
+        string(name: 'REV_ID')
     }
     environment {
         CONDUIT_TOKEN = credentials('phabricator-conduit-token')
@@ -37,7 +38,11 @@ pipeline {
     stages {
         stage("build info"){
             steps {
-                echo "Building diff ${DIFF_ID} with PHID ${PHID}"
+                echo "Building diff ${DIFF_ID} with PHID ${PHID} for Revision ${REV_ID}"
+                script {
+                    currentBuild.displayName += " D${REV_ID}"
+                    currentBuild.description = "<a href='https://reviews.llvm.org/D${REV_ID}'>D${REV_ID}</a>"
+                }
                 script {
                     success = true
                     failure_message = ""
@@ -54,9 +59,9 @@ pipeline {
                 echo "getting llvm-project... "
                 dir("llvm-project")
                 {
-                    bat ""
-                    bat 'if exist "build" rd /s/q "build"'
-                    git url: 'https://github.com/llvm/llvm-project.git'
+                    git url: 'https://github.com/llvm-premerge-tests/llvm-project.git', branch: "phab-diff-${DIFF_ID}"
+                    powershell 'git clean -fdx'
+                    powershell 'git show -s'
                 }
                 // create ${RESULT_DIR}
                 powershell """
@@ -65,27 +70,10 @@ pipeline {
                     """
             }            
         }
-        stage('arc patch'){
-            steps {
-                dir("${LLVM_DIR}"){
-                    bat """
-                        python ${SCRIPT_DIR}/phabtalk/apply_patch2.py --comment-file ${PHAB_LOG}  --token ${CONDUIT_TOKEN} --url ${PHABRICATOR_HOST} ${DIFF_ID}
-                        """
-                }
-            }
-            post {
-                failure {
-                    script {
-                        success = false
-                        failure_message = "Failed to apply patch"
-                    }
-                }
-            }
-        }
         stage('CMake') {
             steps {
                 dir("${LLVM_DIR}"){
-                    powershell "${SCRIPT_DIR}/run_cmake.ps1 -projects detect"
+                    powershell "${SCRIPT_DIR}/run_cmake.py detect"
                 }
             }
             post {
@@ -100,7 +88,7 @@ pipeline {
         stage('ninja all') {
             steps {
                 dir("${LLVM_DIR}"){
-                    powershell "${SCRIPT_DIR}/run_ninja.ps1 all"
+                    powershell "${SCRIPT_DIR}/run_ninja.py all"
                 }
             }
             post {
@@ -115,7 +103,7 @@ pipeline {
         stage('ninja check-all') {
             steps {
                 dir("${LLVM_DIR}"){
-                    powershell "${SCRIPT_DIR}/run_ninja.ps1 check-all"
+                    powershell "${SCRIPT_DIR}/run_ninja.py check-all"
                 }
             }
             post {
