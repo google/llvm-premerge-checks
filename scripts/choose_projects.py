@@ -108,7 +108,7 @@ class ChooseProjects:
     def get_changed_files(patch_str: str = None) -> Set[str]:
         """get list of changed files from the patch from STDIN."""
         if patch_str is None:
-            patch_str = PatchSet(sys.stdin)
+            patch_str = sys.stdin
         patch = PatchSet(patch_str)
 
         changed_files = set({f.path for f in patch.modified_files + patch.added_files + patch.removed_files})
