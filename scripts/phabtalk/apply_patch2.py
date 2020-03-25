@@ -23,7 +23,7 @@ import time
 from typing import List, Optional, Tuple
 
 from phabricator import Phabricator
-from git import Repo, BadName
+from git import Repo, BadName, GitCommandError
 
 
 # FIXME: maybe move to config file
@@ -130,9 +130,14 @@ class ApplyPatch:
         if 'upstream' not in self.repo.remotes:
             self.repo.create_remote('upstream', url=LLVM_GITHUB_URL)
             self.repo.remotes.upstream.fetch()
+        self.repo.git.pull('origin', 'master')
         self.repo.git.pull('upstream', 'master')
-        self.repo.git.push('origin', 'master')
-        print('refresh of master branch completed')
+        try:
+            self.repo.git.push('origin', 'master')
+            print('refresh of master branch completed')
+        except GitCommandError as e:
+            print('Error: could not push to origin master.')
+            print(e)
 
     def _create_branch(self, base_revision: Optional[str]):
         self.repo.git.fetch('--all')
