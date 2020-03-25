@@ -16,7 +16,9 @@
 # This script only needs to be run once per machine.
 
 Write-Host "Initializing local SSD..."
-New-Variable -Name diskid -Value (Get-Disk -FriendlyName "Google EphemeralDisk").Number
+#New-Variable -Name diskid -Value (Get-Disk -FriendlyName "Google EphemeralDisk").Number
+New-Variable -Name diskid -Value (Get-Disk -FriendlyName "NVMe nvme_card").Number
+
 # TODO: check if machine has an SSD
 # TODO: only do this, if SSD is not yet partioned and formatted
 Initialize-Disk -Number $diskid
