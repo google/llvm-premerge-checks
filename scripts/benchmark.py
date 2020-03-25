@@ -61,14 +61,14 @@ COMMANDS = [
     Cmd('git checkout release/10.x', 'git checkout release'),
     Cmd('git checkout {commit}'),
     Cmd('git pull', 'git pull'),
-    Cmd('{pmt_root_path}/scripts/run_cmake.py detect', 'cmake autotdetect 1st'),
+    Cmd('{pmt_root_path}/scripts/run_cmake.py', 'cmake 1st'),
     Cmd('{pmt_root_path}/scripts/run_ninja.py all', 'ninja all 1st'),
     Remove('build'),
-    Cmd('{pmt_root_path}/scripts/run_cmake.py detect', 'cmake autotdetect 2nd'),
+    Cmd('{pmt_root_path}/scripts/run_cmake.py', 'cmake 2nd'),
     Cmd('{pmt_root_path}/scripts/run_ninja.py all', 'ninja all 2nd'),
     Cmd('{pmt_root_path}/scripts/run_ninja.py check-all', 'ninja check-all 1st'),
     Remove('build'),
-    Cmd('{pmt_root_path}/scripts/run_cmake.py detect', 'cmake autotdetect 3nd'),
+    Cmd('{pmt_root_path}/scripts/run_cmake.py', 'cmake 3nd'),
     Cmd('{pmt_root_path}/scripts/run_ninja.py check-all', 'ninja check-all 2nd'),
 ]
 
