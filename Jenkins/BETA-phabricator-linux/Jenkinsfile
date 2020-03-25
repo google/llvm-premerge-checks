@@ -155,7 +155,8 @@ pipeline {
                     set -eu
                     cp ${LLVM_DIR}/build/CMakeCache.txt . || :
                     cp ${LLVM_DIR}/build/test-results.xml . || :
-
+                    cp ${LLVM_DIR}/clang-format.patch . || :
+                    cp ${LLVM_DIR}/clang-tidy.txt . || :
                     mkdir -p ${TARGET_DIR}
                     cp * ${TARGET_DIR}
                 """
@@ -167,8 +168,8 @@ pipeline {
                 --test-result-file "${RESULT_DIR}/test-results.xml" \
                 --host "${PHABRICATOR_HOST}/api/" \
                 --buildresult ${currentBuild.result} \
-                --clang-format-patch "clang-format.patch" \
-                --clang-tidy-result "clang-tidy.txt" \
+                --clang-format-patch "${LLVM_DIR}/clang-format.patch" \
+                --clang-tidy-result "${LLVM_DIR}/clang-tidy.txt" \
                 --clang-tidy-ignore "${SCRIPT_DIR}/clang-tidy-comments.ignore" \
                 --results-dir "${TARGET_DIR}" \
                 --results-url "${RESULT_URL}" \
