@@ -61,8 +61,8 @@ class Remove(Cmd):
 COMMANDS = [
     Cmd('git clone https://github.com/llvm/llvm-project .', 'git clone'),
     Cmd('git checkout release/10.x', 'git checkout release'),
-    Cmd('git checkout {commit}'),
     Cmd('git pull', 'git pull'),
+    Cmd('git checkout {commit}'),
     # clean build, make sure ccache (or similar) is empty
     Cmd('{pmt_root_path}/scripts/run_cmake.py', 'cmake 1st'),
     Cmd('{pmt_root_path}/scripts/run_ninja.py all', 'ninja all 1st'),
