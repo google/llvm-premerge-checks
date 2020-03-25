@@ -235,6 +235,8 @@ class BuildReport:
                 pass
             elif self.buildresult.lower() == 'null':
                 self.working = True
+            else:
+                self.success = False
         else:
             self.success = False
 
