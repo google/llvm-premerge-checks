@@ -22,6 +22,7 @@ import argparse
 import csv
 import datetime
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -39,6 +40,21 @@ class Cmd:
         self.title = title  # type: Optional[str]
         self.execution_time = None  # type: Optional[datetime.timedelta]
 
+    @property
+    def has_title(self):
+        return self.title is None
+
+
+class Remove(Cmd):
+    """Remove command, sensitive to OS."""
+
+    def __init__(self, path: str):
+        if platform.system() == 'Windows':
+            cmd = 'cmd /c rd /s/q {}'.format(path)
+        else:
+            cmd = 'rm -rf {}'.format(path)
+        super().__init__(cmd, "rm -rf {}".format(path))
+
 
 # commands for the benchmark
 COMMANDS = [
@@ -48,8 +64,10 @@ COMMANDS = [
     Cmd('git pull', 'git pull'),
     Cmd('{pmt_root_path}/scripts/run_cmake.py detect', 'cmake autotdetect'),
     Cmd('{pmt_root_path}/scripts/run_ninja.py all', 'ninja all 1st'),
+    Remove('build'),
     Cmd('{pmt_root_path}/scripts/run_ninja.py all', 'ninja all 2nd'),
     Cmd('{pmt_root_path}/scripts/run_ninja.py check-all', 'ninja check-all 1st'),
+    Remove('build'),
     Cmd('{pmt_root_path}/scripts/run_ninja.py check-all', 'ninja check-all 2nd'),
 ]
 
@@ -72,7 +90,7 @@ def run_benchmark(commit: str, name: str, result_file_path: str, workdir: str, p
 
 def write_results(commands: List[Cmd], result_file_path : str, name: str):
     fieldnames = ['name']
-    fieldnames.extend([cmd.title for cmd in COMMANDS if cmd.title is not None])
+    fieldnames.extend(cmd.title for cmd in COMMANDS if cmd.has_title)
     exists = os.path.exists(result_file_path)
     with open(result_file_path, 'a') as csv_file:
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames, dialect=csv.excel)
@@ -81,7 +99,7 @@ def write_results(commands: List[Cmd], result_file_path : str, name: str):
         row = {
             'name': name
         }
-        for command in commands:
+        for command in (cmd for cmd in commands if cmd.has_title):
             row[command.title] = command.execution_time.total_seconds()
         writer.writerow(row)
     print('Benchmark completed.')
