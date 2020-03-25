@@ -23,7 +23,6 @@ import csv
 import datetime
 import os
 import platform
-import shutil
 import subprocess
 import sys
 from typing import Optional, Dict, List
@@ -76,13 +75,13 @@ def run_benchmark(commit: str, name: str, result_file_path: str, workdir: str, p
     """Tun the benchmark, write the results to a file."""
     print('Usingn workdir {}'.format(workdir))
     print('Using scripts from {}'.format(pmt_root_path))
-    if os.path.exists(workdir):
-        shutil.rmtree(workdir)
-    os.makedirs(workdir)
     cmd_parameters = {
         'pmt_root_path': pmt_root_path,
         'commit': commit,
     }
+    if os.path.exists(workdir):
+        run_cmd(Remove(workdir), cmd_parameters, '.')
+    os.makedirs(workdir)
     for command in COMMANDS:
         run_cmd(command, cmd_parameters, workdir)
     write_results(COMMANDS, result_file_path, name)
