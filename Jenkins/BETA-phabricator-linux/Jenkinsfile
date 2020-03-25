@@ -154,7 +154,7 @@ pipeline {
                 sh """
                     set -eu
                     cp ${LLVM_DIR}/build/CMakeCache.txt . || :
-                    cp ${LLVM_DIR}/test-results.xml . || :
+                    cp ${LLVM_DIR}/build/test-results.xml . || :
 
                     mkdir -p ${TARGET_DIR}
                     cp * ${TARGET_DIR}
