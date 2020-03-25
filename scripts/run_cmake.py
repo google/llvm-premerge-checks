@@ -133,7 +133,8 @@ def run_cmake(projects: str, repo_path: str, config_file_path: str = None):
     if config.operating_system == OperatingSystem.Windows:
         # FIXME: move this path to a config file
         cmd = r'"C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64 && ' + cmd
-    
+
+    print('Running cmake with these arguments:\n{}'.format(cmd))
     subprocess.check_call(cmd, env=env, shell=True, cwd=build_dir)
 
     _link_compile_commands(config, repo_path, build_dir)
@@ -156,4 +157,3 @@ if __name__ == '__main__':
     parser.add_argument('repo_path', type=str, nargs='?', default=os.getcwd())
     args = parser.parse_args()
     run_cmake(args.projects, args.repo_path)
-
