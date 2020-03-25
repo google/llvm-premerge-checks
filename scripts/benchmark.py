@@ -21,8 +21,10 @@ This can be used to tune the build times.
 import argparse
 import csv
 import datetime
+import multiprocessing
 import os
 import platform
+import psutil
 import subprocess
 import sys
 from typing import Optional, Dict, List
@@ -41,7 +43,7 @@ class Cmd:
 
     @property
     def has_title(self):
-        return self.title is None
+        return self.title is not None
 
 
 class Remove(Cmd):
@@ -90,7 +92,7 @@ def run_benchmark(commit: str, name: str, result_file_path: str, workdir: str, p
 
 
 def write_results(commands: List[Cmd], result_file_path : str, name: str):
-    fieldnames = ['name']
+    fieldnames = ['name', 'cores', 'CPU', 'RAM', 'timestamp', 'OS']
     fieldnames.extend(cmd.title for cmd in COMMANDS if cmd.has_title)
     exists = os.path.exists(result_file_path)
     with open(result_file_path, 'a') as csv_file:
@@ -98,7 +100,12 @@ def write_results(commands: List[Cmd], result_file_path : str, name: str):
         if not exists:
             writer.writeheader()
         row = {
-            'name': name
+            'name': name,
+            'cores': multiprocessing.cpu_count(),
+            'CPU' : platform.processor(),
+            'RAM' : psutil.virtual_memory().total,
+            'timestamp' : datetime.datetime.now().timestamp(),
+            'OS' : platform.platform()
         }
         for command in (cmd for cmd in commands if cmd.has_title):
             row[command.title] = command.execution_time.total_seconds()
@@ -132,6 +139,6 @@ if __name__ == '__main__':
                         help="path to CSV file where to store the benchmark results")
     parser.add_argument('--workdir', type=str, default=os.path.join(os.getcwd(), 'benchmark'),
                         help='Folder to store the LLVM checkout.')
-    parser.add_argument('name', type=str, nargs='?', help="name for the benchmark")
+    parser.add_argument('--name', type=str, default=None, help="name for the benchmark")
     args = parser.parse_args()
     run_benchmark(args.commit, args.name, args.result_file, args.workdir, pmt_root)
