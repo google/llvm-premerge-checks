@@ -79,6 +79,7 @@ class PhabTalk:
         # https://secure.phabricator.com/conduit/method/differential.revision.edit/
         self._phab.differential.revision.edit(objectIdentifier=revision,
                                               transactions=transactions)
+        print('Uploaded comment to Revision D{}:{}'.format(revision, text))
 
     def update_build_status(self, diff_id: str, phid: str, working: bool, success: bool, lint: {}, unit: []):
         """Submit collected report to Phabricator.
@@ -122,6 +123,8 @@ class PhabTalk:
             type=result_type,
             unit=unit,
             lint=lint_messages))
+        print('Uploaded build status {}, {} test results and {} lint results'.format(
+            result_type, len(unit), len(lint_messages)))
 
     def add_artifact(self, phid: str, file: str, name: str, results_url: str):
         artifactKey = str(uuid.uuid4())
@@ -135,12 +138,12 @@ class PhabTalk:
             print('artifactType: {}'.format(artifactType))
             print('artifactData: {}'.format(artifactData))
             return
-
         _try_call(lambda: self._phab.harbormaster.createartifact(
             buildTargetPHID=phid,
             artifactKey=artifactKey,
             artifactType=artifactType,
             artifactData=artifactData))
+        print('Created artifact "{}"'.format(name))
 
 
 def _parse_patch(patch) -> List[Dict[str, str]]:
