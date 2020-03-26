@@ -19,12 +19,16 @@
 set -eux
 
 echo "Running linters... ====================================="
-# In the normal case: diff staging area against head
-# Optionml: diff against another commit, set via command line parameter
-COMMIT=HEAD
-if (( $# == 1 )); then
-    COMMIT="$1"
+if (( $# != 2 )); then
+  echo "Syntax: lint.sh <COMMIT> <OUTPUT_DIR>"
+  exit 1
 fi;
+# Commit to diff against
+COMMIT="$1"
+# output directory for test results
+OUTPUT_DIR="$2"
+# root directory, where the config files are located
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 if [ ! -f "compile_commands.json" ] ; then
   echo "Could not find compile commands.json in $(pwd)"
@@ -35,12 +39,12 @@ fi
 # Let clang format apply patches --diff doesn't produces results in the format we want.
 git-clang-format "${COMMIT}"
 set +e
-git diff -U0 --exit-code | "${SCRIPT_DIR}/ignore_diff.py" "${SCRIPT_DIR}/clang-format.ignore" > "${TARGET_DIR}"/clang-format.patch
+git diff -U0 --exit-code | "${DIR}/ignore_diff.py" "${DIR}/clang-format.ignore" > "${OUTPUT_DIR}"/clang-format.patch
 set -e
 # Revert changes of git-clang-format.
 git checkout -- .
 
 # clang-tidy
-git diff -U0 "${COMMIT}" | "${SCRIPT_DIR}/ignore_diff.py" "${SCRIPT_DIR}/clang-tidy.ignore" | clang-tidy-diff -p1 -quiet | sed "/^[[:space:]]*$/d" > "${TARGET_DIR}"/clang-tidy.txt
+git diff -U0 "${COMMIT}" | "${DIR}/ignore_diff.py" "${DIR}/clang-tidy.ignore" | clang-tidy-diff -p1 -quiet | sed "/^[[:space:]]*$/d" > "${OUTPUT_DIR}"/clang-tidy.txt
 
 echo "linters completed ======================================"

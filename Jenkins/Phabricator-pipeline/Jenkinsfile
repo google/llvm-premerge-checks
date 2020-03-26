@@ -130,7 +130,7 @@ pipeline {
             steps {
                 script {
                     try {
-                      sh(script: "${SCRIPT_DIR}/lint.sh")
+                      sh(script: "${SCRIPT_DIR}/lint.sh HEAD ${TARGET_DIR}")
                     } catch (e) {
                         success = false;
                         failure_message += "\nFailed to run linters" // append as build might already be broken
