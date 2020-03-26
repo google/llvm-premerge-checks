@@ -19,12 +19,21 @@
 set -eux
 
 echo "Running linters... ====================================="
+# In the normal case: diff staging area against head
+# Optionml: diff against another commit, set via command line parameter
+COMMIT=HEAD
+if (( $# == 1 )); then
+    COMMIT="$1"
+fi;
 
-cd "${WORKSPACE}"
+if [ ! -f "compile_commands.json" ] ; then
+  echo "Could not find compile commands.json in $(pwd)"
+  exit 1
+fi
 
 # clang-format
 # Let clang format apply patches --diff doesn't produces results in the format we want.
-git-clang-format
+git-clang-format "${COMMIT}"
 set +e
 git diff -U0 --exit-code | "${SCRIPT_DIR}/ignore_diff.py" "${SCRIPT_DIR}/clang-format.ignore" > "${TARGET_DIR}"/clang-format.patch
 set -e
@@ -32,6 +41,6 @@ set -e
 git checkout -- .
 
 # clang-tidy
-git diff -U0 HEAD | "${SCRIPT_DIR}/ignore_diff.py" "${SCRIPT_DIR}/clang-tidy.ignore" | clang-tidy-diff -p1 -quiet | sed "/^[[:space:]]*$/d" > "${TARGET_DIR}"/clang-tidy.txt
+git diff -U0 "${COMMIT}" | "${SCRIPT_DIR}/ignore_diff.py" "${SCRIPT_DIR}/clang-tidy.ignore" | clang-tidy-diff -p1 -quiet | sed "/^[[:space:]]*$/d" > "${TARGET_DIR}"/clang-tidy.txt
 
 echo "linters completed ======================================"

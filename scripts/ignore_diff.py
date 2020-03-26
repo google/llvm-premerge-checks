@@ -17,8 +17,11 @@ import re
 import sys
 import pathspec
 
+
 # Takes an output of git diff and removes files ignored by patten specified by ignore file.
 def main():
+    # FIXME: use argparse for parsing commandline parameters
+    # Maybe FIXME: Replace path to file with flags for tidy/format, use paths relative to `__file__`
     argv = sys.argv[1:]
     if not argv:
         print("Please provide a path to .ignore file.")

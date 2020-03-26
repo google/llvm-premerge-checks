@@ -122,10 +122,9 @@ pipeline {
             steps {
                 dir("${LLVM_DIR}")
                 {
-
                     script {
                         try {
-                          sh(script: "${SCRIPT_DIR}/lint.sh")
+                          sh(script: "${SCRIPT_DIR}/lint.sh HEAD~1")
                         } catch (e) {
                             success = false;
                             failure_message += "\nFailed to run linters" // append as build might already be broken
