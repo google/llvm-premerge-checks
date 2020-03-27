@@ -3,7 +3,7 @@ FROM debian:testing
 RUN echo "deb [trusted=yes] http://apt.llvm.org/buster/ llvm-toolchain-buster-10 main\n$(cat /etc/apt/sources.list)" > /etc/apt/sources.list ;\
     apt-get update ;\
     apt-get install -y --no-install-recommends locales \
-        cmake ninja-build git ca-certificates clang lld ccache python3 build-essential \
+        cmake ninja-build git ca-certificates clang lld ccache python3 build-essential gdb \
         clang-tidy clang-format \
         python3-psutil zip wget \
         openjdk-11-jdk \
@@ -30,7 +30,8 @@ COPY start_agent.sh /scripts/
 # install python dependencies for the scripts
 # ADD will checks that contentent of a file has changed.
 ADD "https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/requirements.txt" requirements.txt
-RUN pip3 install -r requirements.txt
+RUN pip3 install wheel ; \
+    pip3 install -r requirements.txt
 
 RUN groupadd -g ${gid} ${group} ;\
     useradd -c "buildkite user" -d /home/${user} -u ${uid} -g ${gid} -m ${user} ;\

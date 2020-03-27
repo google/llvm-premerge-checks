@@ -4,7 +4,7 @@ RUN echo "deb [trusted=yes] http://apt.llvm.org/buster/ llvm-toolchain-buster-10
     apt-get update ;\
     apt-get install -y --no-install-recommends locales \
         cmake ninja-build git ca-certificates clang lld ccache python3 build-essential openssh-client\
-        clang-tidy clang-format \
+        clang-tidy clang-format gdb \
         python3-psutil arcanist zip wget \
         openjdk-11-jdk \
         python3-pip python3-setuptools \
@@ -36,7 +36,8 @@ COPY known_hosts /home/${user}/.ssh/known_hosts
 # install python dependencies for the scripts
 # ADD will checks that contentent of a file has changed.
 ADD "https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/requirements.txt" requirements.txt
-RUN pip3 install -r requirements.txt
+RUN pip3 install wheel ; \
+    pip3 install -r requirements.txt
 
 RUN groupadd -g ${gid} ${group} ;\
     useradd -c "Jenkins user" -d /home/${user} -u ${uid} -g ${gid} -m ${user} ;\
