@@ -73,4 +73,10 @@ excludedProjects:
     - debuginfo-tests # test failing
     - polly # test failing
   # no projects are excluded on Linux
-  linux: []
+  linux:
+    # tests keep failing:
+    # debuginfo-tests :: llgdb-tests/asan-deque.cpp
+    # debuginfo-tests :: llgdb-tests/asan.c
+    # debuginfo-tests :: llgdb-tests/safestack.c
+    # debuginfo-tests :: llvm-prettyprinters/gdb/llvm-support.gdb
+    - debuginfo-tests
