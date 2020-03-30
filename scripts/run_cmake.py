@@ -108,20 +108,22 @@ def _create_args(config: Configuration, llvm_enable_projects: str) -> List[str]:
     return arguments
 
 
-def run_cmake(projects: str, repo_path: str, config_file_path: str = None):
+def run_cmake(projects: str, repo_path: str, config_file_path: str = None, *, dryrun: bool = False):
     """Use cmake to configure the project.
 
     This version works on all operating systems.
     """
+    print(dryrun)
     if config_file_path is None:
         script_dir = os.path.dirname(__file__)
         config_file_path = os.path.join(script_dir, 'run_cmake_config.yaml')
     config = Configuration(config_file_path)
 
     build_dir = os.path.abspath(os.path.join(repo_path, 'build'))
-    if os.path.exists(build_dir):
-        shutil.rmtree(build_dir)
-    os.makedirs(build_dir)
+    if not dryrun:
+        if os.path.exists(build_dir):
+            shutil.rmtree(build_dir)
+        os.makedirs(build_dir)
 
     env = _create_env(config)
     llvm_enable_projects = _select_projects(config, projects, repo_path)
@@ -135,9 +137,11 @@ def run_cmake(projects: str, repo_path: str, config_file_path: str = None):
         cmd = r'"C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64 && ' + cmd
 
     print('Running cmake with these arguments:\n{}'.format(cmd))
-    subprocess.check_call(cmd, env=env, shell=True, cwd=build_dir)
-
-    _link_compile_commands(config, repo_path, build_dir)
+    if dryrun:
+        print('Dryrun, not invoking CMake!')
+    else:
+        subprocess.check_call(cmd, env=env, shell=True, cwd=build_dir)
+        _link_compile_commands(config, repo_path, build_dir)
 
 
 def _link_compile_commands(config: Configuration, repo_path: str, build_dir: str):
@@ -155,5 +159,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run CMake for LLVM.')
     parser.add_argument('projects', type=str, nargs='?', default='default')
     parser.add_argument('repo_path', type=str, nargs='?', default=os.getcwd())
+    parser.add_argument('--dryrun', action='store_true')
     args = parser.parse_args()
-    run_cmake(args.projects, args.repo_path)
+    run_cmake(args.projects, args.repo_path, dryrun=args.dryrun)
