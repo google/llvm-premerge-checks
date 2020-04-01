@@ -44,5 +44,8 @@ Set-Service -Name docker  -StartupType AutomaticDelayedStart
 # TODO: find a better way to install the Google Cloud SDK, avoid ingoring the checksum
 choco install -y gcloudsdk --ignore-checksums
 
+# exclude drive d from Virus scans, to get better performance
+Add-MpPreference -ExclusionPath “D:\”
+
 # Reboot
 Restart-Computer -Force
