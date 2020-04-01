@@ -23,6 +23,7 @@ RUN choco install -y cmake --version 3.15.4
 RUN choco install -y python3
 RUN choco install -y ninja
 RUN choco install -y gnuwin
+RUN choco install -y sccache
 # install perl, required for OpenMP
 # RUN choco install -y strawberryperl 
 RUN pip install psutil
