@@ -22,6 +22,7 @@ import shutil
 import subprocess
 from typing import List, Dict
 import yaml
+import time
 from choose_projects import ChooseProjects
 
 
@@ -123,6 +124,9 @@ def run_cmake(projects: str, repo_path: str, config_file_path: str = None, *, dr
     if not dryrun:
         if os.path.exists(build_dir):
             shutil.rmtree(build_dir)
+            while os.path.exists(build_dir):
+                print('Waiting for folder to really be deleted...')
+                time.sleep(1)
         os.makedirs(build_dir)
 
     env = _create_env(config)
