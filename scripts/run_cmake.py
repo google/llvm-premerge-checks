@@ -101,6 +101,11 @@ def _create_args(config: Configuration, llvm_enable_projects: str) -> List[str]:
     arguments.extend(config.general_cmake_arguments)
     arguments.extend(config.specific_cmake_arguments)
 
+    if 'SCCACHE_DIR' in os.environ:
+        arguments.extend([
+            '-DCMAKE_C_COMPILER_LAUNCHER=sccache',
+            '-DCMAKE_CXX_COMPILER_LAUNCHER=sccache',
+        ])
     # enable ccache if the path is set in the environment
     if 'CCACHE_PATH' in os.environ:
         arguments.extend([
