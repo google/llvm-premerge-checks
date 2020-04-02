@@ -20,7 +20,8 @@
 param(
     [Parameter(Mandatory=$true)]
     [ValidateSet("buildkite", "jenkins")]
-    [string]$master
+    [string]$master,
+    [switch]$testing = $false
 )
 
 $NAME="agent-windows-${master}"
@@ -37,10 +38,20 @@ docker stop ${NAME}
 docker rm ${NAME}
 
 Write-Output "Starting container..."
-docker run -d `
+if (${testing}) {
+    docker run -it `
+    -v D:\:C:\ws `
+    -v C:\credentials:C:\credentials `
+    -e PARENT_HOSTNAME=$env:computername `
+    --restart unless-stopped `
+    --name ${NAME} `
+    ${IMAGE} powershell
+} else {
+    docker run -d `
     -v D:\:C:\ws `
     -v C:\credentials:C:\credentials `
     -e PARENT_HOSTNAME=$env:computername `
     --restart unless-stopped `
     --name ${NAME} `
     ${IMAGE}
+}
