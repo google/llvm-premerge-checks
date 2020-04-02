@@ -42,8 +42,12 @@ class Cmd:
         self.execution_time = None  # type: Optional[datetime.timedelta]
 
     @property
-    def has_title(self):
+    def has_title(self) -> bool:
         return self.title is not None
+
+    @property
+    def was_executed(self) -> bool:
+        return self.execution_time is not None
 
 
 class Remove(Cmd):
@@ -86,12 +90,14 @@ def run_benchmark(commit: str, name: str, result_file_path: str, workdir: str, p
     if os.path.exists(workdir):
         run_cmd(Remove(workdir), cmd_parameters, '.')
     os.makedirs(workdir)
-    for command in COMMANDS:
-        run_cmd(command, cmd_parameters, workdir)
-    write_results(COMMANDS, result_file_path, name)
+    try:
+        for command in COMMANDS:
+            run_cmd(command, cmd_parameters, workdir)
+    finally:
+        write_results(COMMANDS, result_file_path, name)
 
 
-def write_results(commands: List[Cmd], result_file_path : str, name: str):
+def write_results(commands: List[Cmd], result_file_path: str, name: str):
     fieldnames = ['name', 'cores', 'CPU', 'RAM', 'timestamp', 'OS']
     fieldnames.extend(cmd.title for cmd in COMMANDS if cmd.has_title)
     exists = os.path.exists(result_file_path)
@@ -102,12 +108,12 @@ def write_results(commands: List[Cmd], result_file_path : str, name: str):
         row = {
             'name': name,
             'cores': multiprocessing.cpu_count(),
-            'CPU' : platform.processor(),
-            'RAM' : psutil.virtual_memory().total,
-            'timestamp' : datetime.datetime.now().timestamp(),
-            'OS' : platform.platform()
+            'CPU': platform.processor(),
+            'RAM': psutil.virtual_memory().total,
+            'timestamp': datetime.datetime.now().timestamp(),
+            'OS': platform.platform()
         }
-        for command in (cmd for cmd in commands if cmd.has_title):
+        for command in (cmd for cmd in commands if (cmd.has_title and cmd.was_executed)):
             row[command.title] = command.execution_time.total_seconds()
         writer.writerow(row)
     print('Benchmark completed.')
