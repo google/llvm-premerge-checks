@@ -20,14 +20,27 @@ import subprocess
 
 def run_ninja(target: str, repo_path: str):   
     build_dir = os.path.join(repo_path, 'build')
+
+    if 'SCCACHE_DIR' in os.environ:
+        # FIXME: Is there a more elegant way to find out if sccache server
+        #        is already running?
+        try:
+            # start the server with VS environment configured
+            _run_cmd('sccache --start-server')
+        except subprocess.CalledProcessError:
+            print('sccache already running, not starting a new one.')
+
     cmd = 'ninja {}'.format(target)
-    
+    _run_cmd(cmd, cwd=build_dir)
+
+
+def _run_cmd(cmd: str, *, cwd: str = None):
     # On Windows: configure Visutal Studio before running ninja
     if platform.system() == 'Windows':
         # FIXME: move this path to a config file
         cmd = r'"C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64 && ' + cmd
 
-    subprocess.check_call(cmd, shell=True, cwd=build_dir)
+    subprocess.check_call(cmd, shell=True, cwd=cwd)
 
 
 if __name__ == '__main__':
