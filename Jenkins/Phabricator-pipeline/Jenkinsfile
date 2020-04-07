@@ -31,6 +31,9 @@ pipeline {
             RESULT_URL = "http://results.llvm-merge-guard.org/${BUILD_ID}"
             DIFF_JSON = "${WORKSPACE}/build/diff.json"
     }
+    options {
+        timeout(time:2, unit:'HOURS')
+    }
     stages {
         stage("build info"){
             steps {
