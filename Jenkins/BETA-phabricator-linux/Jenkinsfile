@@ -33,6 +33,9 @@ pipeline {
             TARGET_DIR = "/mnt/nfs/results/${MY_BUILD_ID}"
             RESULT_URL = "http://results.llvm-merge-guard.org/${MY_BUILD_ID}"
     }
+    options {
+        timeout(time:2, unit:'HOURS')
+    }
     stages {
         stage("build info"){
             steps {
