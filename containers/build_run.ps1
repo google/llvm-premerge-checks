@@ -22,14 +22,28 @@ param(
 # set script to stop on first error
 $ErrorActionPreference = "Stop"
 
+# setting windows version
+# FIXME: move Windows version to central config file
+$windows_version="10.0.17763.1039"
+Write-Host "Using windows version ${windows_version}"
+
 # some docs recommend setting 2GB memory limit
- docker build --memory 2GB -t $IMAGE_NAME --build-arg token=$token "$PSScriptRoot\$IMAGE_NAME"
+docker build `
+    --memory 2GB `
+    -t $IMAGE_NAME `
+    --build-arg token=$token  `
+    --build-arg windows_version=$windows_version `
+    "$PSScriptRoot\$IMAGE_NAME"
 If ($LastExitCode -ne 0) {
     exit
 }
 
 # mount a persistent workspace for experiments
-docker run -it -v D:\:C:\ws -v C:\credentials:C:\credentials -e PARENT_HOSTNAME=$env:computername $IMAGE_NAME $CMD
+docker run -it `
+    -v D:\:C:\ws `
+    -v C:\credentials:C:\credentials `
+    -e PARENT_HOSTNAME=$env:computername `
+    $IMAGE_NAME $CMD
 If ($LastExitCode -ne 0) {
     exit
 }
