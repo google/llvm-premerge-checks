@@ -39,7 +39,7 @@ $agent_windows_version=Get-Content "../agent-windows/$VERSION_FILE"
 Write-Host "Building ${IMAGE_NAME}:${container_version}..."
 Write-Host "Using windows-agent ${agent_windows_version}"
 
-# TODO: get current Windows version number from host via "cmd /c ver"
+# TODO: move Windows version to central config file
 # to solve these issues: https://stackoverflow.com/questions/43123851/unable-to-run-cygwin-in-windows-docker-container/52273489#52273489
 $windows_version="10.0.17763.1039"
 Write-Host "Using windows version ${windows_version}"
