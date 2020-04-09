@@ -18,17 +18,13 @@ ADD https://aka.ms/vs/16/release/vs_buildtools.exe C:\TEMP\vs_buildtools.exe
 # https://docs.microsoft.com/en-us/visualstudio/install/use-command-line-parameters-to-install-visual-studio?view=vs-2019
 RUN C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --nocache `
     --installPath C:\BuildTools `
-    --add Microsoft.VisualStudio.Workload.VCTools `
+    --add Microsoft.VisualStudio.Workload.VCTools;includeOptional `
     --remove Microsoft.VisualStudio.Component.Windows10SDK.10240 `
     --remove Microsoft.VisualStudio.Component.Windows10SDK.10586 `
     --remove Microsoft.VisualStudio.Component.Windows10SDK.14393 `
     --remove Microsoft.VisualStudio.Component.Windows81SDK `
-    --includeOptional `
  || IF "%ERRORLEVEL%"=="3010" EXIT 0
 
-# Define the entry point for the docker container.
-# This entry point starts the developer command prompt and launches the PowerShell shell.
-ENTRYPOINT ["C:\\BuildTools\\Common7\\Tools\\VsDevCmd.bat", "&&", "powershell.exe", "-NoLogo", "-ExecutionPolicy", "Bypass"]
 
 # install chocolately as package manager
 RUN powershell -NoProfile -InputFormat None -Command `
@@ -44,6 +40,9 @@ RUN choco install -y python3
 RUN choco install -y gnuwin
 RUN choco install -y sccache
 RUN pip install psutil
+
+# install python dependencies for the scripts
+RUN pip install -r https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/requirements.txt
 
 # configure Python encoding
 ENV PYTHONIOENCODING=UTF-8
@@ -61,6 +60,12 @@ WORKDIR C:\ws
 RUN git config --system core.longpaths true & `
     git config --global core.autocrlf false
 
+# Define the entry point for the docker container.
+# This entry point starts the developer command prompt and launches the PowerShell shell.
+ENTRYPOINT ["C:\\BuildTools\\Common7\\Tools\\VsDevCmd.bat", "&&", "powershell.exe", "-NoLogo", "-ExecutionPolicy", "Bypass"]
+
+# FIXME: remove after testing
+RUN choco install mc
+
 # Start developer command prompt with any other commands specified.
-# ENTRYPOINT "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" &&
-CMD cmd
+# CMD powershell

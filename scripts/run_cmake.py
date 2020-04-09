@@ -142,7 +142,7 @@ def run_cmake(projects: str, repo_path: str, config_file_path: str = None, *, dr
     if config.operating_system == OperatingSystem.Windows:
         # FIXME: move this path to a config file
         #   Or run it from the docker entrypoint
-        cmd = r'"C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64 && ' + cmd
+        cmd = r'"C:\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64 && ' + cmd
 
     print('Running cmake with these arguments:\n{}'.format(cmd))
     if dryrun:
