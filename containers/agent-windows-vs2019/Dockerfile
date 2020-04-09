@@ -1,8 +1,34 @@
 # escape=`
+FROM mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-ltsc2019
 
-# use windows server core image
-ARG windows_version=ltsc2019
-FROM mcr.microsoft.com/windows/servercore:${windows_version}
+# Restore the default Windows shell for correct batch processing.
+SHELL ["cmd", "/S", "/C"]
+
+# Download the Build Tools bootstrapper.
+ADD https://aka.ms/vs/16/release/vs_buildtools.exe C:\TEMP\vs_buildtools.exe
+
+# Install Build Tools excluding workloads and components with known issues.
+# Documentation for docker installation 
+# https://docs.microsoft.com/en-us/visualstudio/install/build-tools-container?view=vs-2019
+#
+# Documentation on workloads 
+# https://docs.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-build-tools?view=vs-2019#c-build-tools
+# 
+# Documentation on flags
+# https://docs.microsoft.com/en-us/visualstudio/install/use-command-line-parameters-to-install-visual-studio?view=vs-2019
+RUN C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --nocache `
+    --installPath C:\BuildTools `
+    --add Microsoft.VisualStudio.Workload.VCTools `
+    --remove Microsoft.VisualStudio.Component.Windows10SDK.10240 `
+    --remove Microsoft.VisualStudio.Component.Windows10SDK.10586 `
+    --remove Microsoft.VisualStudio.Component.Windows10SDK.14393 `
+    --remove Microsoft.VisualStudio.Component.Windows81SDK `
+    --includeOptional `
+ || IF "%ERRORLEVEL%"=="3010" EXIT 0
+
+# Define the entry point for the docker container.
+# This entry point starts the developer command prompt and launches the PowerShell shell.
+ENTRYPOINT ["C:\\BuildTools\\Common7\\Tools\\VsDevCmd.bat", "&&", "powershell.exe", "-NoLogo", "-ExecutionPolicy", "Bypass"]
 
 # install chocolately as package manager
 RUN powershell -NoProfile -InputFormat None -Command `
@@ -18,15 +44,6 @@ RUN choco install -y python3
 RUN choco install -y gnuwin
 RUN choco install -y sccache
 RUN pip install psutil
-
-# install Visual Studio build tools
-# VS2019 installation messes up something in the DotNet Framework. 
-# Install this as last package
-# expect exit code 1, as part of the mess up
-RUN powershell -NoProfile -InputFormat None -Command `
-    choco install -y visualstudio2019buildtools --version 16.5.2.0 `
-        --package-parameters "--includeOptional" ; `
-    exit 0
 
 # configure Python encoding
 ENV PYTHONIOENCODING=UTF-8
@@ -45,5 +62,5 @@ RUN git config --system core.longpaths true & `
     git config --global core.autocrlf false
 
 # Start developer command prompt with any other commands specified.
-ENTRYPOINT "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" &&
-CMD powershell
+# ENTRYPOINT "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" &&
+CMD cmd
