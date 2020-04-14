@@ -7,6 +7,10 @@ SHELL ["cmd", "/S", "/C"]
 # Download the Build Tools bootstrapper.
 ADD https://aka.ms/vs/16/release/vs_buildtools.exe C:\TEMP\vs_buildtools.exe
 
+# Download channel for fixed install.
+ARG CHANNEL_URL=https://aka.ms/vs/16/release/channel
+ADD ${CHANNEL_URL} C:\TEMP\VisualStudio.chman
+
 # Install Build Tools excluding workloads and components with known issues.
 # Documentation for docker installation 
 # https://docs.microsoft.com/en-us/visualstudio/install/build-tools-container?view=vs-2019
@@ -17,14 +21,11 @@ ADD https://aka.ms/vs/16/release/vs_buildtools.exe C:\TEMP\vs_buildtools.exe
 # Documentation on flags
 # https://docs.microsoft.com/en-us/visualstudio/install/use-command-line-parameters-to-install-visual-studio?view=vs-2019
 RUN C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --nocache `
+    --channelUri C:\TEMP\VisualStudio.chman `
+    --installChannelUri C:\TEMP\VisualStudio.chman `
     --installPath C:\BuildTools `
-    --add Microsoft.VisualStudio.Workload.VCTools;includeOptional `
-    --remove Microsoft.VisualStudio.Component.Windows10SDK.10240 `
-    --remove Microsoft.VisualStudio.Component.Windows10SDK.10586 `
-    --remove Microsoft.VisualStudio.Component.Windows10SDK.14393 `
-    --remove Microsoft.VisualStudio.Component.Windows81SDK `
- || IF "%ERRORLEVEL%"=="3010" EXIT 0
-
+    --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended `
+    || IF "%ERRORLEVEL%"=="3010" EXIT 0
 
 # install chocolately as package manager
 RUN powershell -NoProfile -InputFormat None -Command `
@@ -39,6 +40,7 @@ RUN choco install -y cmake --version 3.15.4
 RUN choco install -y python3
 RUN choco install -y gnuwin
 RUN choco install -y sccache
+ENV SCCACHE_DIR=C:\ws\sccache
 RUN pip install psutil
 
 # install python dependencies for the scripts
@@ -64,8 +66,6 @@ RUN git config --system core.longpaths true & `
 # This entry point starts the developer command prompt and launches the PowerShell shell.
 ENTRYPOINT ["C:\\BuildTools\\Common7\\Tools\\VsDevCmd.bat", "&&", "powershell.exe", "-NoLogo", "-ExecutionPolicy", "Bypass"]
 
-# FIXME: remove after testing
-RUN choco install mc
 
 # Start developer command prompt with any other commands specified.
 # CMD powershell
