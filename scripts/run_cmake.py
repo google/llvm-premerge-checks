@@ -127,11 +127,7 @@ def run_cmake(projects: str, repo_path: str, config_file_path: str = None, *, dr
 
     build_dir = os.path.abspath(os.path.join(repo_path, 'build'))
     if not dryrun:
-        if os.path.exists(build_dir):
-            shutil.rmtree(build_dir)
-            while os.path.exists(build_dir):
-                print('Waiting for folder to really be deleted...')
-                time.sleep(1)
+        secure_delete(build_dir)
         os.makedirs(build_dir)
 
     env = _create_env(config)
@@ -152,6 +148,25 @@ def run_cmake(projects: str, repo_path: str, config_file_path: str = None, *, dr
     else:
         subprocess.check_call(cmd, env=env, shell=True, cwd=build_dir)
         _link_compile_commands(config, repo_path, build_dir)
+
+
+def secure_delete(path: str):
+    """Try do delete a local folder.
+
+    Deleting folders on Windows can be tricky and frequently fails.
+    In most cases this can be recovered by waiting some time and then trying again.
+    """
+    error_limit = 5
+    while error_limit > 0:
+        error_limit -= 1
+        if not os.path.exists(path):
+            return
+        try:
+            shutil.rmtree(path)
+        except PermissionError:
+            pass
+        time.sleep(3)
+    raise IOError('Could not delete build folder after several tries: {}'.format(path))
 
 
 def _link_compile_commands(config: Configuration, repo_path: str, build_dir: str):
