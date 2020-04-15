@@ -39,17 +39,17 @@ pipeline {
         }
         stage('CMake') {
             steps {
-                sh "${SCRIPT_DIR}/run_cmake.sh"
+                sh "${SCRIPT_DIR}/run_cmake.py"
             }
         }
         stage('ninja all') {
             steps {
-                sh "${SCRIPT_DIR}/run_ninja.sh all"
+                sh "${SCRIPT_DIR}/run_ninja.py all"
             }
         }
         stage('ninja check-all') {
             steps {
-                sh "${SCRIPT_DIR}/run_ninja.sh check-all"
+                sh "${SCRIPT_DIR}/run_ninja.py check-all"
             }
         }
     }
