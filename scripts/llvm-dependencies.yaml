@@ -14,6 +14,9 @@ dependencies:
   #        Same for libcxx, libc and other projects that don't have 'llvm'
   #        as a dependency.
   compiler-rt: []
+  flang:
+  - llvm
+  - mlir
   libc: []
   # FIXME: not sure about 'libcxx' and 'libcxxabi'
   libcxx: []
@@ -47,6 +50,7 @@ allprojects:
   - clang-tools-extra
   - compiler-rt
   - debuginfo-tests
+  - flang
   - libc
   - libclc
   - libcxx

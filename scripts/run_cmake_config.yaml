@@ -33,4 +33,4 @@ arguments:
 # enabled
 default_projects:
   windows: 'clang;clang-tools-extra;libcxx;libc;lld;mlir;libcxxabi'
-  linux:   'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir'
+  linux:   'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;flang'
