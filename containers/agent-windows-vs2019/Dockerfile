@@ -11,15 +11,13 @@ ADD https://aka.ms/vs/16/release/vs_buildtools.exe C:\TEMP\vs_buildtools.exe
 ARG CHANNEL_URL=https://aka.ms/vs/16/release/channel
 ADD ${CHANNEL_URL} C:\TEMP\VisualStudio.chman
 
-# Install Build Tools excluding workloads and components with known issues.
-# Documentation for docker installation 
-# https://docs.microsoft.com/en-us/visualstudio/install/build-tools-container?view=vs-2019
-#
-# Documentation on workloads 
-# https://docs.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-build-tools?view=vs-2019#c-build-tools
-# 
-# Documentation on flags
-# https://docs.microsoft.com/en-us/visualstudio/install/use-command-line-parameters-to-install-visual-studio?view=vs-2019
+# Install Build Tools with C++ workload.
+#   - Documentation for docker installation 
+#     https://docs.microsoft.com/en-us/visualstudio/install/build-tools-container?view=vs-2019
+#   - Documentation on workloads 
+#     https://docs.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-build-tools?view=vs-2019#c-build-tools
+#   - Documentation on flags
+#     https://docs.microsoft.com/en-us/visualstudio/install/use-command-line-parameters-to-install-visual-studio?view=vs-2019
 RUN C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --nocache `
     --channelUri C:\TEMP\VisualStudio.chman `
     --installChannelUri C:\TEMP\VisualStudio.chman `
@@ -40,6 +38,7 @@ RUN choco install -y cmake --version 3.15.4
 RUN choco install -y python3
 RUN choco install -y gnuwin
 RUN choco install -y sccache
+# set local cache folder for sccache
 ENV SCCACHE_DIR=C:\ws\sccache
 RUN pip install psutil
 
@@ -65,7 +64,3 @@ RUN git config --system core.longpaths true & `
 # Define the entry point for the docker container.
 # This entry point starts the developer command prompt and launches the PowerShell shell.
 ENTRYPOINT ["C:\\BuildTools\\Common7\\Tools\\VsDevCmd.bat", "&&", "powershell.exe", "-NoLogo", "-ExecutionPolicy", "Bypass"]
-
-
-# Start developer command prompt with any other commands specified.
-# CMD powershell
