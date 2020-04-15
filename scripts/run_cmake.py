@@ -114,7 +114,6 @@ def run_cmake(projects: str, repo_path: str, config_file_path: str = None, *, dr
 
     This version works on all operating systems.
     """
-    print(dryrun)
     if config_file_path is None:
         script_dir = os.path.dirname(__file__)
         config_file_path = os.path.join(script_dir, 'run_cmake_config.yaml')
