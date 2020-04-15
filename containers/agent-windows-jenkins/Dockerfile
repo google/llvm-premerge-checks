@@ -2,7 +2,7 @@
 
 # use windows server core image
 ARG agent_windows_version
-FROM gcr.io/llvm-premerge-checks/agent-windows:$agent_windows_version
+FROM gcr.io/llvm-premerge-checks/agent-windows-vs2019:1
 
 # install java
 RUN choco install -y openjdk
@@ -23,4 +23,4 @@ VOLUME C:\Temp
 
 # start swarm plugin
 COPY start_agent.ps1 c:\jenkins
-CMD powershell c:\jenkins\start_agent.ps1
+ENTRYPOINT ["C:\\BuildTools\\Common7\\Tools\\VsDevCmd.bat", "&&", "powershell.exe", "-NoLogo", "-ExecutionPolicy", "Bypass", "C:\\jenkins\\start_agent.ps1"]
