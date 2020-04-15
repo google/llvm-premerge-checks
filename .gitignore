@@ -3,3 +3,4 @@
 *.iml
 venv/
 __pycache__/
+containers/workspace
