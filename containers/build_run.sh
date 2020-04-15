@@ -23,4 +23,4 @@ IMAGE_NAME="${1%/}"
 
 cd "${DIR}/${IMAGE_NAME}"
 docker build -t ${IMAGE_NAME} .
-docker run -i -t -v ~/.llvm-premerge-checks:/credentials ${IMAGE_NAME} ${2}
+docker run -i -t -v ~/.llvm-premerge-checks:/credentials -v ${DIR}/workspace:/workspace ${IMAGE_NAME} ${2}
