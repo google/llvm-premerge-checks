@@ -38,7 +38,7 @@ def _run_cmd(cmd: str, *, cwd: str = None):
     # On Windows: configure Visutal Studio before running ninja
     if platform.system() == 'Windows':
         # FIXME: move this path to a config file
-        cmd = r'"C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64 && ' + cmd
+        cmd = r'"C:\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64 && ' + cmd
 
     subprocess.check_call(cmd, shell=True, cwd=cwd)
 
