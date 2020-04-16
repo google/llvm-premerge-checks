@@ -17,7 +17,7 @@ pipeline {
       node {
         label 'windows'
         // use custom workspace folder to shorten paths
-        customWorkspace "D:\\ws\\master"
+        customWorkspace "C:\\ws\\master"
       }
     }
     
