@@ -156,7 +156,7 @@ def secure_delete(path: str):
         if not os.path.exists(name):
             return
         os.chmod(name, stat.S_IWRITE)
-        os.remove(name)
+        os.unlink(name)
 
     shutil.rmtree(path, onerror=del_rw)
 
