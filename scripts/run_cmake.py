@@ -157,7 +157,8 @@ def secure_delete(path: str):
         try:
             shutil.rmtree(path)
         except PermissionError:
-            pass
+            if error_limit <= 0:
+                raise
         time.sleep(3)
     raise IOError('Could not delete build folder after several tries: {}'.format(path))
 
