@@ -154,17 +154,8 @@ def secure_delete(path: str):
         return
 
     def del_rw(action, name, exc):
-        if not os.path.exists(name):
-            return
-        
-        for root, dirs, files in os.walk(name, topdown=False):
-            for name in files:
-                p = Path(os.path.join(root, name))
-                p.chmod(stat.S_IWRITE)
-        if os.path.isdir(name):
-            shutil.rmtree(name)
-        else:
-            os.unlink(name)
+        os.chmod(name, stat.S_IWRITE)
+        os.unlink(name)
 
     shutil.rmtree(path, onerror=del_rw)
 
