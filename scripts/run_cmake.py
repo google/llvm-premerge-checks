@@ -153,6 +153,8 @@ def secure_delete(path: str):
         return
 
     def del_rw(action, name, exc):
+        if not os.path.exists(name):
+            return
         os.chmod(name, stat.S_IWRITE)
         os.remove(name)
 
