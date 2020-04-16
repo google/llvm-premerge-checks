@@ -20,9 +20,10 @@ import os
 import platform
 import shutil
 import subprocess
+import stat
 from typing import List, Dict
 import yaml
-import time
+
 from choose_projects import ChooseProjects
 
 
@@ -146,21 +147,16 @@ def run_cmake(projects: str, repo_path: str, config_file_path: str = None, *, dr
 def secure_delete(path: str):
     """Try do delete a local folder.
 
-    Deleting folders on Windows can be tricky and frequently fails.
-    In most cases this can be recovered by waiting some time and then trying again.
+    Handle read-only files.
     """
-    error_limit = 5
-    while error_limit > 0:
-        error_limit -= 1
-        if not os.path.exists(path):
-            return
-        try:
-            shutil.rmtree(path)
-        except PermissionError:
-            if error_limit <= 0:
-                raise
-        time.sleep(3)
-    raise IOError('Could not delete build folder after several tries: {}'.format(path))
+    if not os.path.exists(path):
+        return
+
+    def del_rw(action, name, exc):
+        os.chmod(name, stat.S_IWRITE)
+        os.remove(name)
+
+    shutil.rmtree(path, onerror=del_rw)
 
 
 def _link_compile_commands(config: Configuration, repo_path: str, build_dir: str):
