@@ -13,7 +13,13 @@
 // limitations under the License.
 
 pipeline {
-    agent { label 'windows' }
+    agent {
+      node {
+        label 'windows'
+        // use custom workspace folder to shorten paths
+        customWorkspace "D:\\ws\\master"
+      }
+    }
     
     triggers {
         pollSCM 'H H/4 * * *'
