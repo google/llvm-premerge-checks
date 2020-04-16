@@ -17,6 +17,7 @@ import argparse
 from enum import Enum
 from git import Repo
 import os
+from pathlib import Path
 import platform
 import shutil
 import subprocess
@@ -155,8 +156,13 @@ def secure_delete(path: str):
     def del_rw(action, name, exc):
         if not os.path.exists(name):
             return
-        os.chmod(name, stat.S_IWRITE)
-        secure_delete(name)
+        
+        for root, dirs, files in os.walk(name, topdown=False):
+            for name in files:
+                p = Path (os.path.join(root, name))
+                p.chmod(stat.S_IWRITE)
+        
+        shutil.rmtree(name)
 
     shutil.rmtree(path, onerror=del_rw)
 
