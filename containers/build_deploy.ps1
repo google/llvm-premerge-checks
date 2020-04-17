@@ -34,21 +34,15 @@ $QUALIFIED_NAME="${GCR_HOSTNAME}/${GCP_PROJECT}/${IMAGE_NAME}"
 Push-Location "$PSScriptRoot\$IMAGE_NAME"
 $container_version=[int](Get-Content $VERSION_FILE)
 $container_version+=1
-$agent_windows_version=Get-Content "../agent-windows/$VERSION_FILE"
+$agent_windows_version=Get-Content "../agent-windows-vs2019/$VERSION_FILE"
 
 Write-Host "Building ${IMAGE_NAME}:${container_version}..."
 Write-Host "Using windows-agent ${agent_windows_version}"
-
-# TODO: move Windows version to central config file
-# to solve these issues: https://stackoverflow.com/questions/43123851/unable-to-run-cygwin-in-windows-docker-container/52273489#52273489
-$windows_version="10.0.17763.1039"
-Write-Host "Using windows version ${windows_version}"
 
 Invoke-Call -ScriptBlock {
     docker build . `
         -t ${IMAGE_NAME}:${container_version} `
         -t ${IMAGE_NAME}:latest `
-        --build-arg windows_version=$windows_version `
         --build-arg agent_windows_version=$agent_windows_version
     }
 Invoke-Call -ScriptBlock {
