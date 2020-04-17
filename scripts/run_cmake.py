@@ -138,12 +138,6 @@ def run_cmake(projects: str, repo_path: str, config_file_path: str = None, *, dr
     arguments = _create_args(config, llvm_enable_projects)
     cmd = 'cmake ' + ' '.join(arguments)
     
-    # On Windows: configure Visutal Studio before running cmake
-    if config.operating_system == OperatingSystem.Windows:
-        # FIXME: move this path to a config file
-        #   Or run it from the docker entrypoint
-        cmd = r'"C:\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64 && ' + cmd
-
     print('Running cmake with these arguments:\n{}'.format(cmd))
     if dryrun:
         print('Dryrun, not invoking CMake!')
