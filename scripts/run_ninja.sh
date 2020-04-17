@@ -31,7 +31,12 @@ set -e
 
 echo "ninja ${CMD} completed ======================================"
 if test -f "test-results.xml" ; then
-	cp test-results.xml "${TARGET_DIR}"
+  echo "copying test_results.xml to ${TARGET_DIR}"
+  # wait for file?
+  sleep 10s
+  du "test-results.xml"
+  cp test-results.xml "${TARGET_DIR}"
+  sleep 10s
 fi
 
 exit ${RETURN_CODE}

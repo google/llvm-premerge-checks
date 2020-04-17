@@ -26,13 +26,14 @@ export LD=LLD
 cd "$WORKSPACE"/build
 set +e
 cmake -GNinja ../llvm -DCMAKE_BUILD_TYPE=Release -D LLVM_ENABLE_LLD=ON \
-    -D LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;libcxx;libcxxabi;lld;libunwind;mlir;flang" \
+    -D LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;flang" \
     -D LLVM_CCACHE_BUILD=ON -D LLVM_CCACHE_DIR="${CCACHE_PATH}" -D LLVM_CCACHE_MAXSIZE=20G \
     -D LLVM_ENABLE_ASSERTIONS=ON -DCMAKE_CXX_FLAGS=-gmlt \
     -DLLVM_LIT_ARGS="-v --xunit-xml-output ${WORKSPACE}/build/test-results.xml"
 RETURN_CODE="${PIPESTATUS[0]}"
 set -e
 
+rm -f "$WORKSPACE/compile_commands.json"
 ln -s "$WORKSPACE"/build/compile_commands.json "$WORKSPACE"
 cp CMakeCache.txt ${TARGET_DIR}
 

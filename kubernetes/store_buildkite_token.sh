@@ -12,20 +12,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#-------------------------------------------------------------------------------
 
-SSD_ROOT="/mnt/disks/ssd0"
-AGENT_ROOT="${SSD_ROOT}/agent"
+# store the buildkite token as kubernetes secret
+# 
+# Get the token from the website [1] and store it in this file locally in
+# ~/.llvm-premerge-checks/buildkite-token  
+# Do not share this token with anyone!
+# [1] https://buildkite.com/organizations/llvm-project/agents
 
-# prepare root folder for Jenkins agent
-mkdir -p "${AGENT_ROOT}"
-chown -R jenkins:jenkins "${AGENT_ROOT}"
-
-# prepare folder for ccache
-mkdir -p "${CCACHE_PATH}"
-chown -R jenkins:jenkins "${CCACHE_PATH}"
-
-# TODO(kuhnel): wipe the disk(s) on startup
-
-# start swarm agent as user jenkins
-# description of arguments: https://wiki.jenkins.io/display/JENKINS/Swarm+Plugin
-su jenkins -c "java -jar /scripts/swarm-client.jar -master http://jenkins-ui.jenkins.svc.cluster.local:8080 -executors 1 -fsroot ${AGENT_ROOT} -labels linux"
+kubectl create secret generic buildkite-token --namespace jenkins --from-file ~/.llvm-premerge-checks/buildkite-token 

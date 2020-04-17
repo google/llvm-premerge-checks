@@ -1,9 +1,10 @@
 FROM debian:testing
 
-RUN apt-get update ;\
+RUN echo "deb [trusted=yes] http://apt.llvm.org/buster/ llvm-toolchain-buster-10 main\n$(cat /etc/apt/sources.list)" > /etc/apt/sources.list;\
+    apt-get update ;\
     apt-get install -y --no-install-recommends locales \
-        cmake ninja-build git ca-certificates clang lld ccache python3 build-essential \
-        clang-tidy clang-format \
+        cmake ninja-build git ca-certificates clang lld ccache python3 build-essential openssh-client\
+        clang-tidy clang-format gdb \
         python3-psutil arcanist zip wget \
         openjdk-11-jdk \
         python3-pip python3-setuptools \
@@ -12,8 +13,6 @@ RUN apt-get update ;\
 
 # Make python3 default (needed by git-clang-format and others).
 RUN rm -f /usr/bin/python && ln -s /usr/bin/python3 /usr/bin/python
-# required for openssh server
-RUN mkdir -p /run/sshd
 
 ARG user=jenkins
 ARG group=jenkins
@@ -30,8 +29,15 @@ RUN cd /scripts ;\
 
 COPY start_agent.sh report_results.sh /scripts/
 
-# for the phabtalk script
-RUN pip3 install -r https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/phabtalk/requirements.txt
+# store SSH known hosts for github, required for ssh authentication
+RUN mkdir -p /home/${user}/.ssh
+COPY known_hosts /home/${user}/.ssh/known_hosts
+
+# install python dependencies for the scripts
+# ADD will checks that contentent of a file has changed.
+ADD "https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/requirements.txt" requirements.txt
+RUN pip3 install wheel ; \
+    pip3 install -r requirements.txt
 
 RUN groupadd -g ${gid} ${group} ;\
     useradd -c "Jenkins user" -d /home/${user} -u ${uid} -g ${gid} -m ${user} ;\

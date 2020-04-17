@@ -1,4 +1,4 @@
-#!/bin/env python3
+#!/usr/bin/env python3
 # Copyright 2019 Google LLC
 #
 # Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
@@ -20,9 +20,10 @@ import sys
 from typing import List, Optional
 from phabricator import Phabricator
 
+
 class ApplyPatch:
 
-    def __init__(self, comment_file_path: str):
+    def __init__(self, comment_file_path: str, git_hash: str):
         # TODO: turn os.environ parameter into command line arguments
         # this would be much clearer and easier for testing
         self.comment_file_path = comment_file_path
@@ -34,7 +35,7 @@ class ApplyPatch:
         if not self.host.endswith('/api/'):
             self.host += '/api/'
         self.phab = Phabricator(token=self.conduit_token, host=self.host)
-        self.git_hash = None  # type: Optional[str]
+        self.git_hash = git_hash  # type: Optional[str]
         self.msg = []  # type: List[str]
 
     def _load_arcrc(self):
@@ -56,17 +57,20 @@ class ApplyPatch:
         self.phab.update_interfaces()
 
         try:
-            self._get_parent_hash()
+            if self.git_hash is None:
+                self._get_parent_hash()
+            else:
+                print('Use provided commit {}'.format(self.git_hash))
             self._git_checkout()
             self._apply_patch()
         finally:
             self._write_error_message()
 
-    def _get_parent_hash(self) -> str:
+    def _get_parent_hash(self):
         diff = self.phab.differential.getdiff(diff_id=self.diff_id)
         # Keep a copy of the Phabricator answer for later usage in a json file
         try:
-            with open(self.diff_json_path,'w') as json_file:
+            with open(self.diff_json_path, 'w') as json_file:
                 json.dump(diff.response, json_file, sort_keys=True, indent=4)
             print('Wrote diff details to "{}".'.format(self.diff_json_path))
         except Exception:
@@ -87,6 +91,8 @@ class ApplyPatch:
                 'master branch instead...'.format(self.git_hash)]
             subprocess.check_call('git checkout master', stdout=sys.stdout, 
                 stderr=sys.stderr, shell=True)
+        subprocess.check_call('git show -s', stdout=sys.stdout,
+                              stderr=sys.stderr, shell=True)
         print('git checkout completed.')
 
     def _apply_patch(self):
@@ -120,7 +126,8 @@ class ApplyPatch:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Apply Phabricator patch to working directory.')
     parser.add_argument('--comment-file', type=str, dest='comment_file_path', default=None)
+    parser.add_argument('--commit', type=str, dest='commit', default=None, help='use explicitly specified base commit')
     args = parser.parse_args()
-    patcher = ApplyPatch(args.comment_file_path)
+    patcher = ApplyPatch(args.comment_file_path, args.commit)
     patcher.run()
 

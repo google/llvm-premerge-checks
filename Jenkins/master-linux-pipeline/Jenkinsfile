@@ -39,23 +39,23 @@ pipeline {
         }
         stage('CMake') {
             steps {
-                sh "${SCRIPT_DIR}/run_cmake.sh"
+                sh "${SCRIPT_DIR}/run_cmake.py"
             }
         }
         stage('ninja all') {
             steps {
-                sh "${SCRIPT_DIR}/run_ninja.sh all"
+                sh "${SCRIPT_DIR}/run_ninja.py all"
             }
         }
         stage('ninja check-all') {
             steps {
-                sh "${SCRIPT_DIR}/run_ninja.sh check-all"
+                sh "${SCRIPT_DIR}/run_ninja.py check-all"
             }
         }
     }
     post { 
         always { 
-            echo "Console log is available at https://results.new.llvm-merge-guard.org/${BUILD_ID}"
+            echo "Console log is available at https://results.llvm-merge-guard.org/${BUILD_ID}"
             dir("${env.TARGET_DIR}") {
                 // copy console log to result folder
                 sh "wget -qO console-log.txt http://jenkins-ui.jenkins.svc.cluster.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText"

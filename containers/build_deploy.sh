@@ -27,4 +27,4 @@ QUALIFIED_NAME="${GCR_HOSTNAME}/${GCP_PROJECT}/${IMAGE_NAME}"
 cd "${DIR}/${IMAGE_NAME}"
 docker build -t ${IMAGE_NAME} .
 docker tag ${IMAGE_NAME} ${QUALIFIED_NAME}
-docker push ${QUALIFIED_NAME} 
+docker push ${QUALIFIED_NAME}

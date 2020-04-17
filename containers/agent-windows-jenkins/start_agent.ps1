@@ -16,11 +16,13 @@ $JENKINS_SERVER="jenkins.local"
 
 $AGENT_ROOT="C:\ws"
 
+# TODO(kuhnel): The autentication does not work!
+# trying to copy the .boto file instead
 # authenticate gsutil
-# gcloud auth activate-service-account --key-file C:\credentials\build-agent-results_key.json
-Write-Output "C:\credentials\build-agent-results_key.json`nllvm-premerge-checks`n`n" | gsutil config -e
+# Write-Output "C:\credentials\build-agent-results_key.json`nllvm-premerge-checks`n`n" | gsutil config -e
+Copy-Item "C:\credentials\.boto" "C:\Users\ContainerAdministrator\.boto"
 
-$env:TEMP="C:\TEMP"
+$env:TEMP="${$AGENT_ROOT}\TEMP"
 $env:TMP="${env:TEMP}"
 
 java -jar ${env:SWARM_PLUGIN_JAR} `

@@ -19,17 +19,32 @@
 set -eux
 
 echo "Running linters... ====================================="
+if (( $# != 2 )); then
+  echo "Syntax: lint.sh <COMMIT> <OUTPUT_DIR>"
+  exit 1
+fi;
+# Commit to diff against
+COMMIT="$1"
+# output directory for test results
+OUTPUT_DIR="$2"
+# root directory, where the config files are located
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-cd "${WORKSPACE}"
+if [ ! -f "compile_commands.json" ] ; then
+  echo "Could not find compile commands.json in $(pwd)"
+  exit 1
+fi
+
+# clang-format
 # Let clang format apply patches --diff doesn't produces results in the format we want.
-git-clang-format --style=llvm
+git-clang-format "${COMMIT}"
 set +e
-git diff -U0 --exit-code > "${TARGET_DIR}"/clang-format.patch
-STATUS="${PIPESTATUS[0]}"
+git diff -U0 --exit-code | "${DIR}/ignore_diff.py" "${DIR}/clang-format.ignore" > "${OUTPUT_DIR}"/clang-format.patch
 set -e
 # Revert changes of git-clang-format.
 git checkout -- .
 
-git diff HEAD^ | clang-tidy-diff -p1 -quiet > "${TARGET_DIR}"/clang-tidy.txt
+# clang-tidy
+git diff -U0 "${COMMIT}" | "${DIR}/ignore_diff.py" "${DIR}/clang-tidy.ignore" | clang-tidy-diff -p1 -quiet | sed "/^[[:space:]]*$/d" > "${OUTPUT_DIR}"/clang-tidy.txt
 
 echo "linters completed ======================================"

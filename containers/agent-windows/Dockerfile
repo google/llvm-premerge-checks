@@ -1,8 +1,8 @@
 # escape=`
 
 # use windows server core image
-ARG version=ltsc2019
-FROM mcr.microsoft.com/windows/servercore:$version
+ARG windows_version=ltsc2019
+FROM mcr.microsoft.com/windows/servercore:${windows_version}
 
 # install chocolately as package manager
 RUN powershell -NoProfile -InputFormat None -Command `
@@ -23,7 +23,9 @@ RUN choco install -y cmake --version 3.15.4
 RUN choco install -y python3
 RUN choco install -y ninja
 RUN choco install -y gnuwin
-RUN pip install psutil    
+# install perl, required for OpenMP
+# RUN choco install -y strawberryperl 
+RUN pip install psutil
 
 # configure Python encoding
 ENV PYTHONIOENCODING=UTF-8

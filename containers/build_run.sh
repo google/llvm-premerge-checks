@@ -14,7 +14,7 @@
 # limitations under the License.
 
 # Starts a new instances of a docker image. Example:
-# sudo build_run.sh agent-debian-testing-clang8-ssd /bin/bash
+# sudo build_run.sh agent-debian-testing-ssd /bin/bash
 
 set -eux
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
@@ -23,4 +23,4 @@ IMAGE_NAME="${1%/}"
 
 cd "${DIR}/${IMAGE_NAME}"
 docker build -t ${IMAGE_NAME} .
-docker run -i -t ${IMAGE_NAME} ${2}
+docker run -i -t -v ~/.llvm-premerge-checks:/credentials -v ${DIR}/workspace:/workspace ${IMAGE_NAME} ${2}

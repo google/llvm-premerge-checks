@@ -1,2 +1,0 @@
-phabricator==0.7.0
-lxml==4.4.1

@@ -1,0 +1,58 @@
+# Copyright 2019 Google LLC
+#
+# Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://llvm.org/LICENSE.txt
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-windows-visualstudio2017-ssd
+  labels:
+    app: agent-windows-visualstudio2017-ssd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent-windows-visualstudio2017-ssd
+  template:
+    metadata:
+      labels:
+        app: agent-windows-visualstudio2017-ssd
+    spec:
+      containers:
+      - name: agent-windows-visualstudio2017-ssd
+        image: gcr.io/llvm-premerge-checks/agent-windows-jenkins
+        resources:
+          limits:
+            cpu: 14
+            memory: 20Gi
+          requests:
+            cpu: 14
+            memory: 20Gi
+#        volumeMounts:
+#        - name: nfs-pvc
+#          mountPath: /mnt/nfs          
+#        - name: ssd 
+#          mountPath: /mnt/disks/ssd0
+#      volumes:
+#      - name: nfs-pvc
+#        persistentVolumeClaim:
+#          claimName: nfs-jenkins
+#      - name: ssd
+#        hostPath:
+#          # directory location on host
+#          path: /mnt/disks/ssd0
+#          type: Directory          
+      nodeSelector:
+        kubernetes.io/os: windows
+        cloud.google.com/gke-nodepool: windows-pool

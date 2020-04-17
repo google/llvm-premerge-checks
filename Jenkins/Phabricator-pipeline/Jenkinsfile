@@ -13,6 +13,7 @@
 // limitations under the License.
 
 def success = true
+def failure_message = ""
 
 pipeline {
     agent { label 'linux' }
@@ -30,6 +31,9 @@ pipeline {
             RESULT_URL = "http://results.llvm-merge-guard.org/${BUILD_ID}"
             DIFF_JSON = "${WORKSPACE}/build/diff.json"
     }
+    options {
+        timeout(time:2, unit:'HOURS')
+    }
     stages {
         stage("build info"){
             steps {
@@ -46,34 +50,57 @@ pipeline {
                     currentBuild.displayName += " D${drev_id}"
                     currentBuild.description = "<a href='https://reviews.llvm.org/D${drev_id}'>D${drev_id}</a>"
                 }
-                // Report versions of the installed packages.
-                sh 'dpkg -l'
-                sh 'clang --version'
-                sh 'python --version'
+                 // Report versions of the installed packages.
+                 sh '''
+                    echo Versions of various tools:
+                    clang --version
+                    clang-tidy --version
+                    ld.lld --version
+                    dpkg -l
+                    '''
+                
             }
         }
         stage("git checkout"){
             steps {
                 git url: 'https://github.com/llvm/llvm-project.git'
+                sh 'git reset --hard origin/master'  // To remove any local commits to master.
                 sh 'git clean -fdx'
+                sh 'git show -s'
                 sh 'mkdir -p llvm-premerge-checks'
                 dir("llvm-premerge-checks")
                 {
                     git url: 'https://github.com/google/llvm-premerge-checks.git'
                 }
-                sh 'rm -rf build || true'
-                sh 'mkdir -p build'
-                sh 'mkdir -p "${TARGET_DIR}"'
             }
         }
         stage('arc patch'){
             steps {
-                sh "python3 ${SCRIPT_DIR}/phabtalk/apply_patch.py --comment-file ${PHAB_LOG}"
+                script {
+                    success = false
+                    failure_message = "Failed to apply patch"
+                }
+                sh "${SCRIPT_DIR}/phabtalk/apply_patch2.py ${DIFF_ID} --token ${CONDUIT_TOKEN} --url ${PHABRICATOR_HOST} --comment-file ${PHAB_LOG}"
+                script {
+                    success = true
+                    failure_message = ""
+                }
             }
         }
         stage('CMake') {
             steps {
+                script {
+                    success = false
+                    failure_message = "Failed to run cmake"
+                }
+                sh 'rm -rf build || true'
+                sh 'mkdir -p build'
+                sh 'mkdir -p "${TARGET_DIR}"'
                 sh "${SCRIPT_DIR}/run_cmake.sh"
+                script {
+                    success = true
+                    failure_message = ""
+                }
             }
         }
         stage('ninja all') {
@@ -83,6 +110,7 @@ pipeline {
                         sh(script: "${SCRIPT_DIR}/run_ninja.sh all")
                     } catch (e) {
                           success = false;
+                          failure_message = "'ninja all' failed" // append as build might already be broken
                           echo e.toString()
                     }
                 }
@@ -95,6 +123,7 @@ pipeline {
                         sh(script: "${SCRIPT_DIR}/run_ninja.sh check-all")
                     } catch (e) {
                         success = false;
+                        failure_message += "\n'ninja check-all' failed" // append as build might already be broken
                         echo e.toString()
                     }
                 }
@@ -102,7 +131,15 @@ pipeline {
         }
         stage('linters') {
             steps {
-                sh "${SCRIPT_DIR}/lint.sh"
+                script {
+                    try {
+                      sh(script: "${SCRIPT_DIR}/lint.sh HEAD ${TARGET_DIR}")
+                    } catch (e) {
+                        success = false;
+                        failure_message += "\nFailed to run linters" // append as build might already be broken
+                        echo e.toString()
+                    }
+                }
             }
         }
     }
@@ -137,8 +174,11 @@ pipeline {
                 --buildresult ${currentBuild.result} \
                 --clang-format-patch "clang-format.patch" \
                 --clang-tidy-result "clang-tidy.txt" \
+                --clang-tidy-ignore "${SCRIPT_DIR}/clang-tidy-comments.ignore" \
                 --results-dir "${TARGET_DIR}" \
-                --results-url "${RESULT_URL}"
+                --results-url "${RESULT_URL}" \
+                --failures "${failure_message}" \
+                --name "linux"
                 """
         }
     }    
