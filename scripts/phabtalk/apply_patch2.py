@@ -136,8 +136,7 @@ class ApplyPatch:
             self.repo.git.push('origin', 'master')
             print('refresh of master branch completed')
         except GitCommandError as e:
-            print('Error: could not push to origin master.')
-            print(e)
+            print('Info: Could not push to origin master.')
 
     def _create_branch(self, base_revision: Optional[str]):
         self.repo.git.fetch('--all')
