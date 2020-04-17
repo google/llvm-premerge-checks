@@ -29,5 +29,5 @@ java -jar ${env:SWARM_PLUGIN_JAR} `
     -master http://${JENKINS_SERVER}:8080 `
     -executors 1 `
     -fsroot ${AGENT_ROOT} `
-    -labels windows `
+    -labels "windows vs2019" `
     -name ${env:PARENT_HOSTNAME}
