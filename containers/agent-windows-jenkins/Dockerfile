@@ -2,7 +2,7 @@
 
 # use windows server core image
 ARG agent_windows_version
-FROM gcr.io/llvm-premerge-checks/agent-windows-vs2019:1
+FROM gcr.io/llvm-premerge-checks/agent-windows-vs2019:2
 
 # install java
 RUN choco install -y openjdk
