@@ -244,7 +244,7 @@ class ApplyPatch:
 
     def _get_landed_revisions(self, limit: int = 1000):
         """Get list of landed revisions from current git branch."""
-        diff_regex = re.compile(r'^Differential Revision: https:\/\/reviews\.llvm\.org\/(.*)$', re.MULTILINE)
+        diff_regex = re.compile(r'^Differential Revision: https://reviews\.llvm\.org/(.*)$', re.MULTILINE)
         earliest_commit = None
         rev = self.base_revision
         if rev is None:
