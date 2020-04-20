@@ -70,7 +70,7 @@ spec:
       hostname: jenkins-master
       containers:
       - name: master
-        image: jenkins/jenkins:lts
+        image: jenkins/jenkins:2.190.3
         ports:
         - containerPort: 8080
         - containerPort: 50000
