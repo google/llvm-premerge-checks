@@ -32,17 +32,20 @@ While GitHub actions might be providing some interesting integration features wi
 
 ## Proposed setup
 
-Use buildkite pipelines and define them here, in llvm-premerge-checks repo. Diffs are going to be reflected in llvm-project fork. Separate "conrol" service will have a DB to collect stats, maintain cohesive history of every revisions, manage tricky workflow cases, and manage scaling of buildkite agents. As much as I don't wan't to maintain a new custom service it seems to be a better idea on a long run as it can allow us to work around potential issues in Phabricator - Buildkite integration as well as missing features, or need to maintain a complex state or history.
+Use buildkite pipelines and define them here, in llvm-premerge-checks repo. Diffs are going to be reflected in llvm-project fork. 
+Hopefully buildkite alone should be enought for the common workflow. If it's not enough and/or there are some issues with phabricator-buildkite itegration that require client update (Phabricator, like we had with [Jenkins CSRF](https://github.com/google/llvm-premerge-checks/issues/163) we can introduce a separate "conrol" service. This service can also have a DB to collect stats, maintain cohesive history of every revisions, manage tricky workflow cases, and manage scaling of buildkite agents. As much as I don't wan't to maintain a new custom service it seems to be a better idea on a long run to work around missing features or having an ability to maintain a complex state or history.
 
 ### Common workflow
-In the most simple case build will be triggered directly by the Harbormaster "buildkite" rule. Build pipeline will:
+In the most simple case build will be triggered directly by the Harbormaster "buildkite" rule. Build pipeline will receive PHID / DiffID and:
 
 - using the ID, communicate with the Phabricator and decide what diffs have to be applied to represent the change
-- report back to Phabricator a link to the build
+- report back to Phabricator a link to the build in buildkite
 - create a new branch in llvm-project fork and apply changes as a separate commits
 - run "build planning" script that will generate further steps based on e.g. author or the diff (if she participates in beta-testing), affected paths, trottling...; there might be multiple steps like this further down the line.
 - complete every build and attach relevant artifacts to the build; add linter comments
 - report final build result back.
+
+Later this workflow can be split into two steps: one will setup github branch and create a PR. Another one will be triggered by GitHub and report PR build status to it. There are challenges on who and when is going to communicate back to Phabricator results of the build. Alternatively we can create a separate pipeline for the reviews on GitHub.
 
 ### Cleaning up branches / PR
 
