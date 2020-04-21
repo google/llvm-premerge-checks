@@ -21,12 +21,6 @@ import subprocess
 def run_ninja(target: str, repo_path: str):   
     build_dir = os.path.join(repo_path, 'build')
     cmd = 'ninja {}'.format(target)
-    
-    # On Windows: configure Visutal Studio before running ninja
-    if platform.system() == 'Windows':
-        # FIXME: move this path to a config file
-        cmd = r'"C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64 && ' + cmd
-
     subprocess.check_call(cmd, shell=True, cwd=build_dir)
 
 

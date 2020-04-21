@@ -101,8 +101,14 @@ def _create_args(config: Configuration, llvm_enable_projects: str) -> List[str]:
     arguments.extend(config.general_cmake_arguments)
     arguments.extend(config.specific_cmake_arguments)
 
+    # enable sccache
+    if 'SCCACHE_DIR' in os.environ:
+        arguments.extend([
+            '-DCMAKE_C_COMPILER_LAUNCHER=sccache',
+            '-DCMAKE_CXX_COMPILER_LAUNCHER=sccache',
+        ])
     # enable ccache if the path is set in the environment
-    if 'CCACHE_PATH' in os.environ:
+    elif 'CCACHE_PATH' in os.environ:
         arguments.extend([
             '-D LLVM_CCACHE_BUILD=ON',
             '-D LLVM_CCACHE_DIR={}'.format(os.environ['CCACHE_PATH']),
@@ -132,11 +138,6 @@ def run_cmake(projects: str, repo_path: str, config_file_path: str = None, *, dr
     arguments = _create_args(config, llvm_enable_projects)
     cmd = 'cmake ' + ' '.join(arguments)
     
-    # On Windows: configure Visutal Studio before running cmake
-    if config.operating_system == OperatingSystem.Windows:
-        # FIXME: move this path to a config file
-        cmd = r'"C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=amd64 -host_arch=amd64 && ' + cmd
-
     print('Running cmake with these arguments:\n{}'.format(cmd))
     if dryrun:
         print('Dryrun, not invoking CMake!')
