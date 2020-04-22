@@ -15,7 +15,7 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: agent-premerge-debian
+  name: premerge-debian
   namespace: buildkite
 spec:
   replicas: 1
@@ -25,8 +25,8 @@ spec:
         app: agent-premerge-debian
     spec:
       containers:
-      - name: agent-debian-testing-buildkite
-        image: gcr.io/llvm-premerge-checks/agent-debian-testing-buildkite
+      - name: buildkite-premerge-debian
+        image: gcr.io/llvm-premerge-checks/buildkite-premerge-debian
         resources:
           limits:
             cpu: 30

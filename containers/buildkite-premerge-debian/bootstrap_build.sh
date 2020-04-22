@@ -1,5 +1,5 @@
-#!/bin/bash
-# Copyright 2019 Google LLC
+#!/usr/bin/env bash
+# Copyright 2020 Google LLC
 #
 # Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,23 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -eux
-
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-ROOT_DIR="$(dirname ${DIR})"
-
-# get config options
-
-IMAGE_NAME="${1%/}"
-
-cd "${DIR}/${IMAGE_NAME}"
-docker build -t ${IMAGE_NAME} .
-read -p "Push to registry? [yN]" -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
-  source "${ROOT_DIR}/k8s_config"
-  QUALIFIED_NAME="${GCR_HOSTNAME}/${GCP_PROJECT}/${IMAGE_NAME}"
-  docker tag ${IMAGE_NAME} ${QUALIFIED_NAME}
-  docker push ${QUALIFIED_NAME}
-fi
+cat << EOF
+steps:
+  - label: ":sparkles: success"
+    command: echo "bootstrap success"
+    agents:
+        queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+        os: "linux"
+EOF
