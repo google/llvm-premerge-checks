@@ -45,9 +45,9 @@ ENV CCACHE_PATH=/mnt/disks/ssd0/ccache
 # configure locale
 RUN sed --in-place '/en_US.UTF-8/s/^#//' /etc/locale.gen ;\
     locale-gen
-ENV LANG en_US.UTF-8  
-ENV LANGUAGE en_US:en  
-ENV LC_ALL en_US.UTF-8  
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
 
 # buildkite
 RUN apt-get install -y apt-transport-https gnupg;\
@@ -55,8 +55,6 @@ RUN apt-get install -y apt-transport-https gnupg;\
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 32A37959C2FA5C3C99EFBC32A79206696452D198 ;\
     apt-get update ;\
     apt-get install -y buildkite-agent
-
-VOLUME /credentials
 
 CMD ["/scripts/start_agent.sh"]
 

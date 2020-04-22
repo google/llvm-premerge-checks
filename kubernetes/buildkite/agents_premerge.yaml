@@ -15,20 +15,18 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: agent-debian-testing-clang8-buildkite
+  name: agent-premerge-debian
   namespace: buildkite
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: agent-debian-testing-clang8-buildkite
+        app: agent-premerge-debian
     spec:
       containers:
       - name: agent-debian-testing-buildkite
         image: gcr.io/llvm-premerge-checks/agent-debian-testing-buildkite
-        ports:
-        - containerPort: 22
         resources:
           limits:
             cpu: 30
@@ -37,7 +35,7 @@ spec:
             cpu: 30
             memory: 45Gi
         volumeMounts:
-        - name: ssd 
+        - name: ssd
           mountPath: /mnt/disks/ssd0
         env:
         - name: BUILDKITE_AGENT_TOKEN
@@ -46,7 +44,7 @@ spec:
               name: agent-token
               key: token
         - name: BUILDKITE_AGENT_TAGS
-          value: "queue=release,os=linux"
+          value: "queue=premerge,os=linux"
       volumes:
       - name: ssd
         hostPath:
