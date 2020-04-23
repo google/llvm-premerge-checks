@@ -76,6 +76,7 @@ excludedProjects:
     - openmp # blacklisting as kuhnel has trouble with the Perl installation
     - debuginfo-tests # test failing
     - polly # test failing
+    - flang # compilation failing with invalid compile arguments
   # no projects are excluded on Linux
   linux:
     # tests keep failing:
