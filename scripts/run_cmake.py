@@ -147,7 +147,7 @@ def run_cmake(projects: str, repo_path: str, config_file_path: str = None, *, dr
     arguments = _create_args(config, llvm_enable_projects)
     cmd = 'cmake ' + ' '.join(arguments)
     
-    print('Running cmake with these arguments:\n{}'.format(cmd))
+    print('Running cmake with these arguments:\n{}'.format(cmd), flush=True)
     if dryrun:
         print('Dryrun, not invoking CMake!')
     else:
