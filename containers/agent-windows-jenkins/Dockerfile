@@ -23,4 +23,4 @@ VOLUME C:\Temp
 
 # start swarm plugin
 COPY start_agent.ps1 c:\jenkins
-ENTRYPOINT ["C:\\BuildTools\\Common7\\Tools\\VsDevCmd.bat", "&&", "powershell.exe", "-NoLogo", "-ExecutionPolicy", "Bypass", "C:\\jenkins\\start_agent.ps1"]
+ENTRYPOINT ["C:\\BuildTools\\Common7\\Tools\\VsDevCmd.bat", "-arch=amd64", "-host_arch=amd64", "&&", "powershell.exe", "-NoLogo", "-ExecutionPolicy", "Bypass", "C:\\jenkins\\start_agent.ps1"]
