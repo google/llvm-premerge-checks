@@ -25,7 +25,7 @@ import logging
 import os
 import platform
 import sys
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Set, Tuple, Optional
 
 from unidiff import PatchSet
 import yaml
@@ -43,8 +43,8 @@ class ChooseProjects:
     # projects used if anything goes wrong
     FALLBACK_PROJECTS = ['all']
 
-    def __init__(self, llvm_dir: str):
-        self.llvm_dir = llvm_dir
+    def __init__(self, llvm_dir: Optional[str]):
+        self.llvm_dir = llvm_dir  # type: Optional[str]
         self.defaultProjects = dict()  # type: Dict[str, Dict[str, str]]
         self.dependencies = dict()  # type: Dict[str,List[str]]
         self.usages = dict()   # type: Dict[str,List[str]]
@@ -72,6 +72,9 @@ class ChooseProjects:
         return 'linux'
 
     def choose_projects(self, patch: str = None) -> List[str]:
+        if self.llvm_dir is None:
+            raise ValueError('path to llvm folder must be set in ChooseProject.')
+
         llvm_dir = os.path.abspath(os.path.expanduser(self.llvm_dir))
         logging.info('Scanning LLVM in {}'.format(llvm_dir))
         if not self.match_projects_dirs():
@@ -164,6 +167,11 @@ class ChooseProjects:
                     changes.update(self.dependencies[project])
             result.update(changes)
         return result
+
+    def get_all_enabled_projects(self) -> List[str]:
+        """Get list of all not-excluded projects for current platform."""
+        result = set(self.all_projects) - self.excluded_projects
+        return sorted(list(result))
 
 
 if __name__ == "__main__":

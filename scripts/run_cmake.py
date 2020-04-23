@@ -17,7 +17,6 @@ import argparse
 from enum import Enum
 from git import Repo
 import os
-from pathlib import Path
 import platform
 import shutil
 import subprocess
@@ -34,6 +33,11 @@ class OperatingSystem(Enum):
 
 
 class Configuration:
+    """Configuration for running cmake.
+
+    The data is mostly read from the file `run_cmake_config.yaml`
+    residing in the same folder as this script.
+    """
 
     def __init__(self, config_file_path: str):
         with open(config_file_path) as config_file:
@@ -41,7 +45,6 @@ class Configuration:
         self._environment = config['environment']  # type: Dict[OperatingSystem, Dict[str, str]]
         self.general_cmake_arguments = config['arguments']['general']  # type: List[str]
         self._specific_cmake_arguments = config['arguments']  # type: Dict[OperatingSystem, List[str]]
-        self._default_projects = config['default_projects']  # type: Dict[OperatingSystem, str]
         self.operating_system = self._detect_os()  # type: OperatingSystem
 
     @property
@@ -54,7 +57,13 @@ class Configuration:
 
     @property
     def default_projects(self) -> str:
-        return self._default_projects[self.operating_system.value]
+        """Get string of projects enabled by default.
+
+        This returns all projects in the mono repo minus the project that were
+        excluded for the current platform.
+        """
+        cp = ChooseProjects(None)
+        return ';'.join(cp.get_all_enabled_projects())
 
     @staticmethod
     def _detect_os() -> OperatingSystem:

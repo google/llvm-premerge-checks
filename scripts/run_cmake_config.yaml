@@ -28,9 +28,3 @@ arguments:
     - '-DCMAKE_CXX_FLAGS=-gmlt'
   windows:
     - '-D LLVM_ENABLE_DIA_SDK=OFF'
-
-# if the automatic project detection fails or is not used, these projects are
-# enabled
-default_projects:
-  windows: 'clang;clang-tools-extra;libcxx;libc;lld;mlir;libcxxabi'
-  linux:   'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;flang'
