@@ -28,5 +28,3 @@ arguments:
     - '-DCMAKE_CXX_FLAGS=-gmlt'
   windows:
     - '-D LLVM_ENABLE_DIA_SDK=OFF'
-    # to help debugging failing tests
-    - '-D CMAKE_BUILD_TYPE=RelWithDebInfo'
