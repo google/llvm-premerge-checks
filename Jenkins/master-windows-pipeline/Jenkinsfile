@@ -72,7 +72,7 @@ pipeline {
         stage('ninja check-all') {
             steps {
                 dir("${LLVM_DIR}"){
-                    powershell "python s${SCRIPT_DIR}/run_ninja.py check-all"
+                    powershell "python ${SCRIPT_DIR}/run_ninja.py check-all"
                 }
             }
         }
