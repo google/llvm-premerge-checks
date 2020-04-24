@@ -125,8 +125,7 @@ To spawn a new windows agent:
 Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/windows_agent_bootstrap.ps1' -OutFile windows_agent_bootstrap.ps1
 .\windows_agent_bootstrap.ps1
 ```
-1. Wait for the machine to reboot, then login again and store the `gsutil` credentials in `build-agent-results_key`.
-TODO: add documentation on how to create these.
+1. Wait for the machine to reboot, then copy the credendials from `windows-agent-2` in `c:\credentials` to the new machine to `c:\credentials`. You can do that by mounting a folder of your host machine via RDP into the Windows VMs.
 1. run this script to start containers:
 ```powershell 
 Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/windows_agent_bootstrap.ps1' -OutFile windows_agent_start.ps1
