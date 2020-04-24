@@ -58,21 +58,21 @@ pipeline {
         stage('CMake') {
             steps {
                 dir("${LLVM_DIR}"){
-                    powershell "${SCRIPT_DIR}/run_cmake.py"
+                    powershell "python ${SCRIPT_DIR}/run_cmake.py"
                 }
             }
         }
         stage('ninja all') {
             steps {
                 dir("${LLVM_DIR}"){
-                    powershell "${SCRIPT_DIR}/run_ninja.py all"
+                    powershell "python ${SCRIPT_DIR}/run_ninja.py all"
                 }
             }
         }
         stage('ninja check-all') {
             steps {
                 dir("${LLVM_DIR}"){
-                    powershell "${SCRIPT_DIR}/run_ninja.py check-all"
+                    powershell "python s${SCRIPT_DIR}/run_ninja.py check-all"
                 }
             }
         }
