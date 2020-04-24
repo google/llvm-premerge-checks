@@ -28,7 +28,7 @@ NAME=agent-windows-1
 gcloud beta compute instances create "${NAME}" \
   --project="${GCP_PROJECT}" \
   --zone="${GCP_ZONE}" \
-  --machine-type=n1-standard-32 \
+  --machine-type=n1-standard-16 \
   --local-ssd=device-name=local-ssd-0 \
   --image=windows-server-2019-dc-v20191210 \
   --image-project=windows-cloud \
