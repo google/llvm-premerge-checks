@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env python3
 # Copyright 2020 Google LLC
 #
 # Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
@@ -13,13 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cat << EOF
+if __name__ == '__main__':
+  print("""
 steps:
-  - label: "bootstrap"
+  - label: "build"
     commands:
-    - "git clone --depth 1 --branch \"${PREMERGE_SCRIPTS_BRANCH}\" https://github.com/google/llvm-premerge-checks.git"
-    - "llvm-premerge-checks/scripts/buildkite/create_pipeline.py | buildkite-agent pipeline upload"
+    - "git clone --depth 1 --branch master https://github.com/google/llvm-premerge-checks.git"
+    - "llvm-premerge-checks/scripts/run_buildkite.sh"
     agents:
-        queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
+        queue: "local"
         os: "linux"
-EOF
+  - label: "parallel step"
+    commands:
+    - "echo do nothing"
+    agents:
+        queue: "local"
+        os: "linux"
+  """)
