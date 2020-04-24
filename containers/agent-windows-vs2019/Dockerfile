@@ -38,8 +38,6 @@ RUN choco install -y cmake --version 3.15.4
 RUN choco install -y python3
 RUN choco install -y gnuwin
 RUN choco install -y sccache
-# set local cache folder for sccache
-ENV SCCACHE_DIR=C:\ws\sccache
 RUN pip install psutil
 
 # install python dependencies for the scripts

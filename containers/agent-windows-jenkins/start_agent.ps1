@@ -25,9 +25,24 @@ Copy-Item "C:\credentials\.boto" "C:\Users\ContainerAdministrator\.boto"
 $env:TEMP="${$AGENT_ROOT}\TEMP"
 $env:TMP="${env:TEMP}"
 
+# set local cache folder for sccache
+$env:SCCACHE_DIR="C:\ws\sccache"
+# Start sccache server and keep it running to avoid problems with Jenkins
+# https://github.com/mozilla/sccache/blob/master/docs/Jenkins.md
+$env:SCCACHE_IDLE_TIMEOUT="0"
+
+# wipe cache at startup, otherwise it will time out
+Remove-Item -Recurse -Force $env:SCCACHE_DIR
+sccache --start-server
+if ($lastexitcode -ne 0) {
+    Write-Error "Failed to start sccache server."
+    exit $lastexitcode
+}
+
+# start Jenkins agent
 java -jar ${env:SWARM_PLUGIN_JAR} `
     -master http://${JENKINS_SERVER}:8080 `
     -executors 1 `
     -fsroot ${AGENT_ROOT} `
-    -labels "windows vs2019" `
-    -name ${env:PARENT_HOSTNAME}
+    -labels "windows vs2019 cores_${env:NUMBER_OF_PROCESSORS}" `
+    -name ${env:PARENT_HOSTNAME} 
