@@ -23,6 +23,7 @@ pipeline {
         SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
     }
     options {
+        // set build timeout
         timeout(time:2, unit:'HOURS')
     }
     stages {

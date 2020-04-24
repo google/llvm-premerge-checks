@@ -25,8 +25,12 @@ pipeline {
         pollSCM 'H H/4 * * *'
     }
 
-    // enable timestaps for getting execution times
-    options { timestamps () }
+    options {
+      // enable timestaps for getting execution times
+      timestamps ()
+      // set build timeout
+      timeout(time:2, unit:'HOURS')
+     }
 
     environment {
         MY_BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
@@ -34,9 +38,7 @@ pipeline {
         RESULT_DIR = "${WORKSPACE}\\results"
         LLVM_DIR = "${WORKSPACE}\\llvm-project"
     }
-    options {
-        timeout(time:2, unit:'HOURS')
-    }
+
     stages {
         stage("git checkout"){
             steps {
