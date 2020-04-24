@@ -77,7 +77,8 @@ excludedProjects:
     - debuginfo-tests # test failing
     - polly # test failing
     - flang # compilation failing with invalid compile arguments
-  # no projects are excluded on Linux
+    # test stuck, needs to be killed manually: instrprof-multiprocess.test
+    - compiler-rt
   linux:
     # tests keep failing:
     # debuginfo-tests :: llgdb-tests/asan-deque.cpp
