@@ -121,18 +121,16 @@ To spawn a new windows agent:
 1. Go to the [GCP page](https://pantheon.corp.google.com/compute/instances?project=llvm-premerge-checks&instancessize=50) again 
 1. login to the new machine via RDP (you probably need to set the i).
 1. In the RDP session: run these commands in the CMD window to start the docker container:
-```cmd
-powershell 
+```powershell 
 Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/windows_agent_bootstrap.ps1' -OutFile windows_agent_bootstrap.ps1
 .\windows_agent_bootstrap.ps1
 ```
 1. Wait for the machine to reboot, then login again and store the `gsutil` credentials in `build-agent-results_key`.
 TODO: add documentation on how to create these.
 1. run this script to start containers:
-```cmd
-powershell Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/windows_agent_bootstrap.ps1' -OutFile windows_agent_bootstrap.ps1
-
-.\windows_agent_bootstrap.ps1
+```powershell 
+Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/windows_agent_bootstrap.ps1' -OutFile windows_agent_start.ps1
+.\windows_agent_start.ps1
 ```
 
 ## Testing scripts locally
