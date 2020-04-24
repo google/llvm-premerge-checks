@@ -128,8 +128,8 @@ Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-c
 1. Wait for the machine to reboot, then copy the credendials from `windows-agent-2` in `c:\credentials` to the new machine to `c:\credentials`. You can do that by mounting a folder of your host machine via RDP into the Windows VMs.
 1. run this script to start containers:
 ```powershell 
-Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/windows_agent_bootstrap.ps1' -OutFile windows_agent_start.ps1
-.\windows_agent_start.ps1
+Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/windows_agent_start.ps1' -OutFile windows_agent_start.ps1
+.\windows_agent_start.ps1 jenkins
 ```
 
 ## Testing scripts locally
