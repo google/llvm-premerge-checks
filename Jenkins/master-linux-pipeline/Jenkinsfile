@@ -22,6 +22,9 @@ pipeline {
         TARGET_DIR="/mnt/nfs/results/${BUILD_ID}"
         SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
     }
+    options {
+        timeout(time:2, unit:'HOURS')
+    }
     stages {
         stage("git checkout"){
             steps {

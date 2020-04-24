@@ -34,6 +34,9 @@ pipeline {
         RESULT_DIR = "${WORKSPACE}\\results"
         LLVM_DIR = "${WORKSPACE}\\llvm-project"
     }
+    options {
+        timeout(time:2, unit:'HOURS')
+    }
     stages {
         stage("git checkout"){
             steps {
