@@ -13,20 +13,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 if __name__ == '__main__':
-  print("""
-steps:
-  - label: "build"
-    commands:
-    - "git clone --depth 1 --branch master https://github.com/google/llvm-premerge-checks.git"
-    - "llvm-premerge-checks/scripts/run_buildkite.sh"
-    agents:
-        queue: "local"
-        os: "linux"
-  - label: "parallel step"
-    commands:
-    - "echo do nothing"
-    agents:
-        queue: "local"
-        os: "linux"
-  """)
+    script_branch = os.getenv("PREMERGE_SCRIPTS_BRANCH", "master")
+    queue = os.getenv("BUILDKITE_AGENT_META_DATA_QUEUE", "default")
+    print(f"""
+  steps:
+    - label: "build"
+      commands:
+      - "git clone --depth 1 --branch '{script_branch}' https://github.com/google/llvm-premerge-checks.git"
+      - "llvm-premerge-checks/scripts/run_buildkite.sh"
+      agents:
+          queue: "{queue}"
+          os: "linux"
+    - label: "parallel step"
+      commands:
+      - "echo do nothing"
+      agents:
+          queue: "{queue}"
+          os: "linux"
+    """)

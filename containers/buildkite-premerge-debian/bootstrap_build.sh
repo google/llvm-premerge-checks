@@ -18,7 +18,7 @@ steps:
   - label: "bootstrap"
     commands:
     - "git clone --depth 1 --branch \"${PREMERGE_SCRIPTS_BRANCH}\" https://github.com/google/llvm-premerge-checks.git"
-    - "llvm-premerge-checks/scripts/buildkite/create_pipeline.py | buildkite-agent pipeline upload"
+    - "llvm-premerge-checks/scripts/buildkite/create_pipeline.py | tee /dev/tty | buildkite-agent pipeline upload"
     agents:
         queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
         os: "linux"
