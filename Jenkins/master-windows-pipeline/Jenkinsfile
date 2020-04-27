@@ -37,6 +37,7 @@ pipeline {
         SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
         RESULT_DIR = "${WORKSPACE}\\results"
         LLVM_DIR = "${WORKSPACE}\\llvm-project"
+        SCCACHE_DIR = "C:\\ws\\sccache"
     }
 
     stages {
