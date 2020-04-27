@@ -31,6 +31,7 @@ pipeline {
         // store all build results here, will be uploaded to GCS later
         RESULT_DIR = "${WORKSPACE}\\results"
         LLVM_DIR = "${WORKSPACE}\\llvm-project"
+        // enable sccache for this build. Comment out the line to disable it
         SCCACHE_DIR = "C:\\ws\\sccache"
     }
     options {
