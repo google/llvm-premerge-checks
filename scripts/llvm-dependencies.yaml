@@ -86,3 +86,6 @@ excludedProjects:
     # debuginfo-tests :: llgdb-tests/safestack.c
     # debuginfo-tests :: llvm-prettyprinters/gdb/llvm-support.gdb
     - debuginfo-tests
+    # test keeps failing, problem with lack of IPv6 networking on Kubernetes:
+    # lldb-unit :: Host/./HostTests/ConnectionFileDescriptorTest.TCPGetURIv6
+    - lldb
