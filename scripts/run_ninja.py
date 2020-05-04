@@ -16,10 +16,36 @@
 import argparse
 import os
 import platform
+import shutil
 import subprocess
 
 
+def check_sccache(dryrun:bool):
+    """check if sccache can be started
+
+    Wipe local cache folder if it fails with a timeout.
+    This is based on the problem described here:
+    https://github.com/google/llvm-premerge-checks/wiki/LLVM-pre-merge-tests-operations-blog#2020-05-04
+    """
+    if platform.system() != 'Windows':
+        return
+    if 'SCCACHE_DIR' not in os.environ:
+        return
+    sccache_dir = os.environ['SCCACHE_DIR']
+    result = subprocess.run('sccache --start-server', shell=True, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, text=True)
+    if result.returncode == 0:
+        return
+    if result.stderr is not None and 'Timed out waiting for server startup' in result.stderr:
+        print('sccache failed with timeout. Wiping local cache dir {}'.format(sccache_dir))
+        if dryrun:
+            print('Dryrun. Not deleting anything.')
+        else: 
+            shutil.rmtree(sccache_dir)
+
+
 def run_ninja(target: str, repo_path: str, *, dryrun:bool = False):
+    check_sccache(dryrun)   
     build_dir = os.path.join(repo_path, 'build')
     cmd = 'ninja {}'.format(target)
     if dryrun:
