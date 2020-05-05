@@ -37,6 +37,7 @@ class LLVMBotArchiveScanner:
         return EMAIL_ARCHIVE_URL.format(year=month.year, month=month.strftime('%B'))
 
     def _download_archive(self, month: datetime.date):
+        os.makedirs(self._tmpdir, exist_ok=True)
         filename = os.path.join(self._tmpdir, 'llvmdev-{year}-{month:02d}.txt'.format(year=month.year, month=month.month))
         url = self._generate_archive_url(month)
         # FIXME: decompress the files
