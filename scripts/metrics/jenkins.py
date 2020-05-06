@@ -52,6 +52,8 @@ class Build:
 
     @property
     def success(self):
+        if self.result is None:
+            return False
         return self.result.lower() == 'success'
 
     def update_from_wfdata(self, wfdata: Dict):
@@ -173,17 +175,17 @@ class JenkinsStatsReader:
                 })
 
     def write_all_builds(self):
+        fieldnames = ['date', 'job_name', 'build_number', 'duration', 'agent', 'success']
+        csv_file = open('tmp/jenkins_all_builds.csv', 'w')
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames, dialect=csv.excel)
+        writer.writeheader()
         for job_name, builds in self.builds.items():
-            fieldnames = ['date', 'job_name', 'build_number', 'duration', 'agent', 'success']
-            csv_file = open('tmp/jenkins_all_builds.csv', 'w')
-            writer = csv.DictWriter(csv_file, fieldnames=fieldnames, dialect=csv.excel)
-            writer.writeheader()
             for build in builds:
                 writer.writerow({
                     'date': build.start_time,
                     'job_name': job_name,
                     'build_number': build.number,
-                    'duration': build.duration,
+                    'duration': build.duration.total_seconds()/60.0,
                     'agent': build.agent,
                     'success': build.success,
                 })
