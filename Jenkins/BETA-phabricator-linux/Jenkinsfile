@@ -110,12 +110,15 @@ pipeline {
                 dir("${LLVM_DIR}")
                 {
                     script {
-                        try {
-                            sh(script: "${SCRIPT_DIR}/run_ninja.py check-all")
-                        } catch (e) {
-                            success = false;
-                            failure_message += "\n'ninja check-all' failed" // append as build might already be broken
-                            echo e.toString()
+                        if (success) {
+                            // only run tests if build has passed, see #176
+                            try {
+                                sh(script: "${SCRIPT_DIR}/run_ninja.py check-all")
+                            } catch (e) {
+                                success = false;
+                                failure_message += "\n'ninja check-all' failed" // append as build might already be broken
+                                echo e.toString()
+                            }
                         }
                     }
                 }
