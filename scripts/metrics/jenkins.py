@@ -7,6 +7,7 @@ import json
 import numpy
 import requests
 import os
+import re
 import sys
 from typing import Optional, List, Dict
 from urllib.parse import urljoin
@@ -30,6 +31,7 @@ class Build:
         self.start_time = datetime.datetime.fromtimestamp(build_dict['timestamp']/1000)
         self.duration = datetime.timedelta(milliseconds=build_dict['duration'])
         self.stages = []  # type: List[Stage]
+        self.agent = None  # type: Optional[str]
 
     @property
     def hour(self) -> datetime.datetime:
@@ -47,6 +49,10 @@ class Build:
             month=self.start_time.month,
             day=self.start_time.day,
         )
+
+    @property
+    def success(self):
+        return self.result.lower() == 'success'
 
     def update_from_wfdata(self, wfdata: Dict):
         self.stages = [Stage(s) for s in wfdata['stages']]
@@ -80,19 +86,22 @@ class JenkinsStatsReader:
         jobnames = self.fetch_jobsnames()
         print('Found {} jobs: {}'.format(len(jobnames), jobnames))
         self.get_builds(jobnames)
-        self.get_workflow_data()
+        # self.get_workflow_data()
+        self.get_build_agents()
         self.create_statistics('hour')
         self.create_statistics('day')
+        self.write_all_builds()
 
-    def cached_get(self, url) -> Dict:
+    def cached_get(self, url, as_json: bool = True):
         m = hashlib.sha256()
         m.update(url.encode('utf-8'))
         filename = m.digest().hex()
         cache_file = os.path.join(self._TMP_DIR, filename)
         if os.path.isfile(cache_file):
             with open(cache_file, 'r') as json_file:
-                data = json.load(json_file)
-            return data
+                if as_json:
+                    return json.load(json_file)
+                return json_file.read()
 
         response = self._session.get(urljoin(self.jenkins_url, url))
         if response.status_code != 200:
@@ -100,7 +109,9 @@ class JenkinsStatsReader:
         os.makedirs(self._TMP_DIR, exist_ok=True)
         with open(cache_file, 'w') as jenkins_data_file:
             jenkins_data_file.write(response.text)
-        return response.json()
+        if as_json:
+            return response.json()
+        return response.text
 
     def fetch_jobsnames(self) -> List[str]:
         data = self.cached_get('api/json?tree=jobs[name]')
@@ -114,10 +125,22 @@ class JenkinsStatsReader:
             print('{} has {} builds'.format(job_name, len(self.builds[job_name])))
 
     def get_workflow_data(self):
+        print('Getting workflow data...')
         for job_name, builds in self.builds.items():
             for i, build in enumerate(builds):
                 wfdata = self.cached_get('job/{}/{}/wfapi/'.format(job_name, build.number))
                 build.update_from_wfdata(wfdata)
+                sys.stdout.write('\r{} [{}/{}]'.format(job_name, i, len(builds)))
+                sys.stdout.flush()
+
+    def get_build_agents(self):
+        print('Getting agent names...')
+        for job_name, builds in self.builds.items():
+            for i, build in enumerate(builds):
+                console_log = self.cached_get('job/{}/{}/consoleText'.format(job_name, build.number), as_json=False)
+                match = re.search(r'Running on ([\w-]+) in', console_log)
+                if match:
+                    build.agent = match.group(1)
                 sys.stdout.write('\r{} [{}/{}]'.format(job_name, i, len(builds)))
                 sys.stdout.flush()
 
@@ -143,6 +166,22 @@ class JenkinsStatsReader:
                     'p90 duration':  numpy.percentile(durations, 90)/60,
                     'p95 duration': numpy.percentile(durations, 95)/60,
                     'max duration': numpy.max(durations)/60,
+                })
+
+    def write_all_builds(self):
+        for job_name, builds in self.builds.items():
+            fieldnames = ['date', 'job_name', 'build_number', 'duration', 'agent', 'success']
+            csv_file = open('tmp/jenkins_all_builds.csv', 'w')
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames, dialect=csv.excel)
+            writer.writeheader()
+            for build in builds:
+                writer.writerow({
+                    'date': build.start_time,
+                    'job_name': job_name,
+                    'build_number': build.number,
+                    'duration': build.duration,
+                    'agent': build.agent,
+                    'success': build.success,
                 })
 
 
