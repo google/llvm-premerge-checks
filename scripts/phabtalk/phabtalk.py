@@ -320,7 +320,7 @@ class BuildReport:
         comment = section_title('clang-format', success, present)
         if not success:
             comment += 'Please format your changes with clang-format by running `git-clang-format HEAD^` or applying ' \
-                       'this <a href="{}">patch</a>.'.format(self.clang_format_patch)
+                       'this <a href="{}">patch</a>.'.format(os.path.basename(self.clang_format_patch))
         self.comments.append(comment)
         self.success = success and self.success
 
