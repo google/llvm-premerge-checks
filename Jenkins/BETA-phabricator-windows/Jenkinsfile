@@ -1,0 +1,171 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://llvm.org/LICENSE.txt
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+def success = true
+
+pipeline {
+    agent { label 'windows' }
+    parameters {
+        string(name: 'DIFF_ID')
+        string(name: 'PHID')
+        string(name: 'REV_ID')
+    }
+    environment {
+        CONDUIT_TOKEN = credentials('phabricator-conduit-token')
+        PHABRICATOR_HOST = 'https://reviews.llvm.org'
+        PHAB_LOG = "${WORKSPACE}/build/.phabricator-comment"
+        MY_BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
+        RESULT_URL = "https://storage.cloud.google.com/llvm-premerge-checks/results/${MY_BUILD_ID}"
+        SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
+        // store all build results here, will be uploaded to GCS later
+        RESULT_DIR = "${WORKSPACE}\\results"
+        LLVM_DIR = "${WORKSPACE}\\llvm-project"
+        // enable sccache for this build. Comment out the line to disable it
+        SCCACHE_DIR = "C:\\ws\\sccache"
+    }
+    options {
+        timeout(time:2, unit:'HOURS')
+    }
+    stages {
+        stage("build info"){
+            steps {
+                echo "Building diff ${DIFF_ID} with PHID ${PHID} for Revision ${REV_ID}"
+                script {
+                    currentBuild.displayName += " D${REV_ID}"
+                    currentBuild.description = "<a href='https://reviews.llvm.org/D${REV_ID}'>D${REV_ID}</a>"
+                }
+                script {
+                    success = true
+                    failure_message = ""
+                }
+            }
+        }
+        stage("git checkout"){
+            steps {
+                echo "getting llvm-premerge-checks... "
+                dir("llvm-premerge-checks")
+                {
+                    git url: 'https://github.com/google/llvm-premerge-checks.git'
+                }
+                echo "getting llvm-project... "
+                dir("llvm-project")
+                {
+                    git url: 'https://github.com/llvm-premerge-tests/llvm-project.git', branch: "phab-diff-${DIFF_ID}"
+                    powershell 'git clean -fdx'
+                    powershell 'git show -s'
+                }
+                // create ${RESULT_DIR}
+                powershell """
+                    Remove-Item ${RESULT_DIR} -Recurse -ErrorAction Ignore
+                    New-Item -ItemType Directory -Force -Path ${RESULT_DIR} | Out-Null
+                    """
+            }            
+        }
+        stage('CMake') {
+            steps {
+                dir("${LLVM_DIR}"){
+                    powershell "python ${SCRIPT_DIR}/run_cmake.py detect"
+                }
+            }
+            post {
+                failure {
+                    script {
+                        success = false
+                        failure_message = "Failed to run CMake"
+                    }
+                }
+            }
+        }
+        stage('ninja all') {
+            steps {
+                dir("${LLVM_DIR}"){
+                    powershell "python ${SCRIPT_DIR}/run_ninja.py all"
+                }
+            }
+            post {
+                failure {
+                    script {
+                        success = false
+                        failure_message = "Failed to run ninja all"
+                    }
+                }
+            }
+        }
+        stage('ninja check-all') {
+            steps {
+                dir("${LLVM_DIR}"){
+                    powershell "python ${SCRIPT_DIR}/run_ninja.py check-all"
+                }
+            }
+            post {
+                failure {
+                    script {
+                        success = false
+                        failure_message = "Failed to run ninja check-all"
+                    }
+                }
+            }
+        }
+    }
+    post { 
+        always { 
+            script {
+                if (success) {
+                    currentBuild.result = "SUCCESS"
+                } else {
+                    currentBuild.result = "FAILURE"
+                }
+            }
+            echo "Uploading logs to ${RESULT_URL} ..."
+            dir("${RESULT_DIR}") {
+                // gather all result files in a folder
+                powershell """
+                    \$ErrorActionPreference = 'Continue'
+                    Write-Host "Getting the console log..."
+                    Invoke-WebRequest -OutFile console-log.txt -uri "http://jenkins.local:8080/job/${JOB_BASE_NAME}/${BUILD_NUMBER}/consoleText" -ErrorAction "Continue"
+                    
+                    Write-Host "Copying build artefacts..."
+                    Copy-Item "${LLVM_DIR}\\choose_projects.log"
+                    Copy-Item "${LLVM_DIR}\\build\\CMakeCache.txt"
+                    Copy-Item "${LLVM_DIR}\\build\\test-results.xml"
+                """                               
+            }
+            /// send results to Phabricator
+            echo "Sending build feedback to Phabricator..."
+            bat """
+                python ${SCRIPT_DIR}/phabtalk/phabtalk.py "${PHID}" "${DIFF_ID}" ^
+                    --workspace "${LLVM_DIR}" ^
+                    --conduit-token "${CONDUIT_TOKEN}" ^
+                    --test-result-file "test-results.xml" ^
+                    --host "${PHABRICATOR_HOST}/api/" ^
+                    --results-dir "${RESULT_DIR}" ^
+                    --results-url "${RESULT_URL}" ^
+                    --failures "${failure_message}" ^
+                    --buildresult ${currentBuild.result} ^
+                    --name "windows"
+                """            
+            dir("${RESULT_DIR}") {
+                // upload results to
+                // Google Cloud Storage
+                powershell """
+                    Write-Host "Uploading results to GCS..."
+                    \$ErrorActionPreference = 'Continue'
+                    gsutil cp *.* gs://llvm-premerge-checks/results/${MY_BUILD_ID}/
+                    Write-Host "Done."
+                """
+            }
+            echo "Done."
+        } 
+    }
+}
