@@ -105,6 +105,8 @@ class JenkinsStatsReader:
 
         response = self._session.get(urljoin(self.jenkins_url, url))
         if response.status_code != 200:
+            if response.status_code == 404:
+                return None
             raise IOError('Could not read data from {}:\n{}'.format(url, response.text))
         os.makedirs(self._TMP_DIR, exist_ok=True)
         with open(cache_file, 'w') as jenkins_data_file:
@@ -138,6 +140,8 @@ class JenkinsStatsReader:
         for job_name, builds in self.builds.items():
             for i, build in enumerate(builds):
                 console_log = self.cached_get('job/{}/{}/consoleText'.format(job_name, build.number), as_json=False)
+                if console_log is None:
+                    continue
                 match = re.search(r'Running on ([\w-]+) in', console_log)
                 if match:
                     build.agent = match.group(1)
