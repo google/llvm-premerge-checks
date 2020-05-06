@@ -2,16 +2,30 @@
 
 The *pre-merge checks* for the [LLVM project](http://llvm.org/) are a [continuous integration (CI)](https://en.wikipedia.org/wiki/Continuous_integration) workflow. The workflow checks the patches the developers upload to the [LLVM Phabricator](https://reviews.llvm.org) instance. *Phabricator* is the code review tool in the LLVM project. The workflow checks the patches before a user merges them the master branch - thus the term *pre-merge testing*. When a user uploads a patch to the LLVM Phabricator, Phabricator triggers the checks and then displays the results. 
 
-The *checks* comprise of these steps:
+The *checks* comprise of separate stages:
 
-1. Checkout of the git repository
-1. Apply the patch -- `arc patch`
-1. Run Cmake -- see [run_cmake.sh](https://github.com/google/llvm-premerge-checks/blob/master/scripts/run_cmake.sh#L31) for details
-1. Build the binaries -- `ninja all`
-1. Run the test suite -- `ninja check-all`
-1. Run clang-format and clang-tidy on the diff.
+* Apply patch
+  1. Checkout of the LLVM git repository
+  1. Apply the patch -- `arc patch`
+  1. Create a new git branch and store it in https://github.com/llvm-premerge-tests/llvm-project/branches
+  1. Upload build results to Phabricator
 
-The checks are executed on one Linux platform (Debian Testing on amd64 with the clang-8 tool chain) at the moment. Builds and Test for Windows (amd64, Visual Studio 2017) are currently in beta testing. The plan is to add more platforms, in the future.
+* Linux 
+  1. Checkout of the branch (from apply patch)
+  1. Guess which projects were modified, run Cmake for those.
+  1. Build the binaries -- `ninja all`
+  1. Run the test suite -- `ninja check-all`
+  1. Run clang-format and clang-tidy on the diff.
+  1. Upload build results to Phabricator
+
+* Windows (beta testing only)
+  1. Checkout of the branch (from apply patch)
+  1. Guess which projects were modified, run Cmake for those.
+  1. Build the binaries -- `ninja all`
+  1. Run the test suite -- `ninja check-all`
+  1. Upload build results to Phabricator
+  
+The checks are executed on one Linux platform (Debian Testing on amd64 with the clang-8 tool chain) at the moment. Builds and Test for Windows (amd64, Visual Studio 2019) are currently in beta testing. The plan is to add more platforms, in the future.
 
 The CI system checks the patches **before** a user merges them to the master branch. This way bugs in a patch are contained during the code review stage and do not pollute the master branch. The more bugs the CI system can catch during the code review phase, the more stable and bug-free the master branch will become.
 
