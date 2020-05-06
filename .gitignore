@@ -4,3 +4,4 @@
 venv/
 __pycache__/
 containers/workspace
+**/.DS_Store
