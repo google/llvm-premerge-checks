@@ -21,7 +21,7 @@ metadata:
     # static IP assignment not working. Not sure why.
     kubernetes.io/ingress.global-static-ip-name: "web-static-ip"
     kubernetes.io/ingress.class: "nginx"    
-    cert-manager.io/issuer: "letsencrypt-prod"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/auth-type: basic
     nginx.ingress.kubernetes.io/auth-secret: proxy-auth
     nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - LLVM pre-merge checks"
@@ -51,7 +51,7 @@ metadata:
     # static IP assignment not working. Not sure why.
     kubernetes.io/ingress.global-static-ip-name: "web-static-ip"
     kubernetes.io/ingress.class: "nginx"    
-    cert-manager.io/issuer: "letsencrypt-prod"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   tls:
   - secretName: results-prod-tls
@@ -74,7 +74,7 @@ spec:
 #     # static IP assignment not working. Not sure why.
 #     kubernetes.io/ingress.global-static-ip-name: "web-static-ip"
 #     kubernetes.io/ingress.class: "nginx"    
-#     cert-manager.io/issuer: "letsencrypt-staging"
+#     cert-manager.io/cluster-issuer: "letsencrypt-staging"
 #     nginx.ingress.kubernetes.io/auth-type: basic
 #     nginx.ingress.kubernetes.io/auth-secret: proxy-auth
 #     nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - LLVM pre-merge checks"
@@ -104,7 +104,7 @@ spec:
 #     # static IP assignment not working. Not sure why.
 #     kubernetes.io/ingress.global-static-ip-name: "web-static-ip"
 #     kubernetes.io/ingress.class: "nginx"    
-#     cert-manager.io/issuer: "letsencrypt-staging"
+#     cert-manager.io/cluster-issuer: "letsencrypt-staging"
 # spec:
 #   tls:
 #   - secretName: results-staging-tls
