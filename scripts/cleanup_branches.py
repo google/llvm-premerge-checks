@@ -27,16 +27,19 @@ from typing import List
 
 
 def delete_old_branches(repo_path: str, max_age: datetime.datetime, branch_patterns: List[re.Pattern],
-                        *, dry_run: bool = True, remote_name: str = 'origin'):
+                        *, dry_run: bool = True, remote_name: str = 'origin') -> bool:
     """Deletes 'old' branches from a git repo.
 
     This script assumes that $repo_path contains a current checkout of the repository ot be cleaned up.
+    :retrun True IFF branches could be deleted successfully.
     """
     repo = git.Repo(repo_path)
     remote = repo.remote(name=remote_name)
+    repo.git.fetch('--prune')
     refs = remote.refs
-    print('Found {} references at {} in total.'.format(len(refs), remote_name))
+    print('Found {} branches at {} in total.'.format(len(refs), remote_name))
     del_count = 0
+    fail_count = 0
     for reference in refs:
         committed_date = datetime.datetime.fromtimestamp(reference.commit.committed_date)
         if committed_date < max_age and _has_pattern_match(reference.name, branch_patterns):
@@ -46,10 +49,17 @@ def delete_old_branches(repo_path: str, max_age: datetime.datetime, branch_patte
             else:
                 print('Deleting {}'.format(reference.name))
                 sys.stdout.flush()
-                remote.push(refspec=':{}'.format(reference.remote_head))
-                del_count += 1
+                try:
+                    remote.push(refspec=':{}'.format(reference.remote_head))
+                    del_count += 1
+                except git.GitCommandError:
+                    print('ERROR: Failed to delete {}.'.format(reference.name))
+                    fail_count = 0
 
-    print('Deleted {} references.'.format(del_count))
+    print('Deleted {} branches.'.format(del_count))
+    if fail_count > 0:
+        print('Failed to delete {} branches.'.format(fail_count))
+    return fail_count == 0
 
 
 def _has_pattern_match(name: str, patterns) -> bool:
@@ -70,4 +80,8 @@ if __name__ == '__main__':
 
     max_age = datetime.datetime.now() - datetime.timedelta(days=args.days)
     branch_pattern = [re.compile(r) for r in args.pattern]
-    delete_old_branches(args.repo_path, max_age, branch_pattern, dry_run=args.dryrun)
+
+    success = delete_old_branches(args.repo_path, max_age, branch_pattern, dry_run=args.dryrun)
+
+    if not success:
+        sys.exit(1)
