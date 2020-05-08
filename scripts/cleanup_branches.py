@@ -22,6 +22,7 @@ import git
 import operator
 import os
 import re
+import sys
 from typing import List
 
 
@@ -40,9 +41,11 @@ def delete_old_branches(repo_path: str, max_age: datetime.datetime, branch_patte
         committed_date = datetime.datetime.fromtimestamp(reference.commit.committed_date)
         if committed_date < max_age and _has_pattern_match(reference.name, branch_patterns):
             if dry_run:
-                print('dryrun: would have deleted {}'.format(reference.name))
+                print('dryrun: would have been deleted {}'.format(reference.name))
+                sys.stdout.flush()
             else:
                 print('Deleting {}'.format(reference.name))
+                sys.stdout.flush()
                 remote.push(refspec=':{}'.format(reference.remote_head))
                 del_count += 1
 
