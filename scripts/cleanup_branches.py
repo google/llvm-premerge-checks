@@ -32,7 +32,8 @@ def delete_old_branches(repo_path: str, max_age: datetime.datetime, branch_patte
     This script assumes that $repo_path contains a current checkout of the repository ot be cleaned up.
     """
     repo = git.Repo(repo_path)
-    refs = repo.remotes[remote_name].refs
+    remote = repo.remote(name=remote_name)
+    refs = remote.refs
     print('Found {} references at {} in total.'.format(len(refs), remote_name))
     del_count = 0
     for reference in refs:
@@ -42,14 +43,10 @@ def delete_old_branches(repo_path: str, max_age: datetime.datetime, branch_patte
                 print('dryrun: would have deleted {}'.format(reference.name))
             else:
                 print('Deleting {}'.format(reference.name))
-                git.RemoteReference.delete(repo.remotes[remote_name].repo, reference)
+                remote.push(refspec=':{}'.format(reference.remote_head))
                 del_count += 1
 
     print('Deleted {} references.'.format(del_count))
-    if not dry_run and del_count > 0:
-        print('Pushing deleted branches to remote...')
-        repo.remotes[remote_name].push()
-    print('Done.')
 
 
 def _has_pattern_match(name: str, patterns) -> bool:
