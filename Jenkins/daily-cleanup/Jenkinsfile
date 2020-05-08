@@ -28,7 +28,7 @@ pipeline {
             SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
     }
     options {
-        timeout(time:10, unit:'MINUTES')
+        timeout(time:30, unit:'MINUTES')
     }
     stages {
         stage("git checkout"){
