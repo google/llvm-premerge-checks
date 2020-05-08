@@ -24,6 +24,7 @@ pipeline {
         cron('@daily')
     }
     environment {
+            LLVM_DIR = "${WORKSPACE}/llvm-project"
             SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
     }
     options {
