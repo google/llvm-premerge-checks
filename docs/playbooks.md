@@ -116,17 +116,18 @@ powershell .\build_deploy.ps1 <container-folder>
 To spawn a new windows agent:
 
 1. Go to the [GCP page](https://pantheon.corp.google.com/compute/instances?project=llvm-premerge-checks&instancessize=50) and pick a new number for the agent.
-1. Update the machine name in `kubernetes/windows_agent_create.sh`.
-1. Run `kubernetes/windows_agent_create.sh`
+1. Run `kubernetes/windows_agent_create.sh agent-windows-<number>`
 1. Go to the [GCP page](https://pantheon.corp.google.com/compute/instances?project=llvm-premerge-checks&instancessize=50) again 
 1. login to the new machine via RDP (you probably need to set the i).
-1. In the RDP session: run these commands in the CMD window to start the docker container:
+1. In the RDP session: run these commands in the CMD window to bootstrap the Windows machine:
 ```powershell 
 Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/windows_agent_bootstrap.ps1' -OutFile windows_agent_bootstrap.ps1
 .\windows_agent_bootstrap.ps1
 ```
+1. Ignore the pop-up to format the new disk.
 1. Wait for the machine to reboot, then copy the credendials from `windows-agent-2` in `c:\credentials` to the new machine to `c:\credentials`. You can do that by mounting a folder of your host machine via RDP into the Windows VMs.
-1. run this script to start containers:
+1: Copy the credientals to `C:\credentials` from another Windows agent.
+1. Run this script to start the container:
 ```powershell 
 Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/windows_agent_start.ps1' -OutFile windows_agent_start.ps1
 .\windows_agent_start.ps1 jenkins

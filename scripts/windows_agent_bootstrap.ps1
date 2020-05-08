@@ -34,11 +34,14 @@ choco install -y git
 New-Item -Path "D:\" -Name "Docker" -ItemType "directory"
 cmd /C "mklink /j C:\ProgramData\Docker D:\docker"
 
+# create folder for credentials
+New-Item -Path "C:\" -Name "credentials" -ItemType "directory"
+
 # install Docker
 Install-PackageProvider -Name NuGet -Force
 Install-Module -Name DockerMsftProvider -Repository PSGallery -Force
 Install-Package -Name docker -ProviderName DockerMsftProvider -Force
-Set-Service -Name docker  -StartupType AutomaticDelayedStart
+sc.exe config docker start=delayed-auto
 
 # install gcloud and authenticate access to gcr.io registry
 # TODO: find a better way to install the Google Cloud SDK, avoid ingoring the checksum
