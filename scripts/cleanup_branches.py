@@ -46,8 +46,8 @@ def delete_old_branches(repo_path: str, max_age: datetime.datetime, branch_patte
                 del_count += 1
 
     print('Deleted {} references.'.format(del_count))
-    if not dry_run:
-        print('Pushing to remote...')
+    if not dry_run and del_count > 0:
+        print('Pushing deleted branches to remote...')
         repo.remotes[remote_name].push()
     print('Done.')
 
