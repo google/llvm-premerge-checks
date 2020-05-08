@@ -23,7 +23,7 @@ ROOT_DIR="$(dirname ${DIR})"
 # get config options
 # shellcheck source=../k8s_config
 source "${ROOT_DIR}/k8s_config"
-NAME=agent-windows-1
+NAME=$1
 
 gcloud beta compute instances create "${NAME}" \
   --project="${GCP_PROJECT}" \
