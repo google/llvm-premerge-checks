@@ -15,7 +15,13 @@
 def success = true
 
 pipeline {
-    agent { label 'windows' }
+    agent {
+      node {
+        label 'windows'
+        // use custom workspace folder to shorten paths
+        customWorkspace "C:\\ws\\prod"
+      }
+    }
     parameters {
         string(name: 'DIFF_ID')
         string(name: 'PHID')
