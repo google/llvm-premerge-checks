@@ -1,31 +1,53 @@
 @startuml
+
 node Phabricator
 
 node github {
 component LLVM_monorepo
 }
 
-cloud "premerge-test cluster" {
+cloud "Google Cloud" {
+
+node "premerge-test Kubernetes cluster" {
 
 
 node "reverse proxy" {
 component nginx
 }
 
+node "nginx results" {
+component "Linux results"
+}
+
 node "Jenkins" {
-component "Jenkins_master"
+component "Jenkins master"
 }
-node "Jenkins_agent" {
-component "swarm_plugin"
-component "LLVM build tools"
+
+node "Linux agent" {
+component "Swarm plugin (Linux)"
+component "LLVM build tools (Linux)"
+[Swarm plugin (Linux)] -- [Jenkins master]
+[Swarm plugin (Linux)] --> [Linux results]
+}
+}
+
+
+node "Google Cloud Storage" {
+component "Windows results"
+}
+
+node "Windows agent" {
+component "Swarm plugin (Win)"
+component "LLVM build tools (Win)"
+[Swarm plugin (Win)] -- [Jenkins master]
+[Swarm plugin (Win)] --> [Windows results]
 }
 
 }
+Phabricator --> nginx
+nginx --> [Jenkins master]
+[Jenkins master] --> LLVM_monorepo
+[Swarm plugin (Linux)] --> LLVM_monorepo
+[Swarm plugin (Win)] --> LLVM_monorepo
 
-
-Jenkins_master -- swarm_plugin
-nginx -- Jenkins_master
-Phabricator -- nginx
-Phabricator --> LLVM_monorepo
-Jenkins_master --> LLVM_monorepo
 @enduml
