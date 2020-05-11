@@ -13,7 +13,8 @@ dependencies:
   #        it means we can miss breakages in configuration changes.
   #        Same for libcxx, libc and other projects that don't have 'llvm'
   #        as a dependency.
-  compiler-rt: []
+  compiler-rt:
+  - clang
   flang:
   - llvm
   - mlir
