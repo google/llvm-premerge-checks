@@ -2,6 +2,9 @@
 
 The *pre-merge checks* for the [LLVM project](http://llvm.org/) are a [continuous integration (CI)](https://en.wikipedia.org/wiki/Continuous_integration) workflow. The workflow checks the patches the developers upload to the [LLVM Phabricator](https://reviews.llvm.org) instance. *Phabricator* is the code review tool in the LLVM project. The workflow checks the patches before a user merges them the master branch - thus the term *pre-merge testing*. When a user uploads a patch to the LLVM Phabricator, Phabricator triggers the checks and then displays the results. 
 
+The CI system checks the patches **before** a user merges them to the master branch. This way bugs in a patch are contained during the code review stage and do not pollute the master branch. The more bugs the CI system can catch during the code review phase, the more stable and bug-free the master branch will become.
+
+## Stages
 The *checks* comprise of separate stages:
 
 * Apply patch
@@ -25,9 +28,17 @@ The *checks* comprise of separate stages:
   1. Run the test suite -- `ninja check-all`
   1. Upload build results to Phabricator
   
-The checks are executed on one Linux platform (Debian Testing on amd64 with the clang-8 tool chain) at the moment. Builds and Test for Windows (amd64, Visual Studio 2019) are currently in beta testing. The plan is to add more platforms, in the future.
+The checks are executed on one Linux platform (Debian Testing on amd64 with the clang-8 tool chain) at the moment. Builds and Test for Windows (Windows 10, amd64, Visual Studio 2019). The plan is to add more platforms, in the future.
 
-The CI system checks the patches **before** a user merges them to the master branch. This way bugs in a patch are contained during the code review stage and do not pollute the master branch. The more bugs the CI system can catch during the code review phase, the more stable and bug-free the master branch will become.
+## Enabled projects and project detection
+
+To reduce build times and mask unrelated problems, we're only building and testing the projects that were modified by a patch. The logic for that looks like this:
+
+1. Get prefix (e.g. llvm, clang) of all paths modified by the patch.
+1. Identify the projects that depend on these, based a manually maintained [config file](https://github.com/google/llvm-premerge-checks/blob/master/scripts/llvm-dependencies.yaml).
+1. Add all projects that this extended list depends on to be built, based on the same [config file](https://github.com/google/llvm-premerge-checks/blob/master/scripts/llvm-dependencies.yaml)
+1. Remove all `excludedProjects` projects, based on the same [config file](https://github.com/google/llvm-premerge-checks/blob/master/scripts/llvm-dependencies.yaml). These projects were blacklisted as they fail building and/or testing on the current machines.
+1. Then use the list of projects as arguments in `cmake -D LLVM_ENABLE_PROJECTS=<project list>`.
 
 ## Feedback
 
