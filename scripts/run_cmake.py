@@ -89,7 +89,7 @@ def _select_projects(config: Configuration, projects: str, repo_path: str) -> st
         patch = repo.git.diff("HEAD~1")
         enabled_projects = ';'.join(cp.choose_projects(patch))
         if enabled_projects is None or len(enabled_projects) == 0:
-            enabled_projects = 'all'
+            enabled_projects = cp.get_all_enabled_projects()
         return enabled_projects
     return projects
 
