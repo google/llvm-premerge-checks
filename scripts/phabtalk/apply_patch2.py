@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import argparse
+import datetime
 import json
 import os
 import re
@@ -27,7 +28,12 @@ from git import Repo, BadName, GitCommandError
 
 
 # FIXME: maybe move to config file
+"""URL of upstream LLVM repository."""
 LLVM_GITHUB_URL = 'ssh://git@github.com/llvm/llvm-project'
+
+"""How far back the script searches in the git history to find Revisions that
+have already landed. """
+APPLIED_SCAN_LIMIT = datetime.timedelta(days=90)
 
 
 class ApplyPatch:
@@ -242,14 +248,17 @@ class ApplyPatch:
             text = '\n\n'.join(self.msg)
             comment_file.write(text)
 
-    def _get_landed_revisions(self, limit: int = 1000):
+    def _get_landed_revisions(self):
         """Get list of landed revisions from current git branch."""
         diff_regex = re.compile(r'^Differential Revision: https://reviews\.llvm\.org/(.*)$', re.MULTILINE)
         earliest_commit = None
         rev = self.base_revision
+        age_limit = datetime.datetime.now() - APPLIED_SCAN_LIMIT
         if rev is None:
             rev = 'master'
-        for commit in self.repo.iter_commits(rev, max_count=limit):
+        for commit in self.repo.iter_commits(rev):
+            if datetime.datetime.fromtimestamp(commit.committed_date) < age_limit:
+                break
             earliest_commit = commit
             result = diff_regex.search(commit.message)
             if result is not None:
