@@ -40,6 +40,16 @@ To reduce build times and mask unrelated problems, we're only building and testi
 1. Remove all `excludedProjects` projects, based on the same [config file](https://github.com/google/llvm-premerge-checks/blob/master/scripts/llvm-dependencies.yaml). These projects were blacklisted as they fail building and/or testing on the current machines.
 1. Then use the list of projects as arguments in `cmake -D LLVM_ENABLE_PROJECTS=<project list>`.
 
+## Machine configuration
+
+All build machines are running from Docker containers so that they can be debugged, updated and scaled easily:
+* [Linux image](https://github.com/google/llvm-premerge-checks/blob/master/containers/agent-debian-testing-ssd/Dockerfile)
+* [Windows base image](https://github.com/google/llvm-premerge-checks/blob/master/containers/agent-windows-vs2019/Dockerfile) and [Windows Jenkins config](https://github.com/google/llvm-premerge-checks/blob/master/containers/agent-windows-jenkins/Dockerfile) on top of base image
+
+## Clean builds and caching
+
+Each build is performed on a clean copy of the git repository. To speed up the builds [ccache](https://ccache.dev/) is used on Linux and [sccache](https://github.com/mozilla/sccache) on Windows.
+
 ## Feedback
 
 If you find any problems please raise an [issue on github](https://github.com/google/llvm-premerge-checks/issues).
