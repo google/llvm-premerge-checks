@@ -10,4 +10,5 @@ RUN echo 'install buildkite' ;\
 
 COPY *.sh /usr/local/bin/
 RUN chmod og+rx /usr/local/bin/*.sh
+ENV CCACHE_PATH=/mnt/disks/ssd0/ccache
 CMD ["start_agent.sh"]

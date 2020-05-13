@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Copyright 2020 Google LLC
 #
 # Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
@@ -13,18 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
-if __name__ == '__main__':
-    script_branch = os.getenv("PREMERGE_SCRIPTS_BRANCH", "master")
-    queue = os.getenv("BUILDKITE_AGENT_META_DATA_QUEUE", "default")
-    print(f"""
-  steps:
-    - label: "build"
-      commands:
-      - "git clone git@github.com:llvm-premerge-tests/llvm-project.git"
-      - "scripts/buildkite/apply_patch.sh" 
-      agents:
-          queue: "{queue}"
-          os: "linux"
-    """)
+kind: Service
+apiVersion: v1
+metadata:
+  name: phabricator-proxy
+  namespace: buildkite
+spec:
+  selector:
+    app: phabricator-proxy
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

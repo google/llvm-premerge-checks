@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 # Copyright 2020 Google LLC
 #
 # Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
@@ -13,13 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cat << EOF
-steps:
-  - label: "bootstrap"
-    commands:
-    - "git clone --depth 1 --branch \"${PREMERGE_SCRIPTS_BRANCH}\" https://github.com/google/llvm-premerge-checks.git"
-    - "llvm-premerge-checks/scripts/buildkite/create_pipeline.py | tee /dev/tty | buildkite-agent pipeline upload"
-    agents:
-        queue: "${BUILDKITE_AGENT_META_DATA_QUEUE}"
-        os: "linux"
-EOF
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: jenkins
+resources:
+  - Deployment.yaml
+  - Services.yaml
+  - Ingress.yaml
+

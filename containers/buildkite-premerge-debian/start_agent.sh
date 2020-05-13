@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2020 Google LLC
 #
 # Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
@@ -17,22 +17,18 @@
 USER=buildkite-agent
 SSD_ROOT="/mnt/disks/ssd0"
 AGENT_ROOT="${SSD_ROOT}/agent"
-CCACHE_PATH="${SSD_ROOT}/ccache"
 
-# prepare root folder for Jenkins agent
+# prepare work directory
 mkdir -p "${AGENT_ROOT}"
 chown -R ${USER}:${USER} "${AGENT_ROOT}"
-# TODO: this is needed if we want to use SSH auth.
-#mkdir -p /var/lib/buildkite-agent/.ssh
-#cp /mnt/ssh/id_rsa /var/lib/buildkite-agent/.ssh
-#cp /mnt/ssh/id_rsa.pub /var/lib/buildkite-agent/.ssh
-#chown -R ${USER}:${USER} /var/lib/buildkite-agent/.ssh
-
-# prepare folder for ccache
 mkdir -p "${CCACHE_PATH}"
 chown -R ${USER}:${USER} "${CCACHE_PATH}"
 
-# TODO(kuhnel): wipe the disk(s) on startup
+# /mnt/ssh should contain known_hosts, id_rsa and id_rsa.pub .
+mkdir -p /var/lib/buildkite-agent/.ssh
+cp /mnt/ssh/* /var/lib/buildkite-agent/.ssh
+chmod 700 /var/lib/buildkite-agent/.ssh
+chmod 600 /var/lib/buildkite-agent/.ssh/*
+chown -R $USER:$USER /var/lib/buildkite-agent/.ssh
 
-# start the buildkite agent
 su buildkite-agent -c "buildkite-agent start --build-path=/mnt/disks/ssd0/agent"
