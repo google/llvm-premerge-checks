@@ -33,4 +33,4 @@ fi
 
 kubectl create secret generic github-ssh-key --namespace jenkins \
   --from-file "$LOCAL_SSH_DIR/id_rsa" \
-    --from-file "$LOCAL_SSH_DIR/id_rsa.pub"
+  --from-file "$LOCAL_SSH_DIR/id_rsa.pub"

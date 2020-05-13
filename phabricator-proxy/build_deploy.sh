@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-# Copyright 2020 Google LLC
+#!/bin/bash
+# Copyright 2019 Google LLC
 #
 # Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,18 +13,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
+set -eux
 
-if __name__ == '__main__':
-    script_branch = os.getenv("PREMERGE_SCRIPTS_BRANCH", "master")
-    queue = os.getenv("BUILDKITE_AGENT_META_DATA_QUEUE", "default")
-    print(f"""
-  steps:
-    - label: "build"
-      commands:
-      - "git clone git@github.com:llvm-premerge-tests/llvm-project.git"
-      - "scripts/buildkite/apply_patch.sh" 
-      agents:
-          queue: "{queue}"
-          os: "linux"
-    """)
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+ROOT_DIR="$(dirname ${DIR})"
+
+# get config options
+
+IMAGE_NAME="phabricator-proxy"
+
+docker build -t ${IMAGE_NAME} .
+read -p "Push to registry? [yN]" -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+  source "${ROOT_DIR}/k8s_config"
+  QUALIFIED_NAME="${GCR_HOSTNAME}/${GCP_PROJECT}/${IMAGE_NAME}"
+  docker tag ${IMAGE_NAME} ${QUALIFIED_NAME}
+  docker push ${QUALIFIED_NAME}
+fi
