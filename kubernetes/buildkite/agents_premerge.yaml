@@ -47,6 +47,8 @@ spec:
               key: token
         - name: BUILDKITE_AGENT_TAGS
           value: "queue=premerge,os=linux"
+        - name: BUILDKITE_BUILD_PATH
+          value: "/mnt/disks/ssd0/agent"
         - name: CONDUIT_TOKEN
           valueFrom:
             secretKeyRef:

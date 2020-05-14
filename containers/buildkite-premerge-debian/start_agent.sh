@@ -15,12 +15,12 @@
 
 # Buildkite installation creates 'buildkite-agent' user.
 USER=buildkite-agent
-SSD_ROOT="/mnt/disks/ssd0"
-AGENT_ROOT="${SSD_ROOT}/agent"
 
 # prepare work directory
-mkdir -p "${AGENT_ROOT}"
-chown -R ${USER}:${USER} "${AGENT_ROOT}"
+mkdir -p "${BUILDKITE_BUILD_PATH}"
+chown -R ${USER}:${USER} "${BUILDKITE_BUILD_PATH}"
+
+export CCACHE_PATH="${BUILDKITE_BUILD_PATH}"/ccache
 mkdir -p "${CCACHE_PATH}"
 chown -R ${USER}:${USER} "${CCACHE_PATH}"
 
@@ -31,4 +31,4 @@ chmod 700 /var/lib/buildkite-agent/.ssh
 chmod 600 /var/lib/buildkite-agent/.ssh/*
 chown -R $USER:$USER /var/lib/buildkite-agent/.ssh
 
-su buildkite-agent -c "buildkite-agent start --build-path=/mnt/disks/ssd0/agent"
+su buildkite-agent -c "buildkite-agent start"

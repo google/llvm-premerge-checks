@@ -44,7 +44,7 @@ def build():
         headers = {'Authorization': f'Bearer {buildkite_api_token}'}
         response = requests.post(
             'https://api.buildkite.com/v2/organizations/llvm-project'
-            '/pipelines/premerge/builds',
+            '/pipelines/diff-checks/builds',
             json=build_request,
             headers=headers)
         app.logger.info('buildkite response: %s %s', response.status_code, response.text)
