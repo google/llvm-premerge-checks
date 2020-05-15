@@ -30,6 +30,7 @@ from git import Repo, BadName, GitCommandError
 # FIXME: maybe move to config file
 """URL of upstream LLVM repository."""
 LLVM_GITHUB_URL = 'ssh://git@github.com/llvm/llvm-project'
+FORK_REMOTE_URL = 'ssh://git@github.com/llvm-premerge-tests/llvm-project'
 
 """How far back the script searches in the git history to find Revisions that
 have already landed. """
@@ -49,10 +50,10 @@ class ApplyPatch:
     Once this class has applied all dependencies, it will apply the diff itself.
 
     This script must be called from the root folder of a local checkout of 
-    https://github.com/llvm/llvm-project
+    https://github.com/llvm/llvm-project or given a path to clone into.
     """
 
-    def __init__(self, diff_id: int, comment_file_path: str, token: str, url: str, git_hash: str,
+    def __init__(self, path: str, diff_id: int, comment_file_path: str, token: str, url: str, git_hash: str,
                  push_branch: bool = False):
         self.comment_file_path = comment_file_path
         self.push_branch = push_branch  # type: bool
@@ -65,7 +66,16 @@ class ApplyPatch:
         self.phab = self._create_phab()
         self.base_revision = git_hash  # type: Optional[str]
         self.msg = []  # type: List[str]
-        self.repo = Repo(os.getcwd())  # type: Repo
+
+        if not os.path.isdir(path):
+            print(f'{path} does not exist, cloning repository')
+            # TODO: progress of clonning
+            self.repo = Repo.clone_from(FORK_REMOTE_URL, path)
+        else:
+            print('repository exist, will reuse')
+            self.repo = Repo(path)  # type: Repo
+        os.chdir(path)
+        print('working dir', os.getcwd())
 
     @property
     def branch_name(self):
@@ -308,6 +318,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Apply Phabricator patch to working directory.')
     parser.add_argument('diff_id', type=int)
     # TODO: instead of --comment-file use stdout / stderr.
+    parser.add_argument('--path', type=str, help='repository path', default=os.getcwd())
     parser.add_argument('--comment-file', type=str, dest='comment_file_path', default=None)
     parser.add_argument('--token', type=str, default=None, help='Conduit API token')
     parser.add_argument('--url', type=str, default=None, help='Phabricator URL')
@@ -316,5 +327,5 @@ if __name__ == "__main__":
     parser.add_argument('--push-branch', action='store_true', dest='push_branch',
                         help='choose if branch shall be pushed to origin')
     args = parser.parse_args()
-    patcher = ApplyPatch(args.diff_id, args.comment_file_path, args.token, args.url, args.commit, args.push_branch)
+    patcher = ApplyPatch(args.path, args.diff_id, args.comment_file_path, args.token, args.url, args.commit, args.push_branch)
     patcher.run()

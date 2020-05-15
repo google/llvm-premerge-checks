@@ -7,8 +7,6 @@ RUN echo 'install buildkite' ;\
     apt-get update ;\
     apt-get install -y buildkite-agent; \
     apt-get clean;
-
 COPY *.sh /usr/local/bin/
 RUN chmod og+rx /usr/local/bin/*.sh
-ENV CCACHE_PATH=/mnt/disks/ssd0/ccache
 CMD ["start_agent.sh"]

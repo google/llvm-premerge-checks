@@ -14,17 +14,23 @@
 # limitations under the License.
 
 import os
+import yaml
 
 if __name__ == '__main__':
-    script_branch = os.getenv("PREMERGE_SCRIPTS_BRANCH", "master")
+    script_branch = os.getenv("scripts_branch", "master")
     queue = os.getenv("BUILDKITE_AGENT_META_DATA_QUEUE", "default")
-    print(f"""
-  steps:
-    - label: "build"
-      commands:
-      - "git clone git@github.com:llvm-premerge-tests/llvm-project.git"
-      - "scripts/buildkite/apply_patch.sh" 
-      agents:
-          queue: "{queue}"
-          os: "linux"
-    """)
+    diff_id = os.getenv("ph_buildable_diff", "")
+    steps = []
+    # SCRIPT_DIR is defined in buildkite pipeline step.
+    linux_buld_step = {
+            'label': 'build linux',
+            'key': 'build-linux',
+            'commands': [
+                    '${SCRIPT_DIR}/run_cmake.py detect',
+                    '${SCRIPT_DIR}/run_ninja.py all',
+                    '${SCRIPT_DIR}/run_ninja.py check-all',
+                    '${SCRIPT_DIR}/lint.sh HEAD~1 ./'],
+            'agents': {'queue': queue, 'os': 'linux'}
+    }
+    steps.append(linux_buld_step)
+    print(yaml.dump({'steps': steps}))
