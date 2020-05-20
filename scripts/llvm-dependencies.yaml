@@ -18,7 +18,9 @@ dependencies:
   flang:
   - llvm
   - mlir
-  libc: []
+  libc:
+  - clang
+  - clang-tools-extra
   # FIXME: not sure about 'libcxx' and 'libcxxabi'
   libcxx: []
   libcxxabi: []
