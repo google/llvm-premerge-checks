@@ -23,14 +23,13 @@ if __name__ == '__main__':
     steps = []
     # SCRIPT_DIR is defined in buildkite pipeline step.
     linux_buld_step = {
-            'label': 'build linux',
-            'key': 'build-linux',
-            'commands': [
-                    '${SCRIPT_DIR}/run_cmake.py detect',
-                    '${SCRIPT_DIR}/run_ninja.py all',
-                    '${SCRIPT_DIR}/run_ninja.py check-all',
-                    '${SCRIPT_DIR}/lint.sh HEAD~1 ./'],
-            'agents': {'queue': queue, 'os': 'linux'}
+        'label': 'build linux',
+        'key': 'build-linux',
+        'commands': [
+            '${SCRIPT_DIR}/premerge_checks.py',
+        ],
+        'artifact_paths': ['artifacts/**/*'],
+        'agents': {'queue': queue, 'os': 'linux'}
     }
     steps.append(linux_buld_step)
     print(yaml.dump({'steps': steps}))

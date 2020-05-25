@@ -49,7 +49,7 @@ def build():
             headers=headers)
         app.logger.info('buildkite response: %s %s', response.status_code, response.text)
         rjs = json.loads(response.text)
-        return rjs['id']
+        return rjs['web_url']
     else:
         return "expected POST request"
 

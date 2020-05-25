@@ -25,10 +25,10 @@ import time
 import urllib
 import uuid
 from typing import Optional, List, Dict
-
 import pathspec
 from lxml import etree
 from phabricator import Phabricator
+from enum import Enum
 
 
 class PhabTalk:
@@ -126,24 +126,28 @@ class PhabTalk:
         print('Uploaded build status {}, {} test results and {} lint results'.format(
             result_type, len(unit), len(lint_messages)))
 
+    # TODO: deprecate
     def add_artifact(self, phid: str, file: str, name: str, results_url: str):
         artifactKey = str(uuid.uuid4())
         artifactType = 'uri'
         artifactData = {'uri': '{}/{}'.format(results_url, file),
                         'ui.external': True,
                         'name': name}
+        self.create_artefact(phid, artifactKey, artifactType, artifactData)
+        print('Created artifact "{}"'.format(name))
+
+    def create_artifact(self, phid, artifact_key, artifact_type, artifact_data):
         if self.dryrun:
             print('harbormaster.createartifact =================')
-            print('artifactKey: {}'.format(artifactKey))
-            print('artifactType: {}'.format(artifactType))
-            print('artifactData: {}'.format(artifactData))
+            print('artifactKey: {}'.format(artifact_key))
+            print('artifactType: {}'.format(artifact_type))
+            print('artifactData: {}'.format(artifact_data))
             return
         _try_call(lambda: self._phab.harbormaster.createartifact(
             buildTargetPHID=phid,
-            artifactKey=artifactKey,
-            artifactType=artifactType,
-            artifactData=artifactData))
-        print('Created artifact "{}"'.format(name))
+            artifactKey=artifact_key,
+            artifactType=artifact_type,
+            artifactData=artifact_data))
 
 
 def _parse_patch(patch) -> List[Dict[str, str]]:
@@ -187,6 +191,47 @@ def _parse_patch(patch) -> List[Dict[str, str]]:
             'line': line_number,
         })
     return entries
+
+
+class CheckResult(Enum):
+    UNKNOWN = 0
+    SUCCESS = 1
+    FAILURE = 2
+
+
+class Report:
+    def __init__(self):
+        self.comments = []
+        self.success = True
+        self.working = False
+        self.unit = []  # type: List
+        self.lint = {}
+        self.test_stats = {
+            'pass': 0,
+            'fail': 0,
+            'skip': 0
+        }  # type: Dict[str, int]
+        self.steps = []  # type: List
+        self.artifacts = []  # type: List
+
+    def __str__(self):
+        return str(self.__dict__)
+
+    def add_lint(self, m):
+        key = '{}:{}'.format(m['path'], m['line'])
+        if key not in self.lint:
+            self.lint[key] = []
+        self.lint[key].append(m)
+
+    def add_step(self, title: str, result: CheckResult, message: str):
+        self.steps.append({
+            'title': title,
+            'result': result,
+            'message': message,
+        })
+
+    def add_artifact(self, dir: str, file: str, name: str):
+        self.artifacts.append({'dir': dir, 'file': file, 'name': name})
 
 
 class BuildReport:
@@ -295,7 +340,7 @@ class BuildReport:
         diffs = _parse_patch(open(p, 'r'))
         success = len(diffs) == 0
         for d in diffs:
-            lines = d['diff'].splitlines(True)
+            lines = d['diff'].splitlines(keepends=True)
             m = 10  # max number of lines to report.
             description = 'please reformat the code\n```\n'
             n = len(lines)
@@ -325,10 +370,10 @@ class BuildReport:
         self.success = success and self.success
 
     def add_clang_tidy(self):
-        # Typical message looks like
-        # [..]/clang/include/clang/AST/DeclCXX.h:3058:20: error: no member named 'LifetimeExtendedTemporary' in 'clang::Decl' [clang-diagnostic-error]
         if self.clang_tidy_result is None:
             return
+        # Typical message looks like
+        # [..]/clang/include/clang/AST/DeclCXX.h:3058:20: error: no member named 'LifetimeExtendedTemporary' in 'clang::Decl' [clang-diagnostic-error]
         pattern = '^{}/([^:]*):(\\d+):(\\d+): (.*): (.*)'.format(self.workspace)
         errors_count = 0
         warn_count = 0
