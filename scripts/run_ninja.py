@@ -18,9 +18,10 @@ import os
 import platform
 import shutil
 import subprocess
+import sys
 
 
-def check_sccache(dryrun:bool):
+def check_sccache(dryrun: bool):
     """check if sccache can be started
 
     Wipe local cache folder if it fails with a timeout.
@@ -40,18 +41,18 @@ def check_sccache(dryrun:bool):
         print('sccache failed with timeout. Wiping local cache dir {}'.format(sccache_dir))
         if dryrun:
             print('Dryrun. Not deleting anything.')
-        else: 
+        else:
             shutil.rmtree(sccache_dir)
 
 
-def run_ninja(target: str, repo_path: str, *, dryrun:bool = False):
-    check_sccache(dryrun)   
-    build_dir = os.path.join(repo_path, 'build')
+def run_ninja(target: str, work_dir: str, *, dryrun: bool = False):
+    check_sccache(dryrun)
     cmd = 'ninja {}'.format(target)
     if dryrun:
         print('Dryrun. Command would have been:\n{}'.format(cmd))
+        return 0
     else:
-        subprocess.check_call(cmd, shell=True, cwd=build_dir)
+        return subprocess.call(cmd, shell=True, cwd=work_dir)
 
 
 if __name__ == '__main__':
@@ -60,4 +61,4 @@ if __name__ == '__main__':
     parser.add_argument('repo_path', type=str, nargs='?', default=os.getcwd())
     parser.add_argument('--dryrun', action='store_true')
     args = parser.parse_args()
-    run_ninja(args.target, args.repo_path, dryrun=args.dryrun)
+    sys.exit(run_ninja(args.target, os.path.join(args.repo_path, 'build'), dryrun=args.dryrun))

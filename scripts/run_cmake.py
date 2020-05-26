@@ -21,6 +21,7 @@ import platform
 import shutil
 import subprocess
 import stat
+import sys
 from typing import List, Dict
 import yaml
 
@@ -44,7 +45,8 @@ class Configuration:
             config = yaml.load(config_file, Loader=yaml.SafeLoader)
         self._environment = config['environment']  # type: Dict[OperatingSystem, Dict[str, str]]
         self.general_cmake_arguments = config['arguments']['general']  # type: List[str]
-        self._specific_cmake_arguments = config['arguments']  # type: Dict[OperatingSystem, List[str]]
+        self._specific_cmake_arguments = config[
+            'arguments']  # type: Dict[OperatingSystem, List[str]]
         self.operating_system = self._detect_os()  # type: OperatingSystem
 
     @property
@@ -126,8 +128,10 @@ def _create_args(config: Configuration, llvm_enable_projects: str) -> List[str]:
     return arguments
 
 
-def run_cmake(projects: str, repo_path: str, config_file_path: str = None, *, dryrun: bool = False):
-    """Use cmake to configure the project.
+def run(projects: str, repo_path: str, config_file_path: str = None, *, dry_run: bool = False):
+    """Use cmake to configure the project and create build directory.
+
+    Returns build directory and path to created artifacts.
 
     This version works on all operating systems.
     """
@@ -137,7 +141,7 @@ def run_cmake(projects: str, repo_path: str, config_file_path: str = None, *, dr
     config = Configuration(config_file_path)
 
     build_dir = os.path.abspath(os.path.join(repo_path, 'build'))
-    if not dryrun:
+    if not dry_run:
         secure_delete(build_dir)
         os.makedirs(build_dir)
 
@@ -146,13 +150,15 @@ def run_cmake(projects: str, repo_path: str, config_file_path: str = None, *, dr
     print('Enabled projects: {}'.format(llvm_enable_projects))
     arguments = _create_args(config, llvm_enable_projects)
     cmd = 'cmake ' + ' '.join(arguments)
-    
+
     print('Running cmake with these arguments:\n{}'.format(cmd), flush=True)
-    if dryrun:
-        print('Dryrun, not invoking CMake!')
-    else:
-        subprocess.check_call(cmd, env=env, shell=True, cwd=build_dir)
-        _link_compile_commands(config, repo_path, build_dir)
+    if dry_run:
+        print('Dry run, not invoking CMake!')
+        return 0, build_dir, []
+
+    result = subprocess.call(cmd, env=env, shell=True, cwd=build_dir)
+    _link_compile_commands(config, repo_path, build_dir)
+    return result, build_dir, [os.path.join(build_dir, 'CMakeCache.txt')]
 
 
 def secure_delete(path: str):
@@ -187,4 +193,5 @@ if __name__ == '__main__':
     parser.add_argument('repo_path', type=str, nargs='?', default=os.getcwd())
     parser.add_argument('--dryrun', action='store_true')
     args = parser.parse_args()
-    run_cmake(args.projects, args.repo_path, dryrun=args.dryrun)
+    result, _, _ = run(args.projects, args.repo_path, dry_run=args.dryrun)
+    sys.exit(result)

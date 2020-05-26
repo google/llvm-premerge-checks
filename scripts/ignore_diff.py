@@ -12,31 +12,38 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import argparse
+import logging
 import re
 import sys
 import pathspec
 
 
-# Takes an output of git diff and removes files ignored by patten specified by ignore file.
-def main():
-    # FIXME: use argparse for parsing commandline parameters
-    # Maybe FIXME: Replace path to file with flags for tidy/format, use paths relative to `__file__`
-    argv = sys.argv[1:]
-    if not argv:
-        print("Please provide a path to .ignore file.")
-        sys.exit(1)
-    ignore = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern,
-                                          open(argv[0], 'r').readlines())
+def remove_ignored(diff_lines, ignore_patterns_lines):
+    logging.debug(f'ignore pattern {ignore_patterns_lines}')
+    ignore = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern, ignore_patterns_lines)
     good = True
-    for line in sys.stdin:
-        match = re.search(r'^diff --git a/(.*) b/(.*)$', line)
+    result = []
+    for line in diff_lines:
+        match = re.search(r'^diff --git (.*) (.*)$', line)
         if match:
             good = not (ignore.match_file(match.group(1)) and ignore.match_file(match.group(2)))
         if not good:
+            logging.debug(f'skip {line.rstrip()}')
             continue
-        sys.stdout.write(line)
+        result.append(line)
+    return result
 
 
 if __name__ == "__main__":
-    main()
+    # Maybe FIXME: Replace this tool usage with flags for tidy/format, use paths relative to `__file__`
+    parser = argparse.ArgumentParser(description='Takes an output of git diff and removes files ignored by patten '
+                                                 'specified by ignore file')
+    parser.add_argument('ignore_config', default=None,
+                        help='path to file with patters of files to ignore')
+    parser.add_argument('--log-level', type=str, default='WARNING')
+    args = parser.parse_args()
+    logging.basicConfig(level=args.log_level)
+    filtered = remove_ignored([x for x in sys.stdin], open(args.ignore_config, 'r').readlines())
+    for x in filtered:
+        sys.stdout.write(x)

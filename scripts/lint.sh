@@ -39,12 +39,12 @@ fi
 # Let clang format apply patches --diff doesn't produces results in the format we want.
 git-clang-format "${COMMIT}"
 set +e
-git diff -U0 --exit-code | "${DIR}/ignore_diff.py" "${DIR}/clang-format.ignore" > "${OUTPUT_DIR}"/clang-format.patch
+git diff -U0 --exit-code --no-prefix | "${DIR}/ignore_diff.py" "${DIR}/clang-format.ignore" > "${OUTPUT_DIR}"/clang-format.patch
 set -e
 # Revert changes of git-clang-format.
 git checkout -- .
 
 # clang-tidy
-git diff -U0 "${COMMIT}" | "${DIR}/ignore_diff.py" "${DIR}/clang-tidy.ignore" | clang-tidy-diff -p1 -quiet | sed "/^[[:space:]]*$/d" > "${OUTPUT_DIR}"/clang-tidy.txt
+git diff -U0 --no-prefix "${COMMIT}" | "${DIR}/ignore_diff.py" "${DIR}/clang-tidy.ignore" | clang-tidy-diff -p0 -quiet | sed "/^[[:space:]]*$/d" > "${OUTPUT_DIR}"/clang-tidy.txt
 
 echo "linters completed ======================================"
