@@ -62,54 +62,49 @@ These are the steps to set up the build server on a clean infrastructure:
 
 ## Creating docker containers on Windows
 
-If you want to build/update/test docker container for Windows, you need to do this on a Windows machine. Here are the instructions to set up such a machine on GCP.
+If you want to build/update/test docker container for Windows, you need to do this on a Windows machine.
+
+**Note**: There is an existing *windows-development* machine that you can resume and use for development. Please stop it after use.
+
+Here are the instructions to set up such a machine on GCP.
 
 1. Pick a GCP Windows image with Desktop Support.
     * pick a "persistent SSD" as boot Disk. This is much faster
-    * Add a "local scratch SSD" and use it as you workspace. This is much faster.
+    * (optionally) add a "local scratch SSD" and use it as you workspace. This will make builds faster, but you **will not be able to stop** this instance and will have to kill and re-create it again.
+    * make sure that you give enough permissions in "Identity and API access" to be able to e.g. push new docker images to GCR. 
+    
 1. Format the local SSD partition and use it as workspace.
 1. install [Chocolately](https://chocolatey.org/docs/installation):
-```bat
-@"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
-```
-1. Install git: `choco install -y git`
+    ```powershell
+    iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
+    ```
+1. Install development tools: `choco install -y git googlechrome vscode`
+1. (optionally) If you want to be able to push changes to github, you need to set up your github SSH keys and user name:
+    ```powershell
+    ssh-keygen
+    git config --global user.name <your name>
+    git config --global user.email <your email>
+    ```
 1. Install [Docker Enterprise](https://docs.docker.com/ee/docker-ee/windows/docker-ee/) and reboot:
-```powershell
-Install-Module DockerMsftProvider -Force
-Install-Package Docker -ProviderName DockerMsftProvider -Force
-Restart-Computer
-```
-1. *optional:* install apps to help you work in the machine:
-```powershell
-choco install -y googlechrome vscode
-```
-1. Log out of the machine and log back in.
-1. Repeat until success:
-    1. Start "Docker Desktop" and let it install it's dependencies. 
-    Then reboot manually, when the error message pops up.
-    1. If you have trouble with the machine name: try to shorten it to 16 chars.
+    ```powershell
+    Install-Module DockerMsftProvider -Force
+    Install-Package Docker -ProviderName DockerMsftProvider -Force
+    Restart-Computer
+    ```
 1. Configure the Docker credentials for GCP:
-```powershell
-gcloud components install docker-credential-gcr
-docker-credential-gcr configure-docker
-```
+    ```powershell
+    gcloud init # set options according to ./k8s_config here
+    gcloud components install docker-credential-gcr
+    docker-credential-gcr configure-docker
+    ```
 1. To build and run the current agent run:
-```powershell
-git clone https://github.com/google/llvm-premerge-checks
-cd llvm-premerge-checks\containers
-powershell .\build_run.ps1 agent-windows-jenkins
-```
-1. If you want to be able to push changes to github, you need to set up your github SSH keys and user name:
-```powershell
-ssh-keygen
-git config --global user.name <your name>
-git config --global user.email <your email>
-```
-
-To push push a new container run in `containers`:
-```powershell
-powershell .\build_deploy.ps1 <container-folder>
-```
+    ```powershell
+    cd c:\
+    git clone https://github.com/google/llvm-premerge-checks
+    cd llvm-premerge-checks\containers
+    .\build_deploy.ps1 agent-windows-buildkite # or agent-windows-jenkins
+    c:\llvm-premerge-check\scripts\windows_agent_start_buildkite.ps1 # or windows_agent_start_jenkins.ps1
+    ```
 
 ## Spawning a new windows agent
 
@@ -118,20 +113,21 @@ To spawn a new windows agent:
 1. Go to the [GCP page](https://pantheon.corp.google.com/compute/instances?project=llvm-premerge-checks&instancessize=50) and pick a new number for the agent.
 1. Run `kubernetes/windows_agent_create.sh agent-windows-<number>`
 1. Go to the [GCP page](https://pantheon.corp.google.com/compute/instances?project=llvm-premerge-checks&instancessize=50) again 
-1. login to the new machine via RDP (you probably need to set the i).
-1. In the RDP session: run these commands in the CMD window to bootstrap the Windows machine:
-```powershell 
-Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/windows_agent_bootstrap.ps1' -OutFile windows_agent_bootstrap.ps1
-.\windows_agent_bootstrap.ps1
-```
-1. Ignore the pop-up to format the new disk.
-1. Wait for the machine to reboot, then copy the credendials from `windows-agent-2` in `c:\credentials` to the new machine to `c:\credentials`. You can do that by mounting a folder of your host machine via RDP into the Windows VMs.
-1: Copy the credientals to `C:\credentials` from another Windows agent.
-1. Run this script to start the container:
-```powershell 
-Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/windows_agent_start.ps1' -OutFile windows_agent_start.ps1
-.\windows_agent_start.ps1 jenkins
-```
+1. login to the new machine via RDP (you will need a RDP client, e.g. Chrome app).
+1. In the RDP session: run these commands in the CMD window under Administrator to bootstrap the Windows machine:
+    ```powershell 
+    Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/windows_agent_bootstrap.ps1' -OutFile windows_agent_bootstrap.ps1
+    ./windows_agent_bootstrap.ps1
+    ```
+    Ignore the pop-up to format the new disk andw wait for the machine to reboot.
+1. Create `c:\credentials` folder with the agent credentials:    
+    For *Buildkite* add file `buildkite-env.ps1`:
+    ```powershell
+    $Env:buildkiteAgentToken = "secret-token"
+    $Env:BUILDKITE_AGENT_TAGS = "queue=premerge;os=windows"
+    ```
+   For *Jenkins*: `build-agent-results_key.json` to access cloud storage copy from one of the existing machines.
+1. Start the container `C:\llvm-premerge-checks\scripts\windows_agent_start_[buildkite|jenkins].ps1 `
 
 ## Testing scripts locally
 
