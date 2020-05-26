@@ -133,7 +133,7 @@ class PhabTalk:
         artifactData = {'uri': '{}/{}'.format(results_url, file),
                         'ui.external': True,
                         'name': name}
-        self.create_artefact(phid, artifactKey, artifactType, artifactData)
+        self.create_artifact(phid, artifactKey, artifactType, artifactData)
         print('Created artifact "{}"'.format(name))
 
     def create_artifact(self, phid, artifact_key, artifact_type, artifact_data):
