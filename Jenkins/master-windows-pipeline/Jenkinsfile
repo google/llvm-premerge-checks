@@ -39,6 +39,7 @@ pipeline {
         LLVM_DIR = "${WORKSPACE}\\llvm-project"
         // enable sccache for this build. Comment out the line to disable it
         SCCACHE_DIR = "C:\\ws\\sccache"
+        RESULT_URL = "https://storage.googleapis.com/llvm-premerge-checks/results/${MY_BUILD_ID}"
     }
 
     stages {
@@ -81,7 +82,7 @@ pipeline {
     }
     post { 
         always { 
-            echo "Logs uploaded to https://pantheon.corp.google.com/storage/browser/llvm-premerge-checks/results/${MY_BUILD_ID}."
+            echo "Logs uploaded to ${RESUlT_URL}"
             dir("${env.RESULT_DIR}") {
                 // gather all result files in a folder, then upload everything to
                 // Google Cloud Storage

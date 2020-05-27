@@ -32,7 +32,7 @@ pipeline {
         PHABRICATOR_HOST = 'https://reviews.llvm.org'
         PHAB_LOG = "${WORKSPACE}/build/.phabricator-comment"
         MY_BUILD_ID = "${JOB_BASE_NAME}-${BUILD_NUMBER}"
-        RESULT_URL = "https://storage.cloud.google.com/llvm-premerge-checks/results/${MY_BUILD_ID}"
+        RESULT_URL = "https://storage.googleapis.com/llvm-premerge-checks/results/${MY_BUILD_ID}"
         SCRIPT_DIR = "${WORKSPACE}/llvm-premerge-checks/scripts"
         // store all build results here, will be uploaded to GCS later
         RESULT_DIR = "${WORKSPACE}\\results"
