@@ -90,11 +90,11 @@ spec:
           name: jenkins-home
         resources:
           limits:
-            cpu: 500m
-            memory: 1500Mi
+            cpu: "4"
+            memory: 4000Mi
           requests:
             cpu: 500m
-            memory: 1500Mi
+            memory: 2000Mi
       volumes:
       - name: jenkins-home
         gcePersistentDisk:
