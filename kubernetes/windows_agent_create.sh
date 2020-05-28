@@ -30,6 +30,6 @@ gcloud beta compute instances create "${NAME}" \
   --zone="${GCP_ZONE}" \
   --machine-type=n1-standard-16 \
   --local-ssd=device-name=local-ssd-0 \
-  --image=windows-server-2019-dc-v20191210 \
+  --image=windows-server-2019-dc-for-containers-v20200512 \
   --image-project=windows-cloud \
   --boot-disk-size=100GB
