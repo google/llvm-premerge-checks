@@ -37,6 +37,7 @@ debuginfo-tests/dexter/feature_tests/subtools/test
 clang/test
 libclc/test
 mlir/test
+mlir/examples/standalone
 openmp/libomptarget/test
 openmp/libomptarget/deviceRTLs/nvptx/test
 openmp/runtime/test
