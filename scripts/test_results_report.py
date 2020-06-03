@@ -14,23 +14,27 @@
 # limitations under the License.
 
 import argparse
-import os
 import logging
+import os
 from typing import Optional
 from lxml import etree
-from phabtalk.phabtalk import Report, CheckResult
+from phabtalk.phabtalk import Report, Step
 
 
-def run(test_results, report: Optional[Report]):
-    """Apply clang-format and return if no issues were found."""
+def run(working_dir: str, test_results: str, step: Optional[Step], report: Optional[Report]):
     if report is None:
         report = Report()  # For debugging.
-    if not os.path.exists(test_results):
-        logging.warning(f'{test_results} not found')
-        report.add_step('clang-format', CheckResult.UNKNOWN, 'test report is not found')
+    if step is None:
+        step = Step()
+    path = os.path.join(working_dir, test_results)
+    if not os.path.exists(path):
+        logging.warning(f'{path} is not found')
+        step.success = False
+        step.messages.append(f'test report "{path}" is not found')
         return
+    report.add_artifact(working_dir, test_results, 'test results')
     success = True
-    root_node = etree.parse(test_results)
+    root_node = etree.parse(path)
     for test_case in root_node.xpath('//testcase'):
         test_result = 'pass'
         if test_case.find('failure') is not None:
@@ -50,21 +54,21 @@ def run(test_results, report: Optional[Report]):
             }
             report.unit.append(test_result)
 
-    msg = f'{report.test_stats["pass"]} tests passed, {report.test_stats["fail"]} failed and' \
+    msg = f'{report.test_stats["pass"]} tests passed, {report.test_stats["fail"]} failed and ' \
           f'{report.test_stats["skip"]} were skipped.\n'
-    if success:
-        report.add_step('test results', CheckResult.SUCCESS, msg)
-    else:
+    if not success:
+        step.success = False
         for test_case in report.unit:
             if test_case['result'] == 'fail':
                 msg += f'{test_case["namespace"]}/{test_case["name"]}\n'
-        report.add_step('unit tests', CheckResult.FAILURE, msg)
+    logging.debug(f'report: {report}')
+    logging.debug(f'step: {step}')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Processes results from xml report')
-    parser.add_argument('test_report', default='build/test-results.xml')
+    parser.add_argument('test-report', default='build/test-results.xml')
     parser.add_argument('--log-level', type=str, default='INFO')
     args = parser.parse_args()
     logging.basicConfig(level=args.log_level)
-    run(args.test_report, None)
+    run(os.getcwd(), args.test_report, None, None)

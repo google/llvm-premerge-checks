@@ -17,7 +17,8 @@
 
 param(
     [string]$version = "latest",
-    [switch]$testing = $false
+    [switch]$testing = $false,
+    [string]$workdir = "D:\"
 )
 
 $NAME="agent-windows-buildkite"
@@ -28,26 +29,21 @@ Write-Output "y`n" | gcloud auth configure-docker
 
 Write-Output "Pulling new image..."
 docker pull ${IMAGE}
-
 Write-Output "Stopping old container..."
 docker stop ${NAME}
 docker rm ${NAME}
-
 Write-Output "Starting container..."
 if (${testing}) {
     docker run -it `
-    -v D:\:C:\ws `
+    -v ${workdir}:C:\ws `
     -v C:\credentials:C:\credentials `
-    -e BUILDKITE_AGENT_NAME=$env:computername `
     -e BUILDKITE_BUILD_PATH=C:\ws `
     --restart unless-stopped `
-    --name ${NAME} `
     ${IMAGE} powershell
 } else {
     docker run -d `
-    -v D:\:C:\ws `
+    -v ${workdir}:C:\ws `
     -v C:\credentials:C:\credentials `
-    -e BUILDKITE_AGENT_NAME=$env:computername `
     -e BUILDKITE_BUILD_PATH=C:\ws `
     --restart unless-stopped `
     --name ${NAME} `
