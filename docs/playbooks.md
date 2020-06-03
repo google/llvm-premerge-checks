@@ -113,21 +113,34 @@ To spawn a new windows agent:
 1. Go to the [GCP page](https://pantheon.corp.google.com/compute/instances?project=llvm-premerge-checks&instancessize=50) and pick a new number for the agent.
 1. Run `kubernetes/windows_agent_create.sh agent-windows-<number>`
 1. Go to the [GCP page](https://pantheon.corp.google.com/compute/instances?project=llvm-premerge-checks&instancessize=50) again 
-1. login to the new machine via RDP (you will need a RDP client, e.g. Chrome app).
+1. Login to the new machine via RDP (you will need a RDP client, e.g. Chrome app).
 1. In the RDP session: run these commands in the CMD window under Administrator to bootstrap the Windows machine:
     ```powershell 
     Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/windows_agent_bootstrap.ps1' -OutFile windows_agent_bootstrap.ps1
     ./windows_agent_bootstrap.ps1
     ```
     Ignore the pop-up to format the new disk andw wait for the machine to reboot.
-1. Create `c:\credentials` folder with the agent credentials:    
-    For *Buildkite* add file `buildkite-env.ps1`:
+    
+### Buildkite
+ 
+1. Create `c:\credentials` folder with file `buildkite-env.ps1`:
     ```powershell
     $Env:buildkiteAgentToken = "secret-token"
-    $Env:BUILDKITE_AGENT_TAGS = "queue=premerge;os=windows"
-    ```
-   For *Jenkins*: `build-agent-results_key.json` to access cloud storage copy from one of the existing machines.
-1. Start the container `C:\llvm-premerge-checks\scripts\windows_agent_start_[buildkite|jenkins].ps1 `
+    $Env:BUILDKITE_AGENT_TAGS = "queue=premerge,os=windows"
+    $Env:CONDUIT_TOKEN = "conduit-api-token"
+    ```   
+1. Run
+   ```powershell
+   C:\llvm-premerge-checks\scripts\windows_agent_start_buildkite.ps1 [-workdir D:/] [-testing] [-version latest]
+   ```
+   
+### Jenkins
+   1. Create `c:\credentials` folder with `build-agent-results_key.json` to access cloud storage copy from one of the existing machines.
+   1. Run
+   ```powershell
+   git clone https://github.com/google/llvm-premerge-checks.git "c:\llvm-premerge-checks"
+   C:\llvm-premerge-checks\scripts\windows_agent_start_buildkite.ps1 [-testing] [-version latest]
+   ```
 
 ## Testing scripts locally
 

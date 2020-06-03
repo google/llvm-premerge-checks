@@ -18,7 +18,7 @@ metadata:
   name: premerge-debian
   namespace: buildkite
 spec:
-  replicas: 1
+  replicas: 2
   template:
     metadata:
       labels:
@@ -43,7 +43,7 @@ spec:
         - name: BUILDKITE_AGENT_TOKEN
           valueFrom:
             secretKeyRef:
-              name: agent-token
+              name: buildkite-agent-token
               key: token
         - name: BUILDKITE_AGENT_TAGS
           value: "queue=premerge,os=linux"

@@ -28,7 +28,7 @@ from typing import Optional, List, Dict
 import pathspec
 from lxml import etree
 from phabricator import Phabricator
-from enum import Enum
+from enum import IntEnum
 
 
 class PhabTalk:
@@ -81,7 +81,7 @@ class PhabTalk:
                                               transactions=transactions)
         print('Uploaded comment to Revision D{}:{}'.format(revision, text))
 
-    def update_build_status(self, diff_id: str, phid: str, working: bool, success: bool, lint: {}, unit: []):
+    def update_build_status(self, diff_id: str, phid: str, working: bool, success: bool, lint: {} = {}, unit: [] = []):
         """Submit collected report to Phabricator.
         """
 
@@ -193,14 +193,22 @@ def _parse_patch(patch) -> List[Dict[str, str]]:
     return entries
 
 
-class CheckResult(Enum):
-    UNKNOWN = 0
-    SUCCESS = 1
-    FAILURE = 2
+class Step:
+    def __init__(self):
+        self.name = ''
+        self.success = True
+        self.duration = 0.0
+        self.messages = []
+
+    def set_status_from_exit_code(self, exit_code: int):
+        if exit_code != 0:
+            self.success = False
 
 
 class Report:
     def __init__(self):
+        self.os = ''
+        self.name = ''
         self.comments = []
         self.success = True
         self.working = False
@@ -211,7 +219,7 @@ class Report:
             'fail': 0,
             'skip': 0
         }  # type: Dict[str, int]
-        self.steps = []  # type: List
+        self.steps = []  # type: List[Step]
         self.artifacts = []  # type: List
 
     def __str__(self):
@@ -222,13 +230,6 @@ class Report:
         if key not in self.lint:
             self.lint[key] = []
         self.lint[key].append(m)
-
-    def add_step(self, title: str, result: CheckResult, message: str):
-        self.steps.append({
-            'title': title,
-            'result': result,
-            'message': message,
-        })
 
     def add_artifact(self, dir: str, file: str, name: str):
         self.artifacts.append({'dir': dir, 'file': file, 'name': name})

@@ -22,11 +22,15 @@ from typing import Optional
 import pathspec
 
 import ignore_diff
-from phabtalk.phabtalk import Report, CheckResult
+from phabtalk.phabtalk import Report, Step
 
 
-def run(base_commit, ignore_config, report: Optional[Report]):
+def run(base_commit, ignore_config, step: Optional[Step], report: Optional[Report]):
     """Apply clang-format and return if no issues were found."""
+    if report is None:
+        report = Report()  # For debugging.
+    if step is None:
+        step = Step()  # For debugging.
     r = subprocess.run(f'git diff -U0 --no-prefix {base_commit}', shell=True, capture_output=True)
     logging.debug(f'git diff {r}')
     diff = r.stdout.decode()
@@ -43,8 +47,6 @@ def run(base_commit, ignore_config, report: Optional[Report]):
     logging.info(f'clang-tidy input: {a}')
     out = p.communicate(input=a.encode())[0].decode()
     logging.debug(f'clang-tidy-diff {p}: {out}')
-    if report is None:
-        report = Report()  # For debugging.
     # Typical finding looks like:
     # [cwd/]clang/include/clang/AST/DeclCXX.h:3058:20: error: ... [clang-diagnostic-error]
     pattern = '^([^:]*):(\\d+):(\\d+): (.*): (.*)'
@@ -94,16 +96,14 @@ def run(base_commit, ignore_config, report: Optional[Report]):
         with open(p, 'w') as f:
             f.write(out)
         report.add_artifact(os.getcwd(), p, 'clang-tidy')
-    if errors_count + warn_count == 0:
-        report.add_step('clang-tidy', CheckResult.SUCCESS, message='')
-    else:
-        report.add_step(
-            'clang-tidy',
-            CheckResult.FAILURE,
+    if errors_count + warn_count != 0:
+        step.success = False
+        step.messages.append(
             f'clang-tidy found {errors_count} errors and {warn_count} warnings. {inline_comments} of them are added '
             f'as review comments. See'
             f'https://github.com/google/llvm-premerge-checks/blob/master/docs/clang_tidy.md#review-comments.')
     logging.debug(f'report: {report}')
+    logging.debug(f'step: {step}')
 
 
 if __name__ == '__main__':
@@ -114,4 +114,4 @@ if __name__ == '__main__':
     parser.add_argument('--log-level', type=str, default='INFO')
     args = parser.parse_args()
     logging.basicConfig(level=args.log_level, format='%(levelname)-7s %(message)s')
-    run(args.base, args.ignore_config, None)
+    run(args.base, args.ignore_config, None, None)

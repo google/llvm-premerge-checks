@@ -14,15 +14,14 @@
 # limitations under the License.
 
 import argparse
+import logging
 import os
 import subprocess
-import logging
-
+from typing import Tuple, Optional
 import pathspec
 import unidiff
 
-from typing import Tuple, Optional
-from phabtalk.phabtalk import Report, CheckResult
+from phabtalk.phabtalk import Report, Step
 
 
 def get_diff(base_commit) -> Tuple[bool, str]:
@@ -40,13 +39,15 @@ def get_diff(base_commit) -> Tuple[bool, str]:
     return True, diff_run.stdout.decode()
 
 
-def run(base_commit, ignore_config, report: Optional[Report]):
+def run(base_commit, ignore_config, step: Optional[Step], report: Optional[Report]):
     """Apply clang-format and return if no issues were found."""
     if report is None:
         report = Report()  # For debugging.
+    if step is None:
+        step = Step()  # For debugging.
     r, patch = get_diff(base_commit)
     if not r:
-        report.add_step('clang-format', CheckResult.FAILURE, '')
+        step.success = False
         return
     add_artifact = False
     patches = unidiff.PatchSet(patch)
@@ -88,14 +89,12 @@ def run(base_commit, ignore_config, report: Optional[Report]):
         with open(patch_file, 'w') as f:
             f.write(patch)
         report.add_artifact(os.getcwd(), patch_file, 'clang-format')
-    if success:
-        report.add_step('clang-format', CheckResult.SUCCESS, message='')
-    else:
-        report.add_step(
-            'clang-format',
-            CheckResult.FAILURE,
+    if not success:
+        step.success = False
+        step.messages.append(
             'Please format your changes with clang-format by running `git-clang-format HEAD^` or applying patch.')
     logging.debug(f'report: {report}')
+    logging.debug(f'step: {step}')
 
 
 if __name__ == '__main__':

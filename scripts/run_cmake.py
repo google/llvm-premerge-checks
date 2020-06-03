@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import argparse
+import logging
 from enum import Enum
 from git import Repo
 import os
@@ -114,12 +115,14 @@ def _create_args(config: Configuration, llvm_enable_projects: str) -> List[str]:
 
     # enable sccache
     if 'SCCACHE_DIR' in os.environ:
+        logging.info("using sccache")
         arguments.extend([
             '-DCMAKE_C_COMPILER_LAUNCHER=sccache',
             '-DCMAKE_CXX_COMPILER_LAUNCHER=sccache',
         ])
     # enable ccache if the path is set in the environment
     elif 'CCACHE_PATH' in os.environ:
+        logging.info("using ccache")
         arguments.extend([
             '-D LLVM_CCACHE_BUILD=ON',
             '-D LLVM_CCACHE_DIR={}'.format(os.environ['CCACHE_PATH']),
