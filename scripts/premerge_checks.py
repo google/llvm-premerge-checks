@@ -136,7 +136,7 @@ if __name__ == '__main__':
         for a in report.artifacts:
             url = upload_file(a['dir'], a['file'])
             if url is not None:
-                maybe_add_url_artifact(phabtalk, ph_target_phid, url, f'{a["name"]} (${step_key})')
+                maybe_add_url_artifact(phabtalk, ph_target_phid, url, f'{a["name"]} ({step_key})')
     else:
         logging.warning('No phabricator phid is specified. Will not update the build status in Phabricator')
     with open(report_path, 'w') as f:
