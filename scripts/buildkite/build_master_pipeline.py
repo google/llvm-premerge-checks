@@ -28,7 +28,8 @@ if __name__ == '__main__':
             'export SRC=${BUILDKITE_BUILD_PATH}/llvm-premerge-checks',
             'rm -rf ${SRC}',
             'git clone --depth 1 --branch ${scripts_branch} https://github.com/google/llvm-premerge-checks.git ${SRC}',
-            '${SRC}/scripts/premerge_checks.py --check-clang-format --check-clang-tidy --projects=default',
+            '${SRC}/scripts/premerge_checks.py --check-clang-format --check-clang-tidy '
+            '--projects="clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;flang"',
         ],
         'artifact_paths': ['artifacts/**/*', '*_result.json'],
         'agents': {'queue': queue, 'os': 'linux'}

@@ -88,7 +88,10 @@ if __name__ == '__main__':
     parser.add_argument('--log-level', type=str, default='WARNING')
     parser.add_argument('--check-clang-format', action='store_true')
     parser.add_argument('--check-clang-tidy', action='store_true')
-    parser.add_argument('--projects', type=str, default='detect',  choices=['detect', 'default'])
+    parser.add_argument('--projects', type=str, default='detect',
+                        help="Projects to select, either a list or projects like 'clang;libc', or "
+                             "'detect' to automatically infer proejcts from the diff, or "
+                             "'default' to add all enabled projects")
     args = parser.parse_args()
     logging.basicConfig(level=args.log_level, format='%(levelname)-7s %(message)s')
     build_dir = ''
