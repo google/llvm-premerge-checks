@@ -67,9 +67,9 @@ def run_step(name: str, report: Report, thunk: Callable[[Step, Report], None]) -
     return step
 
 
-def cmake_report(step: Step, _: Report):
+def cmake_report(projects: str, step: Step, _: Report):
     global build_dir
-    cmake_result, build_dir, cmake_artifacts = run_cmake.run('detect', os.getcwd())
+    cmake_result, build_dir, cmake_artifacts = run_cmake.run(projects, os.getcwd())
     for file in cmake_artifacts:
         if os.path.exists(file):
             shutil.copy2(file, artifacts_dir)
@@ -88,6 +88,7 @@ if __name__ == '__main__':
     parser.add_argument('--log-level', type=str, default='WARNING')
     parser.add_argument('--check-clang-format', action='store_true')
     parser.add_argument('--check-clang-tidy', action='store_true')
+    parser.add_argument('--projects', type=str, default='detect',  choices=['detect', 'default'])
     args = parser.parse_args()
     logging.basicConfig(level=args.log_level, format='%(levelname)-7s %(message)s')
     build_dir = ''
@@ -104,7 +105,7 @@ if __name__ == '__main__':
     with open(report_path, 'w') as f:
         json.dump(report.__dict__, f, default=as_dict)
     report.success = True
-    cmake = run_step('cmake', report, cmake_report)
+    cmake = run_step('cmake', report, lambda s, r: cmake_report(args.projects, s, r))
     if cmake.success:
         ninja_all = run_step('ninja all', report, ninja_all_report)
         if ninja_all.success:

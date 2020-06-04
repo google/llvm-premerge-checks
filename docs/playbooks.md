@@ -119,7 +119,7 @@ To spawn a new windows agent:
     Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/windows_agent_bootstrap.ps1' -OutFile windows_agent_bootstrap.ps1
     ./windows_agent_bootstrap.ps1
     ```
-    Ignore the pop-up to format the new disk andw wait for the machine to reboot.
+    Ignore the pop-up to format the new disk and wait for the machine to reboot.
     
 ### Buildkite
  
@@ -131,6 +131,7 @@ To spawn a new windows agent:
     ```   
 1. Run
    ```powershell
+   git clone https://github.com/google/llvm-premerge-checks.git C:\llvm-premerge-checks
    C:\llvm-premerge-checks\scripts\windows_agent_start_buildkite.ps1 [-workdir D:/] [-testing] [-version latest]
    ```
    
