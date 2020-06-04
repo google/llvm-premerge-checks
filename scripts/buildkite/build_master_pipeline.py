@@ -28,11 +28,6 @@ if __name__ == '__main__':
             'export SRC=${BUILDKITE_BUILD_PATH}/llvm-premerge-checks',
             'rm -rf ${SRC}',
             'git clone --depth 1 --branch ${scripts_branch} https://github.com/google/llvm-premerge-checks.git ${SRC}',
-            # Add link in review to the build.
-            '${SRC}/scripts/phabtalk/add_url_artifact.py '
-            '--phid="$ph_target_phid" '
-            '--url="$BUILDKITE_BUILD_URL" '
-            '--name="Buildkite build"',
             '${SRC}/scripts/premerge_checks.py --check-clang-format --check-clang-tidy --projects=default',
         ],
         'artifact_paths': ['artifacts/**/*', '*_result.json'],
