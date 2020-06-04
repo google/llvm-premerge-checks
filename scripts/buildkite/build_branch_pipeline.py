@@ -42,7 +42,7 @@ if __name__ == '__main__':
         'label': ':windows: build and test windows',
         'key': 'windows',
         'commands': [
-            'sccache --show-stats',
+            'sccache --zero-stats',
             'set SRC=%BUILDKITE_BUILD_PATH%/llvm-premerge-checks',
             'rm -rf %SRC%',
             'git clone --depth 1 --branch %scripts_branch% https://github.com/google/llvm-premerge-checks.git %SRC%',

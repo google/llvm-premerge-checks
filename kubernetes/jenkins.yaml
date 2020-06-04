@@ -154,7 +154,7 @@ metadata:
   name: agent-debian-testing-ssd
   namespace: jenkins
 spec:
-  replicas: 4
+  replicas: 2
   template:
     metadata:
       labels:
