@@ -34,7 +34,7 @@ def build():
             'commit': 'HEAD',
             'branch':  branch,
             'env': build_env,
-            'message': f'Pre-merge checks for D{build_env["ph_buildable_revision"]}',
+            'message': f'D{build_env["ph_buildable_revision"]}',
         }
         app.logger.info('buildkite request: %s', build_request)
         headers = {'Authorization': f'Bearer {buildkite_api_token}'}
