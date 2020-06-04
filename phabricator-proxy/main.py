@@ -23,22 +23,18 @@ def build():
         app.logger.info('form: %s', flask.request.form)
         url = urlparse(flask.request.url)
         params = parse_qs(url.query)
-        metadata = {}
         build_env = {}
         for k, v in params.items():
             if len(v) == 1:
-                metadata[k] = v[0]
                 build_env['ph_' + k] = v[0]
-            else:
-                metadata[k] = v
         branch = 'master'
-        if 'scripts_branch' in metadata:
-            branch = metadata['scripts_branch']
+        if 'ph_scripts_branch' in build_env:
+            branch = build_env['ph_scripts_branch']
         build_request = {
             'commit': 'HEAD',
             'branch':  branch,
-            'meta_data': metadata,
             'env': build_env,
+            'message': f'Pre-merge checks for D{build_env["ph_buildable_revision"]}',
         }
         app.logger.info('buildkite request: %s', build_request)
         headers = {'Authorization': f'Bearer {buildkite_api_token}'}
