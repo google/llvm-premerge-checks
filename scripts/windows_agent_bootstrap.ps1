@@ -48,7 +48,7 @@ sc.exe config docker start=delayed-auto
 choco install -y gcloudsdk --ignore-checksums
 
 # exclude drive d from Virus scans, to get better performance
-Add-MpPreference -ExclusionPath “D:\”
+Add-MpPreference -ExclusionPath "D:\"
 
 # clone scripts repo (this one)
 git clone https://github.com/google/llvm-premerge-checks.git "c:\llvm-premerge-checks"
