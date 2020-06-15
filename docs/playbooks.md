@@ -143,6 +143,22 @@ To spawn a new windows agent:
    C:\llvm-premerge-checks\scripts\windows_agent_start_buildkite.ps1 [-testing] [-version latest]
    ```
 
+## Buildkite monitoring
+
+VM instance `buildkite-monitoring` exposes Buildkite metrics to GCP.
+To setup a new instance:
+1. Create as small linux VM with full access to *Stackdriver Monitoring API*.
+2. Follow instructions to [install moninorign agent](https://cloud.google.com/monitoring/agent/install-agent) and [enable statsd plugin](https://cloud.google.com/monitoring/agent/plugins/statsd).
+3. Download recent release of [buildkite-agent-metrics](https://github.com/buildkite/buildkite-agent-metrics/releases).
+4. Run in SSH session:
+```bash
+chmod +x buildkite-agent-metrics-linux-amd64
+nohup ./buildkite-agent-metrics-linux-amd64 -token XXXX -interval 30s -backend statsd &
+```
+.
+
+Metrics are exported as "custom/statsd/gauge".
+
 ## Testing scripts locally
 
 Build and run agent docker image `sudo ./containers/build_run.sh agent-debian-testing-ssd /bin/bash`.
