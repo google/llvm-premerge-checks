@@ -126,7 +126,7 @@ To spawn a new windows agent:
 1. Create `c:\credentials` folder with file `buildkite-env.ps1`:
     ```powershell
     $Env:buildkiteAgentToken = "secret-token"
-    $Env:BUILDKITE_AGENT_TAGS = "queue=premerge,os=windows"
+    $Env:BUILDKITE_AGENT_TAGS = "queue=windows"
     $Env:CONDUIT_TOKEN = "conduit-api-token"
     ```   
 1. Run

@@ -17,14 +17,14 @@ import os
 import yaml
 
 if __name__ == '__main__':
-    queue = os.getenv("BUILDKITE_AGENT_META_DATA_QUEUE", "default")
+    queue_prefix = os.getenv("BUILDKITE_AGENT_META_DATA_QUEUE_PREFIX", "")
     diff_id = os.getenv("ph_buildable_diff")
     steps = []
     create_branch_step = {
             'label': 'create branch',
             'key': 'create-branch',
             'commands': ['scripts/buildkite/apply_patch.sh'],
-            'agents': {'queue': queue, 'os': 'linux'}
+            'agents': {'queue': f'{queue_prefix}linux'}
     }
     build_linux_step = {
             'trigger': 'premerge-checks',

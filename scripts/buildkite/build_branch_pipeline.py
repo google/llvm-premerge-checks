@@ -18,7 +18,7 @@ import yaml
 
 if __name__ == '__main__':
     script_branch = os.getenv("scripts_branch", "master")
-    queue = os.getenv("BUILDKITE_AGENT_META_DATA_QUEUE", "default")
+    queue_prefix = os.getenv("BUILDKITE_AGENT_META_DATA_QUEUE_PREFIX", "")
     diff_id = os.getenv("ph_buildable_diff", "")
     steps = []
     linux_buld_step = {
@@ -36,7 +36,7 @@ if __name__ == '__main__':
             '${SRC}/scripts/premerge_checks.py --check-clang-format --check-clang-tidy',
         ],
         'artifact_paths': ['artifacts/**/*', '*_result.json'],
-        'agents': {'queue': queue, 'os': 'linux'}
+        'agents': {'queue': f'{queue_prefix}linux'}
     }
     windows_buld_step = {
         'label': ':windows: build and test windows',
@@ -58,7 +58,7 @@ if __name__ == '__main__':
             '}',
         ],
         'artifact_paths': ['artifacts/**/*', '*_result.json'],
-        'agents': {'queue': queue, 'os': 'windows'},
+        'agents': {'queue': f'{queue_prefix}windows'}
     }
     steps.append(linux_buld_step)
     steps.append(windows_buld_step)
@@ -75,7 +75,7 @@ if __name__ == '__main__':
         ],
         'allow_dependency_failure': True,
         'artifact_paths': ['artifacts/**/*'],
-        'agents': {'queue': queue, 'os': 'linux'}
+        'agents': {'queue': f'{queue_prefix}linux'}
     }
     steps.append(report_step)
     print(yaml.dump({'steps': steps}))
