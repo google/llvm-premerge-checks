@@ -38,14 +38,12 @@ if (${testing}) {
     -v ${workdir}:C:\ws `
     -v C:\credentials:C:\credentials `
     -e BUILDKITE_BUILD_PATH=C:\ws `
-    --restart unless-stopped `
     ${IMAGE} powershell
 } else {
     docker run -d `
     -v ${workdir}:C:\ws `
     -v C:\credentials:C:\credentials `
     -e BUILDKITE_BUILD_PATH=C:\ws `
-    --restart unless-stopped `
     --name ${NAME} `
     ${IMAGE}
 }

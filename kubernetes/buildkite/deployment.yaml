@@ -18,7 +18,7 @@ metadata:
   name: premerge-debian
   namespace: buildkite
 spec:
-  replicas: 4
+  replicas: 5
   template:
     metadata:
       labels:
