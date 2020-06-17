@@ -19,7 +19,7 @@
 set -uo pipefail
 
 scripts/phabtalk/apply_patch2.py $ph_buildable_diff \
-  --path "${BUILDKITE_BUILD_PATH}"/llvm-project \
+  --path "${BUILDKITE_BUILD_PATH}"/llvm-project-fork \
   --token $CONDUIT_TOKEN \
   --url $PHABRICATOR_HOST \
   --comment-file apply_patch.txt \
