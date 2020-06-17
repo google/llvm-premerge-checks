@@ -17,7 +17,7 @@ import os
 import yaml
 
 if __name__ == '__main__':
-    queue_prefix = os.getenv("BUILDKITE_AGENT_META_DATA_QUEUE_PREFIX", "")
+    queue_prefix = os.getenv("ph_queue_prefix", "")
     diff_id = os.getenv("ph_buildable_diff")
     steps = []
     create_branch_step = {
