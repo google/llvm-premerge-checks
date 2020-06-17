@@ -126,10 +126,11 @@ To spawn a new windows agent:
 1. Create `c:\credentials` folder with file `buildkite-env.ps1`:
     ```powershell
     $Env:buildkiteAgentToken = "secret-token"
-    $Env:BUILDKITE_AGENT_NAME = "buildkite-windows-#"
+    $Env:BUILDKITE_AGENT_NAME = "w#"
     $Env:BUILDKITE_AGENT_TAGS = "queue=windows"
     $Env:CONDUIT_TOKEN = "conduit-api-token"
-    ```   
+    ```
+   Pleas mind the length of the agent name as it will be in path and might cause some tests to fail due to 260 character limit.
 1. Run
    ```powershell
    git clone https://github.com/google/llvm-premerge-checks.git C:\llvm-premerge-checks
