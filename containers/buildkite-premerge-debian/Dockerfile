@@ -9,4 +9,5 @@ RUN echo 'install buildkite' ;\
     apt-get clean;
 COPY *.sh /usr/local/bin/
 RUN chmod og+rx /usr/local/bin/*.sh
+COPY --chown=buildkite-agent:buildkite-agent pre-checkout /etc/buildkite-agent/hooks
 CMD ["start_agent.sh"]
