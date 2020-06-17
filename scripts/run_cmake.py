@@ -150,7 +150,7 @@ def run(projects: str, repo_path: str, config_file_path: str = None, *, dry_run:
 
     env = _create_env(config)
     llvm_enable_projects = _select_projects(config, projects, repo_path)
-    print('Enabled projects: {}'.format(llvm_enable_projects))
+    print('Enabled projects: {}'.format(llvm_enable_projects), flush=True)
     arguments = _create_args(config, llvm_enable_projects)
     cmd = 'cmake ' + ' '.join(arguments)
 

@@ -41,16 +41,16 @@ if __name__ == '__main__':
     args = parser.parse_args()
     logging.basicConfig(level=args.log_level, format='%(levelname)-7s %(message)s')
 
-    print(f'Branch {os.getenv("BUILDKITE_BRANCH")} at {os.getenv("BUILDKITE_REPO")}')
+    print(f'Branch {os.getenv("BUILDKITE_BRANCH")} at {os.getenv("BUILDKITE_REPO")}', flush=True)
     ph_buildable_diff = os.getenv('ph_buildable_diff')
     if ph_buildable_diff is not None:
         url = f'https://reviews.llvm.org/D{os.getenv("ph_buildable_revision")}?id={ph_buildable_diff}'
-        print(f'Review: {format_url(url)}')
+        print(f'Review: {format_url(url)}', flush=True)
     if os.getenv('BUILDKITE_TRIGGERED_FROM_BUILD_NUMBER') is not None:
         url = f'https://buildkite.com/llvm-project/' \
               f'{os.getenv("BUILDKITE_TRIGGERED_FROM_BUILD_PIPELINE_SLUG")}/' \
               f'builds/{os.getenv("BUILDKITE_TRIGGERED_FROM_BUILD_NUMBER")}'
-        print(f'Triggered from build {format_url(url)}')
+        print(f'Triggered from build {format_url(url)}', flush=True)
 
     success = True
     for path in glob.glob("*_result.json"):
@@ -61,11 +61,11 @@ if __name__ == '__main__':
             success = success and report['success']
     phabtalk = PhabTalk(os.getenv('CONDUIT_TOKEN'), 'https://reviews.llvm.org/api/', False)
     build_url = f'https://reviews.llvm.org/harbormaster/build/{os.getenv("ph_build_id")}'
-    print(f'Reporting results to Phabricator build {format_url(build_url)}')
+    print(f'Reporting results to Phabricator build {format_url(build_url)}', flush=True)
     ph_buildable_diff = os.getenv('ph_buildable_diff')
     ph_target_phid = os.getenv('ph_target_phid')
     phabtalk.update_build_status(ph_buildable_diff, ph_target_phid, False, success)
     bug_url = f'https://github.com/google/llvm-premerge-checks/issues/new?assignees=&labels=bug' \
               f'&template=bug_report.md&title=buildkite build {os.getenv("BUILDKITE_PIPELINE_SLUG")} ' \
               f'{os.getenv("BUILDKITE_BUILD_NUMBER")}'
-    print(f'{format_url(bug_url, "report issue")}')
+    print(f'{format_url(bug_url, "report issue")}', flush=True)

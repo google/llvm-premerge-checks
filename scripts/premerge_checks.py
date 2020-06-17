@@ -34,7 +34,7 @@ from phabtalk.phabtalk import Report, PhabTalk, Step
 
 
 def ninja_all_report(step: Step, _: Report):
-    print('Full will be available in Artifacts "ninja-all.log"')
+    print('Full will be available in Artifacts "ninja-all.log"', flush=True)
     r = subprocess.run(f'ninja all | '
                        f'tee {artifacts_dir}/ninja-all.log | '
                        f'grep -vE "\\[.*] (Building|Linking|Copying|Generating|Creating)"',
@@ -44,7 +44,7 @@ def ninja_all_report(step: Step, _: Report):
 
 
 def ninja_check_all_report(step: Step, _: Report):
-    print('Full will be available in Artifacts "ninja-check-all.log"')
+    print('Full will be available in Artifacts "ninja-check-all.log"', flush=True)
     r = subprocess.run(f'ninja check-all | tee {artifacts_dir}/ninja-check-all.log | '
                        f'grep -vE "^\\[.*] (Building|Linking)" | '
                        f'grep -vE "^(PASS|XFAIL|UNSUPPORTED):"', shell=True, cwd=build_dir)
@@ -55,14 +55,14 @@ def ninja_check_all_report(step: Step, _: Report):
 
 def run_step(name: str, report: Report, thunk: Callable[[Step, Report], None]) -> Step:
     start = time.time()
-    print(f'---  {name}')  # New section in Buildkite log.
+    print(f'---  {name}', flush=True)  # New section in Buildkite log.
     step = Step()
     step.name = name
     thunk(step, report)
     step.duration = time.time() - start
     # Expand section if it failed.
     if not step.success:
-        print('^^^ +++')
+        print('^^^ +++', flush=True)
     report.steps.append(step)
     return step
 
@@ -146,5 +146,5 @@ if __name__ == '__main__':
     with open(report_path, 'w') as f:
         json.dump(report.__dict__, f, default=as_dict)
     if not report.success:
-        print('Build completed with failures')
+        print('Build completed with failures', flush=True)
         exit(1)
