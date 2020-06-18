@@ -33,34 +33,40 @@ def run(working_dir: str, test_results: str, step: Optional[Step], report: Optio
         step.messages.append(f'test report "{path}" is not found')
         return
     report.add_artifact(working_dir, test_results, 'test results')
-    success = True
-    root_node = etree.parse(path)
-    for test_case in root_node.xpath('//testcase'):
-        test_result = 'pass'
-        if test_case.find('failure') is not None:
-            test_result = 'fail'
-        if test_case.find('skipped') is not None:
-            test_result = 'skip'
-        report.test_stats[test_result] += 1
-        if test_result == 'fail':
-            success = False
-            failure = test_case.find('failure')
-            test_result = {
-                'name': test_case.attrib['name'],
-                'namespace': test_case.attrib['classname'],
-                'result': test_result,
-                'duration': float(test_case.attrib['time']),
-                'details': failure.text
-            }
-            report.unit.append(test_result)
+    try:
+        success = True
+        root_node = etree.parse(path)
+        for test_case in root_node.xpath('//testcase'):
+            test_result = 'pass'
+            if test_case.find('failure') is not None:
+                test_result = 'fail'
+            if test_case.find('skipped') is not None:
+                test_result = 'skip'
+            report.test_stats[test_result] += 1
+            if test_result == 'fail':
+                success = False
+                failure = test_case.find('failure')
+                test_result = {
+                    'name': test_case.attrib['name'],
+                    'namespace': test_case.attrib['classname'],
+                    'result': test_result,
+                    'duration': float(test_case.attrib['time']),
+                    'details': failure.text
+                }
+                report.unit.append(test_result)
 
-    msg = f'{report.test_stats["pass"]} tests passed, {report.test_stats["fail"]} failed and ' \
-          f'{report.test_stats["skip"]} were skipped.\n'
-    if not success:
+        msg = f'{report.test_stats["pass"]} tests passed, {report.test_stats["fail"]} failed and ' \
+              f'{report.test_stats["skip"]} were skipped.\n'
+        if not success:
+            step.success = False
+            for test_case in report.unit:
+                if test_case['result'] == 'fail':
+                    msg += f'{test_case["namespace"]}/{test_case["name"]}\n'
+    except Exception as e:
+        logging.error(e)
+        step.messages.append('Parsing of test results failed')
         step.success = False
-        for test_case in report.unit:
-            if test_case['result'] == 'fail':
-                msg += f'{test_case["namespace"]}/{test_case["name"]}\n'
+
     logging.debug(f'report: {report}')
     logging.debug(f'step: {step}')
 

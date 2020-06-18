@@ -25,6 +25,7 @@ if __name__ == '__main__':
         'label': ':linux: build and test linux',
         'key': 'linux',
         'commands': [
+            'dpkg -l >> artifacts/packages.txt',
             'export SRC=${BUILDKITE_BUILD_PATH}/llvm-premerge-checks',
             'rm -rf ${SRC}',
             'git clone --depth 1 --branch ${scripts_branch} https://github.com/google/llvm-premerge-checks.git ${SRC}',

@@ -34,17 +34,17 @@ from phabtalk.phabtalk import Report, PhabTalk, Step
 
 
 def ninja_all_report(step: Step, _: Report):
-    print('Full will be available in Artifacts "ninja-all.log"', flush=True)
+    print('Full log will be available in Artifacts "ninja-all.log"', flush=True)
     r = subprocess.run(f'ninja all | '
                        f'tee {artifacts_dir}/ninja-all.log | '
-                       f'grep -vE "\\[.*] (Building|Linking|Copying|Generating|Creating)"',
+                       f'grep -vE "\\[.*] (Building|Linking|Linting|Copying|Generating|Creating)"',
                        shell=True, cwd=build_dir)
     logging.debug(f'ninja all: returned {r.returncode}, stderr: "{r.stderr}"')
     step.set_status_from_exit_code(r.returncode)
 
 
 def ninja_check_all_report(step: Step, _: Report):
-    print('Full will be available in Artifacts "ninja-check-all.log"', flush=True)
+    print('Full log will be available in Artifacts "ninja-check-all.log"', flush=True)
     r = subprocess.run(f'ninja check-all | tee {artifacts_dir}/ninja-check-all.log | '
                        f'grep -vE "^\\[.*] (Building|Linking)" | '
                        f'grep -vE "^(PASS|XFAIL|UNSUPPORTED):"', shell=True, cwd=build_dir)
