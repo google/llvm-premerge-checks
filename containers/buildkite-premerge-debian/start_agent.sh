@@ -32,3 +32,5 @@ chmod 600 /var/lib/buildkite-agent/.ssh/*
 chown -R $USER:$USER /var/lib/buildkite-agent/.ssh
 
 su buildkite-agent -c "buildkite-agent start"
+echo "agent exited"
+sleep 10m
