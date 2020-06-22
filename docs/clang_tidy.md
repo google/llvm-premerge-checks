@@ -3,7 +3,7 @@
 If you found that a warning produced by clang-tidy is not useful:
   
 - If clang-tidy must not run for some files at all (e.g. lit test), please
-[add files to blacklist](../scripts/clang-tidy.ignore).
+[add files to ignorelist](../scripts/clang-tidy.ignore).
 
 - Consider fixing or [suppressing diagnostic](https://clang.llvm.org/extra/clang-tidy/#suppressing-undesired-diagnostics)
   if there is a good reason.
