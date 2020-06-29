@@ -134,7 +134,7 @@ To spawn a new windows agent:
 1. Run
    ```powershell
    git clone https://github.com/google/llvm-premerge-checks.git C:\llvm-premerge-checks
-   C:\llvm-premerge-checks\scripts\windows_agent_start_buildkite.ps1 [-workdir D:/] [-testing] [-version latest]
+   C:\llvm-premerge-checks\scripts\windows_agent_start_buildkite.ps1 [-workdir D:\] [-testing] [-version latest]
    ```
    
 ### Jenkins
