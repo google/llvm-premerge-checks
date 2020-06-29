@@ -47,12 +47,12 @@ def delete_old_branches(repo_path: str, max_age: datetime.datetime, branch_patte
         committed_date = datetime.datetime.fromtimestamp(reference.commit.committed_date)
         if committed_date < max_age and _has_pattern_match(reference.name, branch_patterns):
             print(reference.name, flush=True)
-            del_count += 1
             if not dry_run:
                 try:
                     remote.push(refspec=':{}'.format(reference.remote_head))
-                except git.GitCommandError:
-                    print('ERROR: Failed to delete {}.'.format(reference.name), flush=True)
+                    del_count += 1
+                except git.GitCommandError as err:
+                    print('ERROR: Failed to delete "{}": {}'.format(reference.name, err), flush=True)
                     fail_count += 1
     print('Deleted {} branches.'.format(del_count))
     if fail_count > 0:
