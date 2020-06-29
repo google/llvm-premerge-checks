@@ -41,11 +41,12 @@ def delete_old_branches(repo_path: str, max_age: datetime.datetime, branch_patte
     del_count = 0
     fail_count = 0
     if dry_run:
-        print('DRY RUN NO BRANCHES WILL BE DELETED', flush=True)
+        print('DRY RUN. NO BRANCHES WILL BE DELETED', flush=True)
+    print('Deleting: \n', flush=True)
     for reference in refs:
         committed_date = datetime.datetime.fromtimestamp(reference.commit.committed_date)
         if committed_date < max_age and _has_pattern_match(reference.name, branch_patterns):
-            print('Deleting {}'.format(reference.name), flush=True)
+            print(reference.name, flush=True)
             del_count += 1
             if not dry_run:
                 try:
