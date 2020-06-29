@@ -33,7 +33,8 @@ if __name__ == '__main__':
             '--projects="clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;flang"',
         ],
         'artifact_paths': ['artifacts/**/*', '*_result.json'],
-        'agents': {'queue': f'{queue_prefix}linux'}
+        'agents': {'queue': f'{queue_prefix}linux'},
+        'timeout_in_minutes': 120,
     }
     windows_buld_step = {
         'label': ':windows: build and test windows',
@@ -55,7 +56,8 @@ if __name__ == '__main__':
             '}',
         ],
         'artifact_paths': ['artifacts/**/*', '*_result.json'],
-        'agents': {'queue': f'{queue_prefix}windows'}
+        'agents': {'queue': f'{queue_prefix}windows'},
+        'timeout_in_minutes': 120,
     }
     steps.append(linux_buld_step)
     steps.append(windows_buld_step)

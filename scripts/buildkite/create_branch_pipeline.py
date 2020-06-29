@@ -21,20 +21,21 @@ if __name__ == '__main__':
     diff_id = os.getenv("ph_buildable_diff")
     steps = []
     create_branch_step = {
-            'label': 'create branch',
-            'key': 'create-branch',
-            'commands': ['scripts/buildkite/apply_patch.sh'],
-            'agents': {'queue': f'{queue_prefix}linux'}
+        'label': 'create branch',
+        'key': 'create-branch',
+        'commands': ['scripts/buildkite/apply_patch.sh'],
+        'agents': {'queue': f'{queue_prefix}linux'},
+        'timeout_in_minutes': 20,
     }
     build_linux_step = {
-            'trigger': 'premerge-checks',
-            'label': ':rocket: build and test',
-            'async': False,
-            'depends_on': 'create-branch',
-            'build': {
-                    'branch': f'phab-diff-{diff_id}',
-                    'env': {'scripts_branch': '${BUILDKITE_BRANCH}'},
-            },
+        'trigger': 'premerge-checks',
+        'label': ':rocket: build and test',
+        'async': False,
+        'depends_on': 'create-branch',
+        'build': {
+            'branch': f'phab-diff-{diff_id}',
+            'env': {'scripts_branch': '${BUILDKITE_BRANCH}'},
+        },
     }
     for e in os.environ:
         if e.startswith('ph_'):
