@@ -30,7 +30,7 @@ if __name__ == '__main__':
             'rm -rf ${SRC}',
             'git clone --depth 1 --branch ${scripts_branch} https://github.com/google/llvm-premerge-checks.git ${SRC}',
             '${SRC}/scripts/premerge_checks.py '
-            '--projects="clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;flang"',
+            '--projects="clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;flang;openmp;polly;compiler-rt"',
         ],
         'artifact_paths': ['artifacts/**/*', '*_result.json'],
         'agents': {'queue': f'{queue_prefix}linux'},
@@ -44,7 +44,8 @@ if __name__ == '__main__':
             'set SRC=%BUILDKITE_BUILD_PATH%/llvm-premerge-checks',
             'rm -rf %SRC%',
             'git clone --depth 1 --branch %scripts_branch% https://github.com/google/llvm-premerge-checks.git %SRC%',
-            'powershell -command "%SRC%/scripts/premerge_checks.py --projects=default; '
+            'powershell -command "%SRC%/scripts/premerge_checks.py '
+            '--projects="clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;flang;openmp;polly;compiler-rt"; '
             '\\$exit=\\$?;'
             'sccache --show-stats;'
             'if (\\$exit) {'
