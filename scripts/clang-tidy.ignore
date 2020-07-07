@@ -35,7 +35,7 @@ compiler-rt/test/builtins/Unit/test
 debuginfo-tests/dexter/dex/tools/test
 debuginfo-tests/dexter/feature_tests/subtools/test
 clang/test
-libclc/test
+libclc
 mlir/examples/standalone
 mlir/test
 openmp/libomptarget/test
