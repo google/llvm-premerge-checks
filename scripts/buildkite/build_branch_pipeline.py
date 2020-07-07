@@ -53,12 +53,12 @@ if __name__ == '__main__':
             '\\$exit=\\$?;'
             'sccache --show-stats;'
             'if (\\$exit) {'
-            '  echo "success";'
+            '  echo success;'
             '  exit 0; } '
             'else {'
-            '  echo "failure";'
+            '  echo failure;'
             '  exit 1;'
-            '}',
+            '}"',
         ],
         'artifact_paths': ['artifacts/**/*', '*_result.json'],
         'agents': {'queue': f'{queue_prefix}windows'},
