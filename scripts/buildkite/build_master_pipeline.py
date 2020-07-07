@@ -45,16 +45,16 @@ if __name__ == '__main__':
             'rm -rf %SRC%',
             'git clone --depth 1 --branch %scripts_branch% https://github.com/google/llvm-premerge-checks.git %SRC%',
             'powershell -command "%SRC%/scripts/premerge_checks.py '
-            '--projects="clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;flang;openmp;polly;compiler-rt"; '
+            '--projects=\'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;flang;openmp;polly;compiler-rt\'; '
             '\\$exit=\\$?;'
             'sccache --show-stats;'
             'if (\\$exit) {'
-            '  echo "success";'
+            '  echo success;'
             '  exit 0; } '
             'else {'
-            '  echo "failure";'
+            '  echo failure;'
             '  exit 1;'
-            '}',
+            '}"',
         ],
         'artifact_paths': ['artifacts/**/*', '*_result.json'],
         'agents': {'queue': f'{queue_prefix}windows'},
