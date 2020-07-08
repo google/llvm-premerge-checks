@@ -27,13 +27,17 @@ if __name__ == '__main__':
         'key': 'linux',
         'commands': [
             'ccache --clear' if no_cache else '',
+            'ccache --zero-stats',
             'mkdir -p artifacts',
             'dpkg -l >> artifacts/packages.txt',
             'export SRC=${BUILDKITE_BUILD_PATH}/llvm-premerge-checks',
             'rm -rf ${SRC}',
             'git clone --depth 1 --branch ${scripts_branch} https://github.com/google/llvm-premerge-checks.git ${SRC}',
-            '${SRC}/scripts/premerge_checks.py '
-            f'--projects="{projects}"',
+            f'${{SRC}}/scripts/premerge_checks.py --projects="{projects}"',
+            'EXIT_STATUS=\\$?',
+            'echo "--- ccache stats"',
+            'ccache --show-stats',
+            'exit \\$EXIT_STATUS',
         ],
         'artifact_paths': ['artifacts/**/*', '*_result.json'],
         'agents': {'queue': f'{queue_prefix}linux'},
@@ -51,9 +55,9 @@ if __name__ == '__main__':
             'set SRC=%BUILDKITE_BUILD_PATH%/llvm-premerge-checks',
             'rm -rf %SRC%',
             'git clone --depth 1 --branch %scripts_branch% https://github.com/google/llvm-premerge-checks.git %SRC%',
-            'powershell -command "%SRC%/scripts/premerge_checks.py '
-            f'--projects=\'{projects}\'; '
+            f'powershell -command "%SRC%/scripts/premerge_checks.py --projects=\'{projects}\'; '
             '\\$exit=\\$?;'
+            'echo \'--- sccache stats\';'
             'sccache --show-stats;'
             'if (\\$exit) {'
             '  echo success;'

@@ -27,7 +27,7 @@ $IMAGE="gcr.io/llvm-premerge-checks/${NAME}:${version}"
 Write-Output "Authenticating docker..."
 Write-Output "y`n" | gcloud auth configure-docker
 
-Write-Output "Pulling new image..."
+Write-Output "Pulling new image '${IMAGE}'..."
 docker pull ${IMAGE}
 Write-Output "Stopping old container..."
 docker stop ${NAME}
