@@ -19,11 +19,13 @@ import yaml
 if __name__ == '__main__':
     script_branch = os.getenv("scripts_branch", "master")
     queue_prefix = os.getenv("ph_queue_prefix", "")
+    no_cache = os.getenv('ph_no_cache', '') != ''
     steps = []
     linux_buld_step = {
         'label': ':linux: build and test linux',
         'key': 'linux',
         'commands': [
+            'ccache --clear' if no_cache else '',
             'mkdir -p artifacts',
             'dpkg -l >> artifacts/packages.txt',
             'export SRC=${BUILDKITE_BUILD_PATH}/llvm-premerge-checks',
@@ -36,10 +38,14 @@ if __name__ == '__main__':
         'agents': {'queue': f'{queue_prefix}linux'},
         'timeout_in_minutes': 120,
     }
+    clear_sccache = 'powershell -command "sccache --stop-server; ' \
+                    'Remove-Item -Recurse -Force -ErrorAction Ignore $env:SCCACHE_DIR; ' \
+                    'sccache --start-server"'
     windows_buld_step = {
         'label': ':windows: build and test windows',
         'key': 'windows',
         'commands': [
+            clear_sccache if no_cache else '',
             'sccache --zero-stats',
             'set SRC=%BUILDKITE_BUILD_PATH%/llvm-premerge-checks',
             'rm -rf %SRC%',
