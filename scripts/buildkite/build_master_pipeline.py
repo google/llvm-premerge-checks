@@ -20,6 +20,7 @@ if __name__ == '__main__':
     script_branch = os.getenv("scripts_branch", "master")
     queue_prefix = os.getenv("ph_queue_prefix", "")
     no_cache = os.getenv('ph_no_cache', '') != ''
+    projects = 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;openmp;polly'
     steps = []
     linux_buld_step = {
         'label': ':linux: build and test linux',
@@ -32,7 +33,7 @@ if __name__ == '__main__':
             'rm -rf ${SRC}',
             'git clone --depth 1 --branch ${scripts_branch} https://github.com/google/llvm-premerge-checks.git ${SRC}',
             '${SRC}/scripts/premerge_checks.py '
-            '--projects="clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;flang;openmp;polly;compiler-rt"',
+            f'--projects="{projects}"',
         ],
         'artifact_paths': ['artifacts/**/*', '*_result.json'],
         'agents': {'queue': f'{queue_prefix}linux'},
@@ -51,7 +52,7 @@ if __name__ == '__main__':
             'rm -rf %SRC%',
             'git clone --depth 1 --branch %scripts_branch% https://github.com/google/llvm-premerge-checks.git %SRC%',
             'powershell -command "%SRC%/scripts/premerge_checks.py '
-            '--projects=\'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;flang;openmp;polly;compiler-rt\'; '
+            f'--projects=\'{projects}\'; '
             '\\$exit=\\$?;'
             'sccache --show-stats;'
             'if (\\$exit) {'
