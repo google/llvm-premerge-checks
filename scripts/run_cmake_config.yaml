@@ -21,6 +21,7 @@ arguments:
     - '-G Ninja'
     - '-D CMAKE_BUILD_TYPE=Release'
     - '-D LLVM_ENABLE_ASSERTIONS=ON'
+    - '-D LLVM_BUILD_EXAMPLES=ON'
     - '-D LLVM_LIT_ARGS="-v --xunit-xml-output test-results.xml"'
   linux:
     # CCACHE is enabled in script iff environment variable `CCACHE_PATH` is set
