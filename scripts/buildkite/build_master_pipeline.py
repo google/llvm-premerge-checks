@@ -19,34 +19,45 @@ import yaml
 if __name__ == '__main__':
     script_branch = os.getenv("scripts_branch", "master")
     queue_prefix = os.getenv("ph_queue_prefix", "")
+    no_cache = os.getenv('ph_no_cache', '') != ''
+    projects = 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;openmp;polly'
     steps = []
     linux_buld_step = {
         'label': ':linux: build and test linux',
         'key': 'linux',
         'commands': [
+            'ccache --clear' if no_cache else '',
+            'ccache --zero-stats',
             'mkdir -p artifacts',
             'dpkg -l >> artifacts/packages.txt',
             'export SRC=${BUILDKITE_BUILD_PATH}/llvm-premerge-checks',
             'rm -rf ${SRC}',
             'git clone --depth 1 --branch ${scripts_branch} https://github.com/google/llvm-premerge-checks.git ${SRC}',
-            '${SRC}/scripts/premerge_checks.py '
-            '--projects="clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;flang;openmp;polly;compiler-rt"',
+            f'${{SRC}}/scripts/premerge_checks.py --projects="{projects}"',
+            'EXIT_STATUS=\\$?',
+            'echo "--- ccache stats"',
+            'ccache --show-stats',
+            'exit \\$EXIT_STATUS',
         ],
         'artifact_paths': ['artifacts/**/*', '*_result.json'],
         'agents': {'queue': f'{queue_prefix}linux'},
         'timeout_in_minutes': 120,
     }
+    clear_sccache = 'powershell -command "sccache --stop-server; ' \
+                    'Remove-Item -Recurse -Force -ErrorAction Ignore $env:SCCACHE_DIR; ' \
+                    'sccache --start-server"'
     windows_buld_step = {
         'label': ':windows: build and test windows',
         'key': 'windows',
         'commands': [
+            clear_sccache if no_cache else '',
             'sccache --zero-stats',
             'set SRC=%BUILDKITE_BUILD_PATH%/llvm-premerge-checks',
             'rm -rf %SRC%',
             'git clone --depth 1 --branch %scripts_branch% https://github.com/google/llvm-premerge-checks.git %SRC%',
-            'powershell -command "%SRC%/scripts/premerge_checks.py '
-            '--projects=\'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;flang;openmp;polly;compiler-rt\'; '
+            f'powershell -command "%SRC%/scripts/premerge_checks.py --projects=\'{projects}\'; '
             '\\$exit=\\$?;'
+            'echo \'--- sccache stats\';'
             'sccache --show-stats;'
             'if (\\$exit) {'
             '  echo success;'

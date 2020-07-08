@@ -32,11 +32,8 @@ RUN powershell -NoProfile -InputFormat None -Command `
 
 # install tools as described in https://llvm.org/docs/GettingStartedVS.html
 # and a few more that were not documented...
-RUN choco install -y ninja
-RUN choco install -y git
+RUN choco install -y ninja git python3 gnuwin activeperl
 RUN choco install -y cmake --version 3.15.4
-RUN choco install -y python3
-RUN choco install -y gnuwin
 RUN choco install -y sccache
 RUN pip install psutil
 
