@@ -46,6 +46,8 @@ if __name__ == '__main__':
     clear_sccache = 'powershell -command "sccache --stop-server; ' \
                     'Remove-Item -Recurse -Force -ErrorAction Ignore $env:SCCACHE_DIR; ' \
                     'sccache --start-server"'
+    # FIXME: openmp is removed as it constantly fails.
+    projects = 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;polly'
     windows_buld_step = {
         'label': ':windows: build and test windows',
         'key': 'windows',
