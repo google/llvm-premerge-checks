@@ -37,7 +37,7 @@ def ninja_all_report(step: Step, _: Report):
     print('Full log will be available in Artifacts "ninja-all.log"', flush=True)
     r = subprocess.run(f'ninja all | '
                        f'tee {artifacts_dir}/ninja-all.log | '
-                       f'grep -vE "\\[.*] (Building|Linking|Linting|Copying|Generating|Creating)"',
+                       f'grep -vE "\\[.*] (Linking|Linting|Copying|Generating|Creating)"',
                        shell=True, cwd=build_dir)
     logging.debug(f'ninja all: returned {r.returncode}, stderr: "{r.stderr}"')
     step.set_status_from_exit_code(r.returncode)
