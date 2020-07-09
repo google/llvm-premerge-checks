@@ -35,6 +35,7 @@ from phabtalk.phabtalk import Report, PhabTalk, Step
 
 def ninja_all_report(step: Step, _: Report):
     print('Full log will be available in Artifacts "ninja-all.log"', flush=True)
+    step.reproduce_commands.append('ninja all')
     r = subprocess.run(f'ninja all | '
                        f'tee {artifacts_dir}/ninja-all.log | '
                        f'grep -vE "\\[.*] (Linking|Linting|Copying|Generating|Creating)"',
@@ -45,8 +46,9 @@ def ninja_all_report(step: Step, _: Report):
 
 def ninja_check_all_report(step: Step, _: Report):
     print('Full log will be available in Artifacts "ninja-check-all.log"', flush=True)
+    step.reproduce_commands.append('ninja check-all')
     r = subprocess.run(f'ninja check-all | tee {artifacts_dir}/ninja-check-all.log | '
-                       f'grep -vE "^\\[.*] (Building|Linking)" | '
+                       f'grep -vE "^\\[.*] (Building|Linking|Generating)" | '
                        f'grep -vE "^(PASS|XFAIL|UNSUPPORTED):"', shell=True, cwd=build_dir)
     logging.debug(f'ninja check-all: returned {r.returncode}, stderr: "{r.stderr}"')
     step.set_status_from_exit_code(r.returncode)
@@ -69,11 +71,12 @@ def run_step(name: str, report: Report, thunk: Callable[[Step, Report], None]) -
 
 def cmake_report(projects: str, step: Step, _: Report):
     global build_dir
-    cmake_result, build_dir, cmake_artifacts = run_cmake.run(projects, os.getcwd())
+    cmake_result, build_dir, cmake_artifacts, commands = run_cmake.run(projects, os.getcwd())
     for file in cmake_artifacts:
         if os.path.exists(file):
             shutil.copy2(file, artifacts_dir)
     step.set_status_from_exit_code(cmake_result)
+    step.reproduce_commands = commands
 
 
 def as_dict(obj):
@@ -120,6 +123,7 @@ if __name__ == '__main__':
         run_step('clang-format', report,
                  lambda s, r: clang_format_report.run('HEAD~1', os.path.join(scripts_dir, 'clang-format.ignore'), s, r))
     logging.debug(report)
+    print('+++ Summary', flush=True)
     for s in report.steps:
         mark = 'OK   '
         if not s.success:
@@ -128,7 +132,17 @@ if __name__ == '__main__':
         msg = ''
         if len(s.messages):
             msg = ': ' + '\n  '.join(s.messages)
-        print(f'{mark} {s.name}{msg}')
+        print(f'{mark} {s.name}{msg}', flush=True)
+    print('--- Reproduce build locally', flush=True)
+    print(f'git clone {os.getenv("BUILDKITE_REPO")}')
+    print(f'git checkout {os.getenv("BUILDKITE_BRANCH")}')
+    for s in report.steps:
+        if len(s.reproduce_commands) == 0:
+            continue
+        print('\n'.join(s.reproduce_commands), flush=True)
+    print('', flush=True)
+    if not report.success:
+        print('^^^ +++', flush=True)
 
     ph_target_phid = os.getenv('ph_target_phid')
     ph_buildable_diff = os.getenv('ph_buildable_diff')

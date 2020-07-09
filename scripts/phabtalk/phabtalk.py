@@ -199,6 +199,7 @@ class Step:
         self.success = True
         self.duration = 0.0
         self.messages = []
+        self.reproduce_commands = []
 
     def set_status_from_exit_code(self, exit_code: int):
         if exit_code != 0:

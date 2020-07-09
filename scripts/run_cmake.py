@@ -104,7 +104,7 @@ def _create_env(config: Configuration) -> Dict[str, str]:
     return env
 
 
-def _create_args(config: Configuration, llvm_enable_projects: str) -> List[str]:
+def _create_args(config: Configuration, llvm_enable_projects: str, use_cache: bool) -> List[str]:
     """Generate the command line arguments for cmake."""
     arguments = [
         os.path.join('..', 'llvm'),
@@ -113,21 +113,21 @@ def _create_args(config: Configuration, llvm_enable_projects: str) -> List[str]:
     arguments.extend(config.general_cmake_arguments)
     arguments.extend(config.specific_cmake_arguments)
 
-    # enable sccache
-    if 'SCCACHE_DIR' in os.environ:
-        logging.info("using sccache")
-        arguments.extend([
-            '-DCMAKE_C_COMPILER_LAUNCHER=sccache',
-            '-DCMAKE_CXX_COMPILER_LAUNCHER=sccache',
-        ])
-    # enable ccache if the path is set in the environment
-    elif 'CCACHE_PATH' in os.environ:
-        logging.info("using ccache")
-        arguments.extend([
-            '-D LLVM_CCACHE_BUILD=ON',
-            '-D LLVM_CCACHE_DIR={}'.format(os.environ['CCACHE_PATH']),
-            '-D LLVM_CCACHE_MAXSIZE=20G',
-        ])
+    if use_cache:
+        if 'SCCACHE_DIR' in os.environ:
+            logging.info("using sccache")
+            arguments.extend([
+                '-DCMAKE_C_COMPILER_LAUNCHER=sccache',
+                '-DCMAKE_CXX_COMPILER_LAUNCHER=sccache',
+            ])
+        # enable ccache if the path is set in the environment
+        elif 'CCACHE_PATH' in os.environ:
+            logging.info("using ccache")
+            arguments.extend([
+                '-D LLVM_CCACHE_BUILD=ON',
+                '-D LLVM_CCACHE_DIR={}'.format(os.environ['CCACHE_PATH']),
+                '-D LLVM_CCACHE_MAXSIZE=20G',
+            ])
     return arguments
 
 
@@ -136,8 +136,11 @@ def run(projects: str, repo_path: str, config_file_path: str = None, *, dry_run:
 
     Returns build directory and path to created artifacts.
 
-    This version works on all operating systems.
+    This version works on Linux and Windows.
+
+    Returns: exit code of cmake command, build directory, path to CMakeCache.txt, commands.
     """
+    commands = []
     if config_file_path is None:
         script_dir = os.path.dirname(__file__)
         config_file_path = os.path.join(script_dir, 'run_cmake_config.yaml')
@@ -147,21 +150,26 @@ def run(projects: str, repo_path: str, config_file_path: str = None, *, dry_run:
     if not dry_run:
         secure_delete(build_dir)
         os.makedirs(build_dir)
-
+        commands.append("rm -rf build")
+        commands.append("mkdir build")
+        commands.append("cd build")
+    for k, v in config.environment.items():
+        commands.append(f'export {k}="{v}"')
     env = _create_env(config)
     llvm_enable_projects = _select_projects(config, projects, repo_path)
     print('Enabled projects: {}'.format(llvm_enable_projects), flush=True)
-    arguments = _create_args(config, llvm_enable_projects)
+    arguments = _create_args(config, llvm_enable_projects, True)
     cmd = 'cmake ' + ' '.join(arguments)
 
     print('Running cmake with these arguments:\n{}'.format(cmd), flush=True)
     if dry_run:
         print('Dry run, not invoking CMake!')
         return 0, build_dir, []
-
     result = subprocess.call(cmd, env=env, shell=True, cwd=build_dir)
+    commands.append('cmake ' + ' '.join(_create_args(config, llvm_enable_projects, False)))
+    commands.append('# ^note that compiler cache arguments are omitted')
     _link_compile_commands(config, repo_path, build_dir)
-    return result, build_dir, [os.path.join(build_dir, 'CMakeCache.txt')]
+    return result, build_dir, [os.path.join(build_dir, 'CMakeCache.txt')], commands
 
 
 def secure_delete(path: str):
