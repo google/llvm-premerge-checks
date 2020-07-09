@@ -20,12 +20,14 @@ if __name__ == '__main__':
     script_branch = os.getenv("scripts_branch", "master")
     queue_prefix = os.getenv("ph_queue_prefix", "")
     no_cache = os.getenv('ph_no_cache', '') != ''
-    projects = 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;openmp;polly'
+    projects = os.getenv('ph_projects', 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;openmp;polly')
+    log_level = os.getenv('ph_log_level', 'WARNING')
     steps = []
     linux_buld_step = {
         'label': ':linux: build and test linux',
         'key': 'linux',
         'commands': [
+            'set -euo pipefail',
             'ccache --clear' if no_cache else '',
             'ccache --zero-stats',
             'mkdir -p artifacts',
@@ -33,7 +35,8 @@ if __name__ == '__main__':
             'export SRC=${BUILDKITE_BUILD_PATH}/llvm-premerge-checks',
             'rm -rf ${SRC}',
             'git clone --depth 1 --branch ${scripts_branch} https://github.com/google/llvm-premerge-checks.git ${SRC}',
-            f'${{SRC}}/scripts/premerge_checks.py --projects="{projects}"',
+            'set -eo pipefail',
+            f'${{SRC}}/scripts/premerge_checks.py --projects="{projects}" --log-level={log_level}',
             'EXIT_STATUS=\\$?',
             'echo "--- ccache stats"',
             'ccache --show-stats',
@@ -47,7 +50,7 @@ if __name__ == '__main__':
                     'Remove-Item -Recurse -Force -ErrorAction Ignore $env:SCCACHE_DIR; ' \
                     'sccache --start-server"'
     # FIXME: openmp is removed as it constantly fails.
-    projects = 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;polly'
+    projects = os.getenv('ph_projects', 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;polly')
     windows_buld_step = {
         'label': ':windows: build and test windows',
         'key': 'windows',
@@ -57,7 +60,7 @@ if __name__ == '__main__':
             'set SRC=%BUILDKITE_BUILD_PATH%/llvm-premerge-checks',
             'rm -rf %SRC%',
             'git clone --depth 1 --branch %scripts_branch% https://github.com/google/llvm-premerge-checks.git %SRC%',
-            f'powershell -command "%SRC%/scripts/premerge_checks.py --projects=\'{projects}\'; '
+            f'powershell -command "%SRC%/scripts/premerge_checks.py --projects=\'{projects}\' --log-level={log_level}; '
             '\\$exit=\\$?;'
             'echo \'--- sccache stats\';'
             'sccache --show-stats;'
