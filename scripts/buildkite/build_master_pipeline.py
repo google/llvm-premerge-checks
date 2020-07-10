@@ -17,9 +17,10 @@ import os
 import yaml
 
 if __name__ == '__main__':
-    script_branch = os.getenv("scripts_branch", "master")
+    scripts_branch = os.getenv("scripts_branch", "master")
     queue_prefix = os.getenv("ph_queue_prefix", "")
-    no_cache = os.getenv('ph_no_cache', '') != ''
+    no_cache = os.getenv('ph_no_cache') is not None
+    filter_output = '--filter-output' if os.getenv('ph_no_filter_output') is None else ''
     projects = os.getenv('ph_projects', 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;openmp;polly')
     log_level = os.getenv('ph_log_level', 'WARNING')
     steps = []
@@ -34,9 +35,12 @@ if __name__ == '__main__':
             'dpkg -l >> artifacts/packages.txt',
             'export SRC=${BUILDKITE_BUILD_PATH}/llvm-premerge-checks',
             'rm -rf ${SRC}',
-            'git clone --depth 1 --branch ${scripts_branch} https://github.com/google/llvm-premerge-checks.git ${SRC}',
-            'set -eo pipefail',
-            f'${{SRC}}/scripts/premerge_checks.py --projects="{projects}" --log-level={log_level}',
+            f'git clone --depth 1 --branch {scripts_branch} https://github.com/google/llvm-premerge-checks.git '
+            '${SRC}',
+            'echo "llvm-premerge-checks commit"',
+            'git rev-parse HEAD',
+            'set +e',
+            f'${{SRC}}/scripts/premerge_checks.py --projects="{projects}" --log-level={log_level} {filter_output}',
             'EXIT_STATUS=\\$?',
             'echo "--- ccache stats"',
             'ccache --show-stats',
@@ -59,8 +63,11 @@ if __name__ == '__main__':
             'sccache --zero-stats',
             'set SRC=%BUILDKITE_BUILD_PATH%/llvm-premerge-checks',
             'rm -rf %SRC%',
-            'git clone --depth 1 --branch %scripts_branch% https://github.com/google/llvm-premerge-checks.git %SRC%',
-            f'powershell -command "%SRC%/scripts/premerge_checks.py --projects=\'{projects}\' --log-level={log_level}; '
+            f'git clone --depth 1 --branch {scripts_branch} https://github.com/google/llvm-premerge-checks.git %SRC%',
+            'echo "llvm-premerge-checks commit"',
+            'git rev-parse HEAD',
+            'powershell -command "'
+            f'%SRC%/scripts/premerge_checks.py --projects=\'{projects}\' --log-level={log_level} {filter_output}; '
             '\\$exit=\\$?;'
             'echo \'--- sccache stats\';'
             'sccache --show-stats;'
@@ -76,6 +83,8 @@ if __name__ == '__main__':
         'agents': {'queue': f'{queue_prefix}windows'},
         'timeout_in_minutes': 120,
     }
-    steps.append(linux_buld_step)
-    steps.append(windows_buld_step)
+    if os.getenv('ph_skip_linux') is None:
+        steps.append(linux_buld_step)
+    if os.getenv('ph_skip_windows') is None:
+        steps.append(windows_buld_step)
     print(yaml.dump({'steps': steps}))

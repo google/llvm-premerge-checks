@@ -19,9 +19,11 @@ import json
 import logging
 import os
 import pathlib
+import re
 import shutil
-import subprocess
+import sys
 import time
+from functools import partial
 from typing import Callable
 
 import clang_format_report
@@ -29,29 +31,41 @@ import clang_tidy_report
 import run_cmake
 import test_results_report
 from buildkite.utils import upload_file
+from exec_utils import watch_shell, if_not_matches, tee
 from phabtalk.add_url_artifact import maybe_add_url_artifact
 from phabtalk.phabtalk import Report, PhabTalk, Step
 
 
-def ninja_all_report(step: Step, _: Report):
+def ninja_all_report(step: Step, _: Report, filter_output: bool):
     print('Full log will be available in Artifacts "ninja-all.log"', flush=True)
     step.reproduce_commands.append('ninja all')
-    r = subprocess.run(f'ninja all | '
-                       f'tee {artifacts_dir}/ninja-all.log | '
-                       f'grep -vE "\\[.*] (Linking|Linting|Copying|Generating|Creating)"',
-                       shell=True, cwd=build_dir)
-    logging.debug(f'ninja all: returned {r.returncode}, stderr: "{r.stderr}"')
-    step.set_status_from_exit_code(r.returncode)
+    with open(f'{artifacts_dir}/ninja-all.log', 'wb') as f:
+        w = sys.stdout.buffer.write
+        if filter_output:
+            r = re.compile(r'^\[.*] (Building|Linking|Linting|Copying|Generating|Creating)')
+            w = partial(if_not_matches, write=sys.stdout.buffer.write, regexp=r)
+        rc = watch_shell(
+            partial(tee, write1=w, write2=f.write),
+            partial(tee, write1=sys.stderr.buffer.write, write2=f.write),
+            'ninja all', cwd=build_dir)
+        logging.debug(f'ninja all: returned {rc}')
+        step.set_status_from_exit_code(rc)
 
 
-def ninja_check_all_report(step: Step, _: Report):
+def ninja_check_all_report(step: Step, _: Report, filter_output: bool):
     print('Full log will be available in Artifacts "ninja-check-all.log"', flush=True)
     step.reproduce_commands.append('ninja check-all')
-    r = subprocess.run(f'ninja check-all | tee {artifacts_dir}/ninja-check-all.log | '
-                       f'grep -vE "^\\[.*] (Building|Linking|Generating)" | '
-                       f'grep -vE "^(PASS|XFAIL|UNSUPPORTED):"', shell=True, cwd=build_dir)
-    logging.debug(f'ninja check-all: returned {r.returncode}, stderr: "{r.stderr}"')
-    step.set_status_from_exit_code(r.returncode)
+    with open(f'{artifacts_dir}/ninja-check-all.log', 'wb') as f:
+        w = sys.stdout.buffer.write
+        if filter_output:
+            r = re.compile(r'^(\[.*] (Building|Linking|Generating)|(PASS|XFAIL|UNSUPPORTED):)')
+            w = partial(if_not_matches, write=sys.stdout.buffer.write, regexp=r)
+        rc = watch_shell(
+            partial(tee, write1=w, write2=f.write),
+            partial(tee, write1=sys.stderr.buffer.write, write2=f.write),
+            'ninja check-all', cwd=build_dir)
+        logging.debug(f'ninja check-all: returned {rc}')
+        step.set_status_from_exit_code(rc)
     test_results_report.run(build_dir, 'test-results.xml', step, report)
 
 
@@ -91,6 +105,7 @@ if __name__ == '__main__':
     parser.add_argument('--log-level', type=str, default='WARNING')
     parser.add_argument('--check-clang-format', action='store_true')
     parser.add_argument('--check-clang-tidy', action='store_true')
+    parser.add_argument('--filter-output', action='store_true')
     parser.add_argument('--projects', type=str, default='detect',
                         help="Projects to select, either a list or projects like 'clang;libc', or "
                              "'detect' to automatically infer proejcts from the diff, or "
@@ -113,9 +128,9 @@ if __name__ == '__main__':
     report.success = True
     cmake = run_step('cmake', report, lambda s, r: cmake_report(args.projects, s, r))
     if cmake.success:
-        ninja_all = run_step('ninja all', report, ninja_all_report)
+        ninja_all = run_step('ninja all', report, partial(ninja_all_report, filter_output=args.filter_output))
         if ninja_all.success:
-            run_step('ninja check-all', report, ninja_check_all_report)
+            run_step('ninja check-all', report, partial(ninja_check_all_report, filter_output=args.filter_output))
         if args.check_clang_tidy:
             run_step('clang-tidy', report,
                      lambda s, r: clang_tidy_report.run('HEAD~1', os.path.join(scripts_dir, 'clang-tidy.ignore'), s, r))
@@ -159,6 +174,7 @@ if __name__ == '__main__':
         logging.warning('No phabricator phid is specified. Will not update the build status in Phabricator')
     with open(report_path, 'w') as f:
         json.dump(report.__dict__, f, default=as_dict)
+
     if not report.success:
         print('Build completed with failures', flush=True)
         exit(1)
