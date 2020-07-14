@@ -62,7 +62,8 @@ class ChooseProjects:
             for used in used_list:
                 self.usages.setdefault(used, []).append(user)
         self.all_projects = config['allprojects']
-        self.excluded_projects = set(config['excludedProjects'][self.operating_system])
+        excluded = config['excludedProjects'][self.operating_system]
+        self.excluded_projects = set(excluded if excluded is not None else [])
 
     @staticmethod
     def _detect_os() -> str:
@@ -86,10 +87,19 @@ class ChooseProjects:
             logging.warning('There were changes that could not be mapped to a project.'
                             'Building all projects instead!')
             return self.FALLBACK_PROJECTS
+        return self.extend_projects(changed_projects)
 
-        affected_projects = self.get_affected_projects(changed_projects)
+    def extend_projects(self, projects: Set[str]) -> List[str]:
+        logging.info(f'projects: {projects}')
+        affected_projects = self.get_affected_projects(projects)
+        logging.info(f'with affected projects: {affected_projects}')
         affected_projects = self.add_dependencies(affected_projects)
-        affected_projects = affected_projects - self.excluded_projects
+        logging.info(f'with dependencies: {affected_projects}')
+        to_exclude = affected_projects.intersection(self.excluded_projects)
+        if len(to_exclude) != 0:
+            affected_projects = affected_projects - to_exclude
+            logging.warning(f'{to_exclude} projects are excluded')
+            logging.info(f'without excluded: {affected_projects}')
         return sorted(affected_projects)
 
     def run(self):
@@ -147,9 +157,7 @@ class ChooseProjects:
                     changes.update(self.usages[project])
             affected_projects.update(changes)
 
-        logging.info('Projects affected by this patch:')
-        logging.info('  ' + '\n  '.join(sorted(affected_projects)))
-
+        logging.info(f'added {affected_projects - changed_projects} projects as they are affected')
         return affected_projects
 
     def add_dependencies(self, projects: Set[str]) -> Set[str]:
@@ -170,8 +178,7 @@ class ChooseProjects:
 
     def get_all_enabled_projects(self) -> List[str]:
         """Get list of all not-excluded projects for current platform."""
-        result = set(self.all_projects) - self.excluded_projects
-        return sorted(list(result))
+        return self.extend_projects(set(self.all_projects))
 
 
 if __name__ == "__main__":
