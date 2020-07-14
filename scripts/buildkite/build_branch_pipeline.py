@@ -87,11 +87,16 @@ if __name__ == '__main__':
         'agents': {'queue': f'{queue_prefix}windows'},
         'timeout_in_minutes': 120,
     }
-    steps.append(linux_buld_step)
-    steps.append(windows_buld_step)
+    deps = []
+    if os.getenv('ph_skip_linux') is None:
+        steps.append(linux_buld_step)
+        deps.append(linux_buld_step['key'])
+    if os.getenv('ph_skip_windows') is None:
+        steps.append(windows_buld_step)
+        deps.append(windows_buld_step['key'])
     report_step = {
         'label': ':spiral_note_pad: report',
-        'depends_on': [linux_buld_step['key'], windows_buld_step['key']],
+        'depends_on': deps,
         'commands': [
             'mkdir -p artifacts',
             'buildkite-agent artifact download "*_result.json" .',

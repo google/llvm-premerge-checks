@@ -90,8 +90,10 @@ def _select_projects(config: Configuration, projects: str, repo_path: str) -> st
         cp = ChooseProjects(repo_path)
         repo = Repo('.')
         patch = repo.git.diff("HEAD~1")
+        logging.debug(f'diff {patch}')
         enabled_projects = ';'.join(cp.choose_projects(patch))
         if enabled_projects is None or len(enabled_projects) == 0:
+            logging.warning('Cannot detect affected projects. Enable all projects')
             enabled_projects = cp.get_all_enabled_projects()
         return enabled_projects
     return projects
@@ -164,7 +166,7 @@ def run(projects: str, repo_path: str, config_file_path: str = None, *, dry_run:
     print('Running cmake with these arguments:\n{}'.format(cmd), flush=True)
     if dry_run:
         print('Dry run, not invoking CMake!')
-        return 0, build_dir, []
+        return 0, build_dir, [], []
     result = subprocess.call(cmd, env=env, shell=True, cwd=build_dir)
     commands.append('cmake ' + ' '.join(_create_args(config, llvm_enable_projects, False)))
     commands.append('# ^note that compiler cache arguments are omitted')
@@ -203,6 +205,8 @@ if __name__ == '__main__':
     parser.add_argument('projects', type=str, nargs='?', default='default')
     parser.add_argument('repo_path', type=str, nargs='?', default=os.getcwd())
     parser.add_argument('--dryrun', action='store_true')
+    parser.add_argument('--log-level', type=str, default='WARNING')
     args = parser.parse_args()
-    result, _, _ = run(args.projects, args.repo_path, dry_run=args.dryrun)
+    logging.basicConfig(level=args.log_level, format='%(levelname)-7s %(message)s')
+    result, _, _, _ = run(args.projects, args.repo_path, dry_run=args.dryrun)
     sys.exit(result)
