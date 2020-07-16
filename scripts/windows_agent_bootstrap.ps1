@@ -15,24 +15,32 @@
 # 1st stage of the installation process.
 # This script only needs to be run once per machine.
 
-Write-Host "Initializing local SSD..."
-New-Variable -Name diskid -Value (Get-Disk -FriendlyName "Google EphemeralDisk").Number
-#New-Variable -Name diskid -Value (Get-Disk -FriendlyName "NVMe nvme_card").Number
+param (
+    [switch]$ssd
+)
 
-# TODO: check if machine has an SSD
-# TODO: only do this, if SSD is not yet partioned and formatted
-Initialize-Disk -Number $diskid
-New-Partition -DiskNumber $diskid -UseMaximumSize -AssignDriveLetter
-Format-Volume -DriveLetter D
+if ($ssd) {
+    Write-Host "Initializing local SSD..."
+    New-Variable -Name diskid -Value (Get-Disk -FriendlyName "Google EphemeralDisk").Number
+    #New-Variable -Name diskid -Value (Get-Disk -FriendlyName "NVMe nvme_card").Number
+
+    # TODO: check if machine has an SSD
+    # TODO: only do this, if SSD is not yet partioned and formatted
+    Initialize-Disk -Number $diskid
+    New-Partition -DiskNumber $diskid -UseMaximumSize -AssignDriveLetter
+    Format-Volume -DriveLetter D
+}
 
 Write-Host "install chocolately as package manager..."
 iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
 choco feature disable --name showDownloadProgress
 choco install -y git
 
-# move docker folder to SSD to get better IO performance
-New-Item -Path "D:\" -Name "Docker" -ItemType "directory"
-cmd /C "mklink /j C:\ProgramData\Docker D:\docker"
+if ($ssd) {
+    # move docker folder to SSD to get better IO performance
+    New-Item -Path "D:\" -Name "Docker" -ItemType "directory"
+    cmd /C "mklink /j C:\ProgramData\Docker D:\docker"
+}
 
 # create folder for credentials
 New-Item -Path "C:\" -Name "credentials" -ItemType "directory"
@@ -48,7 +56,11 @@ sc.exe config docker start=delayed-auto
 choco install -y gcloudsdk --ignore-checksums
 
 # exclude drive d from Virus scans, to get better performance
-Add-MpPreference -ExclusionPath "D:\"
+if ($sdd) {
+    Add-MpPreference -ExclusionPath "D:\"
+} else {
+    Add-MpPreference -ExclusionPath "C:\ws"
+}
 
 # clone scripts repo (this one)
 git clone https://github.com/google/llvm-premerge-checks.git "c:\llvm-premerge-checks"
