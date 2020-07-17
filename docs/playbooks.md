@@ -131,11 +131,15 @@ To spawn a new windows agent:
     $Env:CONDUIT_TOKEN = "conduit-api-token"
     ```
    Pleas mind the length of the agent name as it will be in path and might cause some tests to fail due to 260 character limit.
-1. Run
+1. Clone scripts directory and start agent:
    ```powershell
    git clone https://github.com/google/llvm-premerge-checks.git C:\llvm-premerge-checks
    C:\llvm-premerge-checks\scripts\windows_agent_start_buildkite.ps1 [-workdir D:\] [-testing] [-version latest]
    ```
+1. Add a task to start agent when machine restarts (make sure to pass correct parameters).
+```
+schtasks.exe /create /tn "Start Buildkite agent" /ru SYSTEM /SC ONSTART /DELAY 0005:00 /tr "powershell -command 'C:\llvm-premerge-checks\scripts\windows_agent_start_buildkite.ps1'"
+```
    
 ### Jenkins
    1. Create `c:\credentials` folder with `build-agent-results_key.json` to access cloud storage copy from one of the existing machines.
