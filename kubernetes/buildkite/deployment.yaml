@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: premerge-debian
@@ -24,6 +24,11 @@ spec:
       labels:
         app: agent-premerge-debian
     spec:
+      strategy:
+        rollingUpdate:
+          maxSurge: 25%
+          maxUnavailable: 25%
+        type: RollingUpdate
       containers:
       - name: buildkite-premerge-debian
         image: gcr.io/llvm-premerge-checks/buildkite-premerge-debian
@@ -39,6 +44,8 @@ spec:
           mountPath: /mnt/disks/ssd0
         - name: github-ssh
           mountPath: /mnt/ssh
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
         env:
         - name: BUILDKITE_AGENT_TOKEN
           valueFrom:
