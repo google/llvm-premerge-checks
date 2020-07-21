@@ -38,10 +38,10 @@ spec:
           resources:
             limits:
               cpu: 30
-              memory: 45Gi
+              memory: 80Gi
             requests:
               cpu: 30
-              memory: 45Gi
+              memory: 80Gi
           volumeMounts:
             - name: ssd
               mountPath: /mnt/disks/ssd0
