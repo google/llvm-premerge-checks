@@ -49,6 +49,10 @@ if __name__ == '__main__':
         'artifact_paths': ['artifacts/**/*', '*_result.json'],
         'agents': {'queue': f'{queue_prefix}linux'},
         'timeout_in_minutes': 120,
+        'retry': {'automatic': [
+            {'exit_status': -1, 'limit': 2},  # Agent lost
+            {'exit_status': 255, 'limit': 2},  # Forced agent shutdown
+        ]},
     }
     clear_sccache = 'powershell -command "sccache --stop-server; ' \
                     'Remove-Item -Recurse -Force -ErrorAction Ignore $env:SCCACHE_DIR; ' \
@@ -82,6 +86,10 @@ if __name__ == '__main__':
         'artifact_paths': ['artifacts/**/*', '*_result.json'],
         'agents': {'queue': f'{queue_prefix}windows'},
         'timeout_in_minutes': 120,
+        'retry': {'automatic': [
+            {'exit_status': -1, 'limit': 2},  # Agent lost
+            {'exit_status': 255, 'limit': 2},  # Forced agent shutdown
+        ]},
     }
     if os.getenv('ph_skip_linux') is None:
         steps.append(linux_buld_step)
