@@ -117,7 +117,7 @@ To spawn a new windows agent:
 1. In the RDP session: run these commands in the CMD window under Administrator to bootstrap the Windows machine:
     ```powershell 
     Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/windows_agent_bootstrap.ps1' -OutFile c:\windows_agent_bootstrap.ps1
-    c:/windows_agent_bootstrap.ps1
+    c:/windows_agent_bootstrap.ps1 -ssd
     ```
     Ignore the pop-up to format the new disk and wait for the machine to reboot.
     
