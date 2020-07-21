@@ -19,56 +19,57 @@ metadata:
   namespace: buildkite
 spec:
   replicas: 4
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: agent-premerge-debian
   template:
     metadata:
       labels:
         app: agent-premerge-debian
     spec:
-      strategy:
-        rollingUpdate:
-          maxSurge: 25%
-          maxUnavailable: 25%
-        type: RollingUpdate
       containers:
-      - name: buildkite-premerge-debian
-        image: gcr.io/llvm-premerge-checks/buildkite-premerge-debian
-        resources:
-          limits:
-            cpu: 30
-            memory: 45Gi
-          requests:
-            cpu: 30
-            memory: 45Gi
-        volumeMounts:
-        - name: ssd
-          mountPath: /mnt/disks/ssd0
-        - name: github-ssh
-          mountPath: /mnt/ssh
-        terminationMessagePath: /dev/termination-log
-        terminationMessagePolicy: File
-        env:
-        - name: BUILDKITE_AGENT_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: buildkite-agent-token
-              key: token
-        - name: BUILDKITE_AGENT_TAGS
-          value: "queue=linux"
-        - name: BUILDKITE_BUILD_PATH
-          value: "/mnt/disks/ssd0/agent"
-        - name: CONDUIT_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: conduit-api-token
-              key: token
+        - name: buildkite-premerge-debian
+          image: gcr.io/llvm-premerge-checks/buildkite-premerge-debian
+          resources:
+            limits:
+              cpu: 30
+              memory: 45Gi
+            requests:
+              cpu: 30
+              memory: 45Gi
+          volumeMounts:
+            - name: ssd
+              mountPath: /mnt/disks/ssd0
+            - name: github-ssh
+              mountPath: /mnt/ssh
+          env:
+            - name: BUILDKITE_AGENT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: buildkite-agent-token
+                  key: token
+            - name: BUILDKITE_AGENT_TAGS
+              value: "queue=linux"
+            - name: BUILDKITE_BUILD_PATH
+              value: "/mnt/disks/ssd0/agent"
+            - name: CONDUIT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: conduit-api-token
+                  key: token
       volumes:
-      - name: ssd
-        hostPath:
-          # directory location on host
-          path: /mnt/disks/ssd0
-          type: Directory
-      - name: github-ssh
-        secret:
-          secretName: github-ssh
+        - name: ssd
+          hostPath:
+            # directory location on host
+            path: /mnt/disks/ssd0
+            type: Directory
+        - name: github-ssh
+          secret:
+            secretName: github-ssh
       nodeSelector:
         cloud.google.com/gke-nodepool: jenkins-agents
