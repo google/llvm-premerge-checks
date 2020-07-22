@@ -50,6 +50,8 @@ def ninja_all_report(step: Step, _: Report, filter_output: bool):
             'ninja all', cwd=build_dir)
         logging.debug(f'ninja all: returned {rc}')
         step.set_status_from_exit_code(rc)
+        if not step.success:
+            report.add_artifact(artifacts_dir, 'ninja-all.log', 'build failed')
 
 
 def ninja_check_all_report(step: Step, _: Report, filter_output: bool):
@@ -67,6 +69,14 @@ def ninja_check_all_report(step: Step, _: Report, filter_output: bool):
         logging.debug(f'ninja check-all: returned {rc}')
         step.set_status_from_exit_code(rc)
     test_results_report.run(build_dir, 'test-results.xml', step, report)
+    if not step.success:
+        message = 'tests failed'
+        f = report.test_stats['fail']
+        if f == 1:
+            message = '1 test failed'
+        if f > 1:
+            message = f'{f} tests failed'
+        report.add_artifact(artifacts_dir, 'ninja-check-all.log', message)
 
 
 def run_step(name: str, report: Report, thunk: Callable[[Step, Report], None]) -> Step:
