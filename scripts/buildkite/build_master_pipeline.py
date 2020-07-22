@@ -23,6 +23,7 @@ if __name__ == '__main__':
     filter_output = '--filter-output' if os.getenv('ph_no_filter_output') is None else ''
     projects = os.getenv('ph_projects', 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;openmp;polly')
     log_level = os.getenv('ph_log_level', 'WARNING')
+    notify_emails = list(filter(None, os.getenv('ph_notify_emails', '').split(',')))
     steps = []
     linux_buld_step = {
         'label': ':linux: build and test linux',
@@ -95,4 +96,7 @@ if __name__ == '__main__':
         steps.append(linux_buld_step)
     if os.getenv('ph_skip_windows') is None:
         steps.append(windows_buld_step)
-    print(yaml.dump({'steps': steps}))
+    notify = []
+    for e in notify_emails:
+        notify.append({'email': e})
+    print(yaml.dump({'steps': steps, 'notify': notify}))
