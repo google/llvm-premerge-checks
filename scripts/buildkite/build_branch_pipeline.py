@@ -39,7 +39,7 @@ if __name__ == '__main__':
             f'git clone --depth 1 --branch {scripts_branch} https://github.com/google/llvm-premerge-checks.git '
             '${SRC}',
             'echo "llvm-premerge-checks commit"',
-            'git rev-parse HEAD',
+            'git --git-dir ${SRC}/.git rev-parse HEAD',
             'set +e',
             # Add link in review to the build.
             '${SRC}/scripts/phabtalk/add_url_artifact.py '
@@ -73,8 +73,8 @@ if __name__ == '__main__':
             'set SRC=%BUILDKITE_BUILD_PATH%/llvm-premerge-checks',
             'rm -rf %SRC%',
             f'git clone --depth 1 --branch {scripts_branch} https://github.com/google/llvm-premerge-checks.git %SRC%',
-            'echo "llvm-premerge-checks commit"',
-            'git rev-parse HEAD',
+            'echo llvm-premerge-checks commit:',
+            'git --git-dir %SRC%/.git rev-parse HEAD',
             'powershell -command "'
             f'%SRC%/scripts/premerge_checks.py --projects=\'{projects}\' --log-level={log_level} {filter_output}; '
             '\\$exit=\\$?;'
