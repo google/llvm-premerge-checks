@@ -32,7 +32,6 @@ def run(working_dir: str, test_results: str, step: Optional[Step], report: Optio
         step.success = False
         step.messages.append(f'test report "{path}" is not found')
         return
-    report.add_artifact(working_dir, test_results, 'test results')
     try:
         success = True
         root_node = etree.parse(path)
