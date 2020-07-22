@@ -1,1 +1,2 @@
 # Patterns for clang-format to ignore.
+**/test
