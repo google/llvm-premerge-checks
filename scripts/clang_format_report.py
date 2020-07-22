@@ -54,6 +54,7 @@ def run(base_commit, ignore_config, step: Optional[Step], report: Optional[Repor
     ignore_lines = []
     if ignore_config is not None and os.path.exists(ignore_config):
         ignore_lines = open(ignore_config, 'r').readlines()
+    logging.debug("ignore patterns: " + str(';'.join(ignore_lines)))
     ignore = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern, ignore_lines)
     patched_file: unidiff.PatchedFile
     success = True
