@@ -4,6 +4,7 @@ import re
 import subprocess
 from typing import Optional
 
+
 def upload_file(base_dir: str, file: str):
     """
     Uploads artifact to buildkite and returns URL to it

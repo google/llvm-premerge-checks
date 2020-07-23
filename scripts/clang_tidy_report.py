@@ -22,6 +22,7 @@ from typing import Optional
 import pathspec
 
 import ignore_diff
+from buildkite.utils import format_url
 from phabtalk.phabtalk import Report, Step
 
 
@@ -43,6 +44,7 @@ def run(base_commit, ignore_config, step: Optional[Step], report: Optional[Repor
         ignore = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern, [])
     p = subprocess.Popen(['clang-tidy-diff', '-p0', '-quiet'], stdout=subprocess.PIPE, stdin=subprocess.PIPE,
                          stderr=subprocess.PIPE)
+    step.reproduce_commands.append(f'git diff -U0 --no-prefix {base_commit} | clang-tidy-diff -p0')
     a = ''.join(diff)
     logging.info(f'clang-tidy input: {a}')
     out = p.communicate(input=a.encode())[0].decode()
@@ -98,10 +100,11 @@ def run(base_commit, ignore_config, step: Optional[Step], report: Optional[Repor
         report.add_artifact(os.getcwd(), p, 'clang-tidy')
     if errors_count + warn_count != 0:
         step.success = False
+        url = format_url("https://github.com/google/llvm-premerge-checks/blob/master/docs/clang_tidy.md"
+                         "#review-comments.", "why?")
         step.messages.append(
             f'clang-tidy found {errors_count} errors and {warn_count} warnings. {inline_comments} of them are added '
-            f'as review comments. See'
-            f'https://github.com/google/llvm-premerge-checks/blob/master/docs/clang_tidy.md#review-comments.')
+            f'as review comments {url}')
     logging.debug(f'report: {report}')
     logging.debug(f'step: {step}')
 
