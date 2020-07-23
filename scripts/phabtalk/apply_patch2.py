@@ -165,8 +165,8 @@ class ApplyPatch:
             self.repo.delete_head('--force', self.branch_name)
         try:
             commit = self.repo.commit(base_revision)
-        except BadName:
-            logging.info('Revision {} not found in upstream repository, using master instead.'.format(base_revision))
+        except Exception as e:
+            logging.info('Cannot resolve revision {}: {}, going to use "master" instead.'.format(base_revision, e))
             commit = self.repo.heads['master']
         logging.info(f'creating branch {self.branch_name} at {commit.hexsha}')
         new_branch = self.repo.create_head(self.branch_name, commit.hexsha)
