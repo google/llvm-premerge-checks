@@ -19,6 +19,9 @@ import yaml
 if __name__ == '__main__':
     queue_prefix = os.getenv("ph_queue_prefix", "")
     diff_id = os.getenv("ph_buildable_diff")
+    log_level = os.getenv('ph_log_level', 'INFO')
+    base_commit = os.getenv('ph_base_commit', 'auto')
+    run_build = os.getenv('ph_skip_build') is None
     steps = []
     create_branch_step = {
         'label': 'create branch',
@@ -26,6 +29,10 @@ if __name__ == '__main__':
         'commands': ['scripts/buildkite/apply_patch.sh'],
         'agents': {'queue': f'{queue_prefix}linux'},
         'timeout_in_minutes': 20,
+        'env': {
+            'LOG_LEVEL': log_level,
+            'BASE_COMMIT': base_commit,
+        }
     }
     build_linux_step = {
         'trigger': 'premerge-checks',
@@ -41,5 +48,6 @@ if __name__ == '__main__':
         if e.startswith('ph_'):
             build_linux_step['build']['env'][e] = os.getenv(e)
     steps.append(create_branch_step)
-    steps.append(build_linux_step)
+    if run_build:
+        steps.append(build_linux_step)
     print(yaml.dump({'steps': steps}))
