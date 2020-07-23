@@ -16,10 +16,12 @@
 import argparse
 import datetime
 import json
+import logging
 import os
 import re
 import socket
 import subprocess
+import sys
 import time
 from typing import List, Optional, Tuple
 
@@ -53,9 +55,8 @@ class ApplyPatch:
     https://github.com/llvm/llvm-project or given a path to clone into.
     """
 
-    def __init__(self, path: str, diff_id: int, comment_file_path: str, token: str, url: str, git_hash: str,
+    def __init__(self, path: str, diff_id: int, token: str, url: str, git_hash: str,
                  push_branch: bool = False):
-        self.comment_file_path = comment_file_path
         self.push_branch = push_branch  # type: bool
         self.conduit_token = token  # type: Optional[str]
         self.host = url  # type: Optional[str]
@@ -64,18 +65,17 @@ class ApplyPatch:
         if not self.host.endswith('/api/'):
             self.host += '/api/'
         self.phab = self._create_phab()
-        self.base_revision = git_hash  # type: Optional[str]
-        self.msg = []  # type: List[str]
+        self.base_revision = git_hash  # type: str
 
         if not os.path.isdir(path):
-            print(f'{path} does not exist, cloning repository')
+            logging.info(f'{path} does not exist, cloning repository')
             # TODO: progress of clonning
             self.repo = Repo.clone_from(FORK_REMOTE_URL, path)
         else:
-            print('repository exist, will reuse')
+            logging.info('repository exist, will reuse')
             self.repo = Repo(path)  # type: Repo
         os.chdir(path)
-        print('working dir', os.getcwd())
+        logging.info(f'working dir {os.getcwd()}')
 
     @property
     def branch_name(self):
@@ -86,7 +86,7 @@ class ApplyPatch:
         """Load arc configuration from file if not set."""
         if self.conduit_token is not None or self.host is not None:
             return
-        print('Loading configuration from ~/.arcrc file')
+        logging.info('Loading configuration from ~/.arcrc file')
         with open(os.path.expanduser('~/.arcrc'), 'r') as arcrc_file:
             arcrc = json.load(arcrc_file)
         # use the first host configured in the file
@@ -95,24 +95,27 @@ class ApplyPatch:
 
     def run(self):
         """try to apply the patch from phabricator
-        
-        Write to `self.comment_file` for showing error messages on Phabricator.
+
         """
 
         try:
             self._refresh_master()
             revision_id, dependencies, base_revision = self._get_dependencies(self.diff_id)
             dependencies.reverse()  # Arrange deps in chronological order.
+            if self.base_revision != 'auto':
+                logging.info('Using base revision provided by command line\n{} instead of resolved\n{}'.format(
+                    self.base_revision, base_revision))
+                base_revision = self.base_revision
             self._create_branch(base_revision)
-            print('git reset, git cleanup...')
+            logging.info('git reset, git cleanup...')
             self.repo.git.reset('--hard')
             self.repo.git.clean('-fdx')
-            print('Analyzing {}'.format(diff_to_str(revision_id)))
+            logging.info('Analyzing {}'.format(diff_to_str(revision_id)))
             if len(dependencies) > 0:
-                print('This diff depends on: {}'.format(diff_list_to_str(dependencies)))
+                logging.info('This diff depends on: {}'.format(diff_list_to_str(dependencies)))
                 missing, landed = self._get_missing_landed_dependencies(dependencies)
-                print('  Already landed: {}'.format(diff_list_to_str(landed)))
-                print('  Will be applied: {}'.format(diff_list_to_str(missing)))
+                logging.info('  Already landed: {}'.format(diff_list_to_str(landed)))
+                logging.info('  Will be applied: {}'.format(diff_list_to_str(missing)))
                 if missing:
                     for revision in missing:
                         self._apply_revision(revision)
@@ -120,15 +123,17 @@ class ApplyPatch:
                     self.repo.config_writer().set_value("user", "name", "myusername").release()
                     self.repo.config_writer().set_value("user", "email", "myemail@example.com").release()
                     self.repo.git.commit('-a', '-m', 'dependencies')
-                print('All depended diffs are applied')
+                logging.info('All depended diffs are applied')
+            logging.info('applying original diff')
             self._apply_diff(self.diff_id, revision_id)
             if self.push_branch:
                 self._commit_and_push()
             else:
                 self.repo.git.add('-u', '.')
-            print('done.')
-        finally:
-            self._write_error_message()
+            return 0
+        except Exception as e:
+            logging.error(f'exception: {e}')
+            return 1
 
     def _refresh_master(self):
         """Update local git repo and origin.
@@ -138,7 +143,7 @@ class ApplyPatch:
         if not self.push_branch:
             return
 
-        print('Syncing local, origin and upstream...')
+        logging.info('Syncing local, origin and upstream...')
         self.repo.git.fetch('--all')
         self.repo.git.checkout('master')
         self.repo.git.reset('--hard')
@@ -150,27 +155,24 @@ class ApplyPatch:
         self.repo.git.pull('upstream', 'master')
         try:
             self.repo.git.push('origin', 'master')
-            print('refresh of master branch completed')
+            logging.info('refresh of master branch completed')
         except GitCommandError as e:
-            print('Info: Could not push to origin master.')
+            logging.info('Info: Could not push to origin master.')
 
     def _create_branch(self, base_revision: Optional[str]):
         self.repo.git.fetch('--all')
         if self.branch_name in self.repo.heads:
             self.repo.delete_head('--force', self.branch_name)
-        if self.base_revision is not None:
-            print('Using base revision provided by command line\n{} instead of resolved\n{}'.format(
-                self.base_revision, base_revision))
-            base_revision = self.base_revision
         try:
-            commit = self.repo.commit()
+            commit = self.repo.commit(base_revision)
         except BadName:
-            print('Revision {} not found in upstream repository, using master instead.'.format(base_revision))
+            logging.info('Revision {} not found in upstream repository, using master instead.'.format(base_revision))
             commit = self.repo.heads['master']
+        logging.info(f'creating branch {self.branch_name} at {commit.hexsha}')
         new_branch = self.repo.create_head(self.branch_name, commit.hexsha)
         self.repo.head.reference = new_branch
         self.repo.head.reset(index=True, working_tree=True)
-        print('Base revision is {}'.format(self.repo.head.commit.hexsha))
+        logging.info('Base branch revision is {}'.format(self.repo.head.commit.hexsha))
 
     def _commit_and_push(self):
         """Commit the patch and push it to origin."""
@@ -181,7 +183,7 @@ class ApplyPatch:
         self.repo.index.commit(message='applying Diff {}'.format(
             self.diff_id))
         self.repo.git.push('--force', 'origin', self.branch_name)
-        print('Branch {} pushed to origin'.format(self.branch_name))
+        logging.info('Branch {} pushed to origin'.format(self.branch_name))
         pass
 
     def _create_phab(self):
@@ -211,10 +213,12 @@ class ApplyPatch:
         """Get all dependencies for the diff.
         They are listed in reverse chronological order - from most recent to least recent."""
 
-        print('Getting dependencies of {}'.format(diff_id))
+        logging.info('Getting dependencies of {}'.format(diff_id))
         diff = self._get_diff(diff_id)
+        logging.debug(f'diff object: {diff}')
         revision_id = int(diff.revisionID)
         revision = self._get_revision(revision_id)
+        logging.debug(f'revision object: {revision}')
         base_revision = diff['sourceControlBaseRevision']
         if base_revision is None or len(base_revision) == 0:
             base_revision = 'master'
@@ -231,9 +235,9 @@ class ApplyPatch:
 
     def _apply_diff(self, diff_id: int, revision_id: int):
         """Download and apply a diff to the local working copy."""
-        print('Applying diff {} for revision {}...'.format(diff_id, diff_to_str(revision_id)))
-        # TODO: print diff or URL to it
+        logging.info('Applying diff {} for revision {}...'.format(diff_id, diff_to_str(revision_id)))
         diff = try_call(lambda: self.phab.differential.getrawdiff(diffID=str(diff_id)).response)
+        logging.debug(f'diff {diff_id}:\n{diff}')
         proc = subprocess.run('git apply -', input=diff, shell=True, text=True,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if proc.returncode != 0:
@@ -244,19 +248,8 @@ class ApplyPatch:
         revision = self._get_revision(revision_id)
         # take the diff_id with the highest number, this should be latest one
         diff_id = max(revision['diffs'])
+        logging.info(f'picking diff from revision {revision_id}: {diff_id} from {revision["diffs"]}')
         self._apply_diff(diff_id, revision_id)
-
-    def _write_error_message(self):
-        """Write the log message to a file."""
-        if self.comment_file_path is None:
-            return
-
-        if len(self.msg) == 0:
-            return
-        print('writing error message to {}'.format(self.comment_file_path))
-        with open(self.comment_file_path, 'a') as comment_file:
-            text = '\n\n'.join(self.msg)
-            comment_file.write(text)
 
     def _get_landed_revisions(self):
         """Get list of landed revisions from current git branch."""
@@ -274,7 +267,8 @@ class ApplyPatch:
             if result is not None:
                 yield result.group(1)
         if earliest_commit is not None:
-            print('Earliest analyzed commit in history', earliest_commit.hexsha, earliest_commit.committed_datetime)
+            logging.info(f'Earliest analyzed commit in history {earliest_commit.hexsha}, '
+                         f'{earliest_commit.committed_datetime}')
         return
 
     def _get_missing_landed_dependencies(self, dependencies: List[int]) -> Tuple[List[int], List[int]]:
@@ -308,24 +302,24 @@ def try_call(call):
         except socket.timeout as e:
             c += 1
             if c > 5:
-                print('Connection to Pharicator failed, giving up: {}'.format(e))
+                logging.error('Connection to Pharicator failed, giving up: {}'.format(e))
                 raise
-            print('Connection to Pharicator failed, retrying: {}'.format(e))
+            logging.error('Connection to Pharicator failed, retrying: {}'.format(e))
             time.sleep(c * 10)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Apply Phabricator patch to working directory.')
     parser.add_argument('diff_id', type=int)
-    # TODO: instead of --comment-file use stdout / stderr.
     parser.add_argument('--path', type=str, help='repository path', default=os.getcwd())
-    parser.add_argument('--comment-file', type=str, dest='comment_file_path', default=None)
     parser.add_argument('--token', type=str, default=None, help='Conduit API token')
     parser.add_argument('--url', type=str, default=None, help='Phabricator URL')
-    parser.add_argument('--commit', dest='commit', type=str, default=None,
-                        help='Use this commit as a base. By default tool tries to pick the base commit itself')
+    parser.add_argument('--commit', dest='commit', type=str, default='auto',
+                        help='Use this commit as a base. For "auto" tool tries to pick the base commit itself')
     parser.add_argument('--push-branch', action='store_true', dest='push_branch',
                         help='choose if branch shall be pushed to origin')
+    parser.add_argument('--log-level', type=str, default='INFO')
     args = parser.parse_args()
-    patcher = ApplyPatch(args.path, args.diff_id, args.comment_file_path, args.token, args.url, args.commit, args.push_branch)
-    patcher.run()
+    logging.basicConfig(level=args.log_level, format='%(levelname)-7s %(message)s')
+    patcher = ApplyPatch(args.path, args.diff_id, args.token, args.url, args.commit, args.push_branch)
+    sys.exit(patcher.run())

@@ -22,7 +22,8 @@ scripts/phabtalk/apply_patch2.py $ph_buildable_diff \
   --path "${BUILDKITE_BUILD_PATH}"/llvm-project-fork \
   --token $CONDUIT_TOKEN \
   --url $PHABRICATOR_HOST \
-  --comment-file apply_patch.txt \
+  --log-level $LOG_LEVEL \
+  --commit $BASE_COMMIT \
   --push-branch
 
 EXIT_STATUS=$?
