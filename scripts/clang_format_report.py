@@ -45,6 +45,7 @@ def run(base_commit, ignore_config, step: Optional[Step], report: Optional[Repor
         report = Report()  # For debugging.
     if step is None:
         step = Step()  # For debugging.
+    step.reproduce_commands.append(f'git-clang-format {base_commit}')
     r, patch = get_diff(base_commit)
     if not r:
         step.success = False
