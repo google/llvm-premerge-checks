@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import os
 import yaml
 
@@ -25,13 +26,17 @@ if __name__ == '__main__':
     projects = os.getenv('ph_projects', 'detect')
     log_level = os.getenv('ph_log_level', 'WARNING')
     steps = []
+    linux_agents = {'queue': f'{queue_prefix}linux'}
+    t = os.getenv('ph_linux_agents')
+    if t is not None:
+        linux_agents = json.loads(t)
     linux_buld_step = {
         'label': ':linux: build and test linux',
         'key': 'linux',
         'commands': [
             'set -euo pipefail',
             'ccache --clear' if no_cache else '',
-             'ccache --zero-stats',
+            'ccache --zero-stats',
             'mkdir -p artifacts',
             'dpkg -l >> artifacts/packages.txt',
             'export SRC=${BUILDKITE_BUILD_PATH}/llvm-premerge-checks',
@@ -54,7 +59,7 @@ if __name__ == '__main__':
             'exit \\$EXIT_STATUS',
         ],
         'artifact_paths': ['artifacts/**/*', '*_result.json'],
-        'agents': {'queue': f'{queue_prefix}linux'},
+        'agents': linux_agents,
         'timeout_in_minutes': 120,
         'retry': {'automatic': [
             {'exit_status': -1, 'limit': 2},  # Agent lost
@@ -64,6 +69,10 @@ if __name__ == '__main__':
     clear_sccache = 'powershell -command "sccache --stop-server; ' \
                     'Remove-Item -Recurse -Force -ErrorAction Ignore $env:SCCACHE_DIR; ' \
                     'sccache --start-server"'
+    win_agents = {'queue': f'{queue_prefix}windows'}
+    t = os.getenv('ph_windows_agents')
+    if t is not None:
+        win_agents = json.loads(t)
     windows_buld_step = {
         'label': ':windows: build and test windows',
         'key': 'windows',
@@ -88,7 +97,7 @@ if __name__ == '__main__':
             '}"',
         ],
         'artifact_paths': ['artifacts/**/*', '*_result.json'],
-        'agents': {'queue': f'{queue_prefix}windows'},
+        'agents': win_agents,
         'timeout_in_minutes': 120,
         'retry': {'automatic': [
             {'exit_status': -1, 'limit': 2},  # Agent lost
