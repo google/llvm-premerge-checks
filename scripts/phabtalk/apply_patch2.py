@@ -257,7 +257,7 @@ class ApplyPatch:
         earliest_commit = None
         rev = self.base_revision
         age_limit = datetime.datetime.now() - APPLIED_SCAN_LIMIT
-        if rev is None:
+        if rev != 'auto':
             rev = 'master'
         for commit in self.repo.iter_commits(rev):
             if datetime.datetime.fromtimestamp(commit.committed_date) < age_limit:
