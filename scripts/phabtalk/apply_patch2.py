@@ -167,7 +167,7 @@ class ApplyPatch:
             commit = self.repo.commit(base_revision)
         except Exception as e:
             logging.info('Cannot resolve revision {}: {}, going to use "master" instead.'.format(base_revision, e))
-            commit = self.repo.heads['master']
+            commit = self.repo.heads['master'].commit
         logging.info(f'creating branch {self.branch_name} at {commit.hexsha}')
         new_branch = self.repo.create_head(self.branch_name, commit.hexsha)
         self.repo.head.reference = new_branch
