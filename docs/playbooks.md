@@ -138,6 +138,7 @@ To spawn a new windows agent:
    ```
 1. Add a task to start agent when machine restarts (make sure to pass correct parameters).
 ```
+git clone https://github.com/google/llvm-premerge-checks.git C:\llvm-premerge-checks
 schtasks.exe /create /tn "Start Buildkite agent" /ru SYSTEM /SC ONSTART /DELAY 0005:00 /tr "powershell -command 'C:\llvm-premerge-checks\scripts\windows_agent_start_buildkite.ps1'"
 ```
    
