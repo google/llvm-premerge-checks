@@ -66,8 +66,8 @@ if __name__ == '__main__':
             {'exit_status': 255, 'limit': 2},  # Forced agent shutdown
         ]},
     }
-    clear_sccache = 'powershell -command "sccache --stop-server; ' \
-                    'Remove-Item -Recurse -Force -ErrorAction Ignore $env:SCCACHE_DIR; ' \
+    clear_sccache = 'powershell -command "sccache --stop-server; echo \\$env:SCCACHE_DIR; ' \
+                    'Remove-Item -Recurse -Force -ErrorAction Ignore \\$env:SCCACHE_DIR; ' \
                     'sccache --start-server"'
     win_agents = {'queue': f'{queue_prefix}windows'}
     t = os.getenv('ph_windows_agents')
