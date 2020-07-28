@@ -60,8 +60,8 @@ if __name__ == '__main__':
             {'exit_status': 255, 'limit': 2},  # Forced agent shutdown
         ]},
     }
-    clear_sccache = 'powershell -command "sccache --stop-server; echo $env:SCCACHE_DIR; ' \
-                    'Remove-Item -Recurse -Force -ErrorAction Ignore $env:SCCACHE_DIR; ' \
+    clear_sccache = 'powershell -command "sccache --stop-server; echo \\$env:SCCACHE_DIR; ' \
+                    'Remove-Item -Recurse -Force -ErrorAction Ignore \\$env:SCCACHE_DIR; ' \
                     'sccache --start-server"'
     # FIXME: openmp is removed as it constantly fails. Make this project list be evaluated through "choose_projects".
     projects = os.getenv('ph_projects', 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;polly')
