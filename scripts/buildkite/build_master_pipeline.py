@@ -23,7 +23,7 @@ if __name__ == '__main__':
     no_cache = os.getenv('ph_no_cache') is not None
     filter_output = '--filter-output' if os.getenv('ph_no_filter_output') is None else ''
     projects = os.getenv('ph_projects', 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;openmp;polly')
-    log_level = os.getenv('ph_log_level', 'WARNING')
+    log_level = os.getenv('C', 'WARNING')
     notify_emails = list(filter(None, os.getenv('ph_notify_emails', '').split(',')))
     steps = []
     linux_agents = {'queue': f'{queue_prefix}linux'}

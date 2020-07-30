@@ -146,9 +146,9 @@ class ApplyPatch:
 
         logging.info('Syncing local, origin and upstream...')
         self.repo.git.clean('-ffxdq')
+        self.repo.git.reset('--hard')
         self.repo.git.fetch('--all')
         self.repo.git.checkout('master')
-        self.repo.git.reset('--hard')
         if 'upstream' not in self.repo.remotes:
             self.repo.create_remote('upstream', url=LLVM_GITHUB_URL)
             self.repo.remotes.upstream.fetch()

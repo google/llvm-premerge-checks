@@ -139,7 +139,7 @@ To spawn a new windows agent:
 1. Add a task to start agent when machine restarts (make sure to pass correct parameters).
 ```
 git clone https://github.com/google/llvm-premerge-checks.git C:\llvm-premerge-checks
-schtasks.exe /create /tn "Start Buildkite agent" /ru SYSTEM /SC ONSTART /DELAY 0005:00 /tr "powershell -command 'C:\llvm-premerge-checks\scripts\windows_agent_start_buildkite.ps1'"
+schtasks.exe /create /tn "Start Buildkite agent" /ru SYSTEM /SC ONSTART /DELAY 0005:00 /tr "powershell -command 'C:\llvm-premerge-checks\scripts\windows_agent_start_buildkite.ps1 -workdir c:\ws'"
 ```
    
 ### Jenkins
@@ -174,6 +174,18 @@ Within a container set environment variables similar to [pipeline](https://githu
 
 Additionally set `WORKSPACE`, `PHID` and `DIFF_ID` parameters. Set `CONDUIT_TOKEN` with your personal one from `https://reviews.llvm.org/settings/user/<USERNAME>/page/apitokens/`.
 
+## Custom environment variables for debugging
+
+Buildkite pipelines have a number of custom environment variables one can set to change their behavior to debug issues
+or test changes. The best way is to look on pipeline generators (e.g. build_master_pipeline) 
+
+## Testing changes before merging
+
+It's recommended to test even small changes before committing them to the `master` branch.
+
+1. create a branch with your changes, e.g. "my-feature" and push it to origin.
+1. manually create a buildkite build in the pipeline you are updating and specify environment variable
+   `scripts_branch="my-feature"` (see other )
 
 # Phabricator integration
 
@@ -204,13 +216,3 @@ We have these build plans in Harbormaster:
 * [Plan 3](https://reviews.llvm.org/harbormaster/plan/3/) Builds for beta testers
 
 You can *disable* a build plan to stop it from building.
-
-## Per user Opt in/out
-
-You can also on a per-user bases opt in/out to premerge testing. 
-* To opt-in to pre-merge beta testing, add yourself to this project:
-https://reviews.llvm.org/project/view/78/
-* To opt-out of pre-merge testing entirely, add yourself to this project:
-https://reviews.llvm.org/project/view/83/
-
-These projects are checked in the Herald rules above.

@@ -3,7 +3,7 @@
 This repository contains the configuration files for the pre-merge checks for the LLVM project. This github project contains the documentation and the server configuration cluster of build machines that are used to check all incoming commits to the LLVM project.
 
 # User documentation
-See [docs/user_doc.md](docs/user_doc.md)
+If you are interested in a high-level overview and how to best use the tool see [docs/user_doc.md](docs/user_doc.md)
 
 # Cluster overview
 
@@ -31,7 +31,7 @@ On the Jenkins side:
 There is no backup of the credentials. If you need to change it, generate a new one and update it in Jenkins and Phabricator.
 
 # Additional Information
-* [Playbooks](docs/playbooks.md) for installing/upgrading
+* [Playbooks](docs/playbooks.md) for installing/upgrading agents and testing changes.
 * [User documentation](docs/user_doc.md)
 * [Log of the service operations](https://github.com/google/llvm-premerge-checks/wiki/LLVM-pre-merge-tests-operations-blog)
 
