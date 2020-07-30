@@ -74,6 +74,7 @@ class ApplyPatch:
         else:
             logging.info('repository exist, will reuse')
             self.repo = Repo(path)  # type: Repo
+            # TODO: set origin url to fork
         os.chdir(path)
         logging.info(f'working dir {os.getcwd()}')
 
@@ -109,7 +110,7 @@ class ApplyPatch:
             self._create_branch(base_revision)
             logging.info('git reset, git cleanup...')
             self.repo.git.reset('--hard')
-            self.repo.git.clean('-fdx')
+            self.repo.git.clean('-ffxdq')
             logging.info('Analyzing {}'.format(diff_to_str(revision_id)))
             if len(dependencies) > 0:
                 logging.info('This diff depends on: {}'.format(diff_list_to_str(dependencies)))
@@ -147,7 +148,7 @@ class ApplyPatch:
         self.repo.git.fetch('--all')
         self.repo.git.checkout('master')
         self.repo.git.reset('--hard')
-        self.repo.git.clean('-fdx')
+        self.repo.git.clean('-ffxdq')
         if 'upstream' not in self.repo.remotes:
             self.repo.create_remote('upstream', url=LLVM_GITHUB_URL)
             self.repo.remotes.upstream.fetch()
