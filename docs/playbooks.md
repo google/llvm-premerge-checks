@@ -174,18 +174,31 @@ Within a container set environment variables similar to [pipeline](https://githu
 
 Additionally set `WORKSPACE`, `PHID` and `DIFF_ID` parameters. Set `CONDUIT_TOKEN` with your personal one from `https://reviews.llvm.org/settings/user/<USERNAME>/page/apitokens/`.
 
-## Custom environment variables for debugging
+## Custom environment variables
 
-Buildkite pipelines have a number of custom environment variables one can set to change their behavior to debug issues
-or test changes. The best way is to look on pipeline generators (e.g. build_master_pipeline) 
+Buildkite pipelines have a number of custom environment variables one can set to change their behavior. That is useful to debug issues
+or test changes. They are mostly used by pipleine generators, e.g. [build_master_pipeline](../scripts/buildkite/build_master_pipeline.py),
+please refer to the source code for the details. These variables have `ph_` prefix and can be set with URL parameters in Harbormaster build.
+
+Most commonly used are:
+
+- `scripts_branch` ("master" by default): which branch of llvm-premerge-checks to use. This variable is also used in pipeline "bootstrap" in Buildkite interface.
+- `ph_no_cache`: (if set to any value) clear compilation cache before the build.
+- `ph_projects`: which projects to use, "detect" will look on diff to infer the projects, "default" selects all projects.
+- `ph_notify_email`: comma-separated list of email addresses to be notified when build is complete.
+- `ph_log_level` ("DEBUG", "INFO", "WARNING" (default) or "ERROR"): log level for build scripts. 
+- `ph_no_filter_output` (if set to any value): do not filter output of `ninja all` and other commands from buildkite log.
+- `ph_linux_agents`, `ph_windows_agents`: custom JSON constraints on agents. For example you might put one machine to a custom queue if it's errornous and send jobs to it with `ph_windows_agents="{{\"queue\": \"custom\"}}"`.
+- `ph_skip_linux`, `ph_skip_windows` (if set to any value): skip build on this OS.
 
 ## Testing changes before merging
 
-It's recommended to test even small changes before committing them to the `master` branch.
+It's recommended to test even smallest changes before committing them to the `master` branch.
 
-1. create a branch with your changes, e.g. "my-feature" and push it to origin.
-1. manually create a buildkite build in the pipeline you are updating and specify environment variable
-   `scripts_branch="my-feature"` (see other )
+1. Create a branch with your changes, e.g. "my-feature" and push it to origin.
+1. Manually create a buildkite build in the pipeline you are updating and specify environment variable
+   `scripts_branch="my-feature"` (see also "Custom environment variables" for other options above). To test "premerge-tests" pipeline pick an existing build and copy parameters from it, omitting "ph_target_phid", namely: "ph_build_id", "ph_buildable_diff", "ph_buildable_revision", "ph_initiator_phid" and "scripts_branch" variables.
+1. Wait for build to complete and maybe attach a link to it to your PR.
 
 # Phabricator integration
 
@@ -214,5 +227,3 @@ You can *archive* a rule to disable it.
 We have these build plans in Harbormaster:
 * [Plan 4](https://reviews.llvm.org/harbormaster/plan/4/) Builds for everyone
 * [Plan 3](https://reviews.llvm.org/harbormaster/plan/3/) Builds for beta testers
-
-You can *disable* a build plan to stop it from building.
