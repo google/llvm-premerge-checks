@@ -27,5 +27,4 @@ arguments:
     # CCACHE is enabled in script iff environment variable `CCACHE_PATH` is set
     - '-D LLVM_ENABLE_LLD=ON'
     - '-D CMAKE_CXX_FLAGS=-gmlt'
-  windows:
-    - '-D LLVM_ENABLE_DIA_SDK=OFF'
+  windows: []
