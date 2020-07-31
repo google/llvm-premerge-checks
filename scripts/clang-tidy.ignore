@@ -38,8 +38,8 @@ clang/test
 libclc
 mlir/examples/standalone
 mlir/test
-mlir/tools/mlir-cuda-runner/cuda-runtime-wrappers.cpp
-mlir/tools/mlir-rocm-runner/rocm-runtime-wrappers.cpp
+mlir/tools/mlir-cuda-runner
+mlir/tools/mlir-rocm-runner
 openmp/libomptarget/test
 openmp/libomptarget/deviceRTLs/nvptx/test
 openmp/runtime/test
