@@ -1,4 +1,4 @@
-#!/usr/bin/env pathon3
+#!/usr/bin/env python3
 # Copyright 2019 Google LLC
 #
 # Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
@@ -21,12 +21,18 @@ import os
 import datetime
 from typing import Dict, List, Optional
 import csv
+import time
+import socket
 
-
+# PHIDs of build plans used for pre-merge testing
+# FIXME: how do you get these?
 _PRE_MERGE_PHIDs = ['PHID-HMCP-bfkbtacsszhg3feydpo6',  # beta testers
                     'PHID-HMCP-qbviyekvgirhhhvkzpsn'   # public pre-merge tests
+                    # FIXME: add plan5 for buildkite
                     ]
 
+# query all data after this date
+START_DATE = datetime.date(year=2019, month=10, day=1)
 
 class PhabResponse:
 
@@ -125,7 +131,10 @@ class Build(PhabResponse):
 
     @property
     def was_premerge_tested(self) -> bool:
-        return self.buildplan_phid in _PRE_MERGE_PHIDs
+        result = self.buildplan_phid in _PRE_MERGE_PHIDs
+        if not result:
+            print(f'new buildplan id: {self.buildplan_phid}')
+        return result
 
 
 class Diff(PhabResponse):
@@ -144,12 +153,13 @@ class Diff(PhabResponse):
 
 
 class PhabBuildPuller:
-
-    _REVISION_FILE = 'tmp/phab-revisions.json'
-    _BUILDABLE_FILE = 'tmp/phab-buildables.json'
-    _BUILD_FILE = 'tmp/phab-build.json'
-    _DIFF_FILE = 'tmp/phab-diffs.json'
-    _PHAB_WEEKLY_METRICS_FILE = 'tmp/phabricator_{}.csv'
+    # files/folder for sotring temporary results
+    _TMP_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'tmp'))
+    _REVISION_FILE = os.path.join(_TMP_DIR, 'phab-revisions.json')
+    _BUILDABLE_FILE = os.path.join(_TMP_DIR, 'phab-buildables.json')
+    _BUILD_FILE = os.path.join(_TMP_DIR, 'phab-build.json')
+    _DIFF_FILE = os.path.join(_TMP_DIR, 'phab-diffs.json')
+    _PHAB_WEEKLY_METRICS_FILE = os.path.join(_TMP_DIR, 'phabricator_{}.csv')
 
     def __init__(self):
         self.conduit_token = None
@@ -177,8 +187,8 @@ class PhabBuildPuller:
         self.conduit_token = arcrc['hosts'][self.host]['token']
 
     def run(self):
-        if not os.path.exists('tmp'):
-            os.mkdir('tmp')
+        if not os.path.exists(self._TMP_DIR):
+            os.mkdir(self._TMP_DIR)
         if not os.path.isfile(self._REVISION_FILE):
             self.get_revisions()
         self.parse_revisions()
@@ -197,11 +207,8 @@ class PhabBuildPuller:
 
     def get_revisions(self):
         print('Downloading revisions starting...')
-        from_date = int(datetime.date(year=2019, month=10, day=1).strftime('%s'))
+        from_date = int(START_DATE.strftime('%s'))
         data = []
-        cursor = {
-            'limit': 100
-        }
         constraints = {
             'createdStart': from_date
         }
@@ -242,8 +249,19 @@ class PhabBuildPuller:
         }
         after = None
         while True:
-            revisions = self.phab.harbormaster.build.search(
-                constraints=constraints, after=after)
+            # retry on timeouts
+            fail_count = 0
+            while True:
+                try: 
+                    revisions = self.phab.harbormaster.build.search(
+                        constraints=constraints, after=after)
+                except socket.timeout:
+                    fail_count +=1
+                    if fail_count > 5:
+                        raise
+                    time.sleep(10)
+                    continue
+                break
             data.extend(revisions.response['data'])
             print('{} builds...'.format(len(data)))
             after = revisions.response['cursor']['after']
@@ -261,8 +279,19 @@ class PhabBuildPuller:
         }
         after = None
         while True:
-            diffs = self.phab.differential.diff.search(
-                constraints=constraints, after=after)
+            # retry on timeouts
+            fail_count = 0
+            while True:
+                try: 
+                    diffs = self.phab.differential.diff.search(
+                        constraints=constraints, after=after)
+                except socket.timeout:
+                    fail_count +=1
+                    if fail_count > 5:
+                        raise
+                    time.sleep(10)
+                    continue
+                break
             data.extend(diffs.response['data'])
             print('{} diffs...'.format(len(data)))
             after = diffs.response['cursor']['after']
