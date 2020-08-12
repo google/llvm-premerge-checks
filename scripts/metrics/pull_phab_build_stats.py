@@ -23,12 +23,14 @@ from typing import Dict, List, Optional
 import csv
 import time
 import socket
+import git
+import argparse
 
 # PHIDs of build plans used for pre-merge testing
 # FIXME: how do you get these?
 _PRE_MERGE_PHIDs = ['PHID-HMCP-bfkbtacsszhg3feydpo6',  # beta testers
-                    'PHID-HMCP-qbviyekvgirhhhvkzpsn'   # public pre-merge tests
-                    # FIXME: add plan5 for buildkite
+                    'PHID-HMCP-qbviyekvgirhhhvkzpsn',   # public pre-merge tests
+                    'PHID-HMCP-p2oc4ocen3l2yzymvg2l',
                     ]
 
 # query all data after this date
@@ -133,7 +135,7 @@ class Build(PhabResponse):
     def was_premerge_tested(self) -> bool:
         result = self.buildplan_phid in _PRE_MERGE_PHIDs
         if not result:
-            print(f'new buildplan id: {self.buildplan_phid}')
+            print(self.buildplan_phid)
         return result
 
 
@@ -148,9 +150,30 @@ class Diff(PhabResponse):
         return self.revision_dict['fields']['revisionPHID']
 
     @property
-    def has_refs(self) -> bool:
-        return len(self.revision_dict['fields']['refs']) > 0
+    def _refs(self) -> List:
+        return self.revision_dict['fields']['refs']
 
+    @property
+    def has_refs(self) -> bool:
+        return len(self._refs) > 0
+
+    @property
+    def base_revision(self) -> str:
+        for ref in self._refs:
+            if ref['type'] == 'base':
+                return ref['identifier']
+        return None
+
+    @property
+    def base_branch(self) -> str:
+        for ref in self._refs:
+            if ref['type'] == 'branch':
+                return ref['name']
+        return None
+
+    @property
+    def dateCreated(self) -> datetime.datetime:
+        return datetime.datetime.fromtimestamp(self.revision_dict['fields']['dateCreated'])
 
 class PhabBuildPuller:
     # files/folder for sotring temporary results
@@ -161,10 +184,11 @@ class PhabBuildPuller:
     _DIFF_FILE = os.path.join(_TMP_DIR, 'phab-diffs.json')
     _PHAB_WEEKLY_METRICS_FILE = os.path.join(_TMP_DIR, 'phabricator_{}.csv')
 
-    def __init__(self):
+    def __init__(self, repo_path: str):
         self.conduit_token = None
         self.host = None
         self.phab = self._create_phab()
+        self._repo_path = repo_path  # type: str
         self.revisions = {}  # type: Dict[str, Revision]
         self.buildables = {}  # type: Dict[str, Buildable]
         self.builds = {}  # type: Dict[str, Build]
@@ -204,6 +228,8 @@ class PhabBuildPuller:
         self.link_objects()
         self.compute_metrics('day', lambda r: r.day)
         self.compute_metrics('week', lambda r: r.week)
+        self.count_base_revisions()
+        self.match_base_revisions_with_repo(self._repo_path)
 
     def get_revisions(self):
         print('Downloading revisions starting...')
@@ -212,6 +238,8 @@ class PhabBuildPuller:
         constraints = {
             'createdStart': from_date
         }
+        # FIXME: lots of code duplication around pagination and error handling.
+        # find a way to separate this into a function.
         after = None
         while True:
             revisions = self.phab.differential.revision.search(
@@ -371,7 +399,55 @@ class PhabBuildPuller:
                 '# no repository set': num_no_repo,
             })
 
+    def count_base_revisions(self):
+        base_revisions = {}
+        base_branches = {}
+        for diff in self.diffs.values():
+            base_revisions.setdefault(diff.base_revision, 0)
+            base_revisions[diff.base_revision] += 1
+
+            base_branches.setdefault(diff.base_branch, 0) 
+            base_branches[diff.base_branch] +=1
+        
+        print(f'{len(self.diffs)} diffs are using {len(base_revisions)} different git base revisions.')
+        print('The top 10 revisions and their usages are:')
+        revisions = sorted( base_revisions.items(), key=lambda x: x[1] , reverse=True)
+        for i in revisions[:10]:
+            print(f'  commit {i[0]} was used {i[1]} times')
+        print()
+        print(f'{len(self.diffs)} diffs are using {len(base_branches)} different git base branches')
+        branches = sorted( base_branches.items(), key=lambda x: x[1] , reverse=True)
+        print('The top 10 branches and their usages are:')
+        for i in branches[:10]:
+            print(f'  branch {i[0]} was used {i[1]} times')
+        print()
+
+    def match_base_revisions_with_repo(self, repo_path: str):
+        repo = git.Repo(repo_path)
+        not_found = 0
+        invalid_date = 0
+        has_base_revision = 0
+        for diff in self.diffs.values():
+            revision = diff.base_revision
+            if revision is None:
+                continue
+            has_base_revision += 1
+            try:
+                commit = repo.commit(revision)
+            except (ValueError, git.BadName):
+                not_found += 1
+                continue
+            commited_date = datetime.datetime.fromtimestamp(commit.committed_date)
+            if commited_date > diff.dateCreated:
+                invalid_date += 1
+        print(f'Of the {has_base_revision} Diffs with base revision, the base revision was NOT found in the repo for {not_found} and ')
+        print(f'{invalid_date} base revisions were used before being available upstream.')
+        print(f'So {(not_found+invalid_date)/has_base_revision*100:0.2f} % of specified the base revisions were unusable.')
+
 
 if __name__ == '__main__':
-    puller = PhabBuildPuller()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('repo_path')
+    args = parser.parse_args()
+    puller = PhabBuildPuller(args.repo_path)
     puller.run()
