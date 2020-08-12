@@ -40,7 +40,7 @@ Write-Host "Building ${IMAGE_NAME}:${container_version}..."
 Write-Host "Using windows-agent ${agent_windows_version}"
 
 Invoke-Call -ScriptBlock {
-    docker build . `
+    docker build . --no-cache `
         -t ${IMAGE_NAME}:${container_version} `
         -t ${IMAGE_NAME}:latest `
         --build-arg agent_windows_version=$agent_windows_version

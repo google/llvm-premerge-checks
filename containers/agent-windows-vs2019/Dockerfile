@@ -22,7 +22,9 @@ RUN C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --nocache `
     --channelUri C:\TEMP\VisualStudio.chman `
     --installChannelUri C:\TEMP\VisualStudio.chman `
     --installPath C:\BuildTools `
-    --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended `
+    --add Microsoft.VisualStudio.Workload.VCTools `
+    --add Microsoft.VisualStudio.Component.VC.ATL `
+    --includeRecommended `
     || IF "%ERRORLEVEL%"=="3010" EXIT 0
 
 # Register DIA dll (Debug Interface Access) so it can be used to symbolize 
