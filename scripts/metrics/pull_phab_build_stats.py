@@ -100,6 +100,42 @@ class Revision(PhabResponse):
         day = self.day
         return'{}-w{:02d}'.format(day.year, day.isocalendar()[1])
 
+    @property
+    def published(self) -> bool:
+        return self.status == 'published'
+
+    @property
+    def build_status_list(self) -> List[bool]:
+        return [b.passed for b in self.builds if b.was_premerge_tested]
+
+    @property
+    def builds_finally_succeeded(self) -> bool:
+        """Return true iff one of the builds failed and the last build passed."""
+        return self.has_failed_builds and self.build_status_list[-1]
+
+    @property
+    def has_failed_builds(self) -> bool:
+        """Return true iff one of the builds failed."""
+        return False in self.build_status_list
+
+    @property
+    def published_failing(self) -> bool:
+        """Return true iff published and the last build failed."""
+        return self.was_premerge_tested and self.published \
+               and not self.build_status_list[-1]
+
+    @property
+    def all_builds_passed(self) -> bool:
+        return self.was_premerge_tested and all(self.build_status_list)
+
+    @property
+    def all_builds_failed(self) -> bool:
+        return self.was_premerge_tested and all(not b for b in self.build_status_list)
+
+    @property
+    def dateModified(self) -> datetime.datetime:
+        return datetime.datetime.fromtimestamp(self.revision_dict['fields']['dateModified'])
+       
 
 class Buildable(PhabResponse):
 
@@ -134,10 +170,16 @@ class Build(PhabResponse):
     @property
     def was_premerge_tested(self) -> bool:
         result = self.buildplan_phid in _PRE_MERGE_PHIDs
-        if not result:
-            print(self.buildplan_phid)
         return result
 
+    @property
+    def passed(self) -> bool:
+        """Returns true, if the build "passed" """
+        return self.was_premerge_tested and self.revision_dict['fields']['buildStatus']['value'] == 'passed'
+
+    @property
+    def dateModified(self) ->datetime.datetime:
+        return datetime.datetime.fromtimestamp(self.revision_dict['fields']['dateModified'])
 
 class Diff(PhabResponse):
 
@@ -229,6 +271,7 @@ class PhabBuildPuller:
         self.compute_metrics('day', lambda r: r.day)
         self.compute_metrics('week', lambda r: r.week)
         self.count_base_revisions()
+        self.revision_statistics()
         self.match_base_revisions_with_repo(self._repo_path)
 
     def get_revisions(self):
@@ -377,7 +420,11 @@ class PhabBuildPuller:
 
         csv_file = open(self._PHAB_WEEKLY_METRICS_FILE.format(name), 'w')
         fieldnames = [name, '# revisions', '# tested revisions', '% tested revisions', '# untested revisions',
-                      '# revisions without builds', '% revisions without builds', '# no repository set']
+                      '# revisions without builds', '% revisions without builds', '# no repository set', 
+                      '# had failed builds', '% had failed builds', '# failed first then passed', 
+                      '% failed first then passed', '# published failing', '% published failing',
+                        '# all passed', '% all passed']
+
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames, dialect=csv.excel)
         writer.writeheader()
         for group in sorted(group_dict.keys()):
@@ -388,6 +435,10 @@ class PhabBuildPuller:
             num_no_build_triggered = len([r for r in revisions if len(r.builds) == 0])
             percent_no_build_triggered = 100.0 * num_no_build_triggered / num_revisions
             num_no_repo = len([r for r in revisions if r.repository_phid is None])
+            num_had_failed_builds =len([r for r in revisions if r.has_failed_builds])
+            num_failed_first_then_passed = len([r for r in revisions if r.builds_finally_succeeded])
+            num_published_failing = len([r for r in revisions if r.published_failing])
+            num_all_passed = len([r for r in revisions if r.all_builds_passed])
             writer.writerow({
                 name: group,
                 '# revisions': num_revisions,
@@ -397,6 +448,14 @@ class PhabBuildPuller:
                 '# revisions without builds': num_no_build_triggered,
                 '% revisions without builds': percent_no_build_triggered,
                 '# no repository set': num_no_repo,
+                '# had failed builds': num_had_failed_builds,
+                '% had failed builds': 100 * num_had_failed_builds / num_revisions,
+                '# failed first then passed': num_failed_first_then_passed,
+                '% failed first then passed': 100 * num_failed_first_then_passed / num_revisions,
+                '# published failing': num_published_failing,
+                '% published failing': 100 * num_published_failing / num_revisions,
+                '# all passed': num_all_passed,
+                '% all passed': 100*num_all_passed / num_revisions,
             })
 
     def count_base_revisions(self):
@@ -440,10 +499,39 @@ class PhabBuildPuller:
             commited_date = datetime.datetime.fromtimestamp(commit.committed_date)
             if commited_date > diff.dateCreated:
                 invalid_date += 1
+        
+        print()
         print(f'Of the {has_base_revision} Diffs with base revision, the base revision was NOT found in the repo for {not_found} and ')
         print(f'{invalid_date} base revisions were used before being available upstream.')
         print(f'So {(not_found+invalid_date)/has_base_revision*100:0.2f} % of specified the base revisions were unusable.')
 
+    def revision_statistics(self):
+        no_builds = 0
+        has_failed = 0
+        fail_then_pass = 0
+        all_passed = 0
+        fail_last = 0
+        for revision in self.revisions.values():
+            build_status = [b.passed for b in revision.builds]
+            if len(revision.builds) == 0:
+                no_builds += 1
+                continue
+            if False in build_status:
+                has_failed += 1
+                if build_status[-1] == True:
+                    fail_then_pass +=1
+            else:
+                all_passed += 1
+            if revision.published and build_status[-1] == False:
+                fail_last += 1
+        print()
+        print(f'Out of the {len(self.revisions)} Revisions:')
+        print(f'   {no_builds} had no builds.')
+        print(f'   {has_failed} had failed builds.')
+        print(f'   {fail_then_pass} had failed builds, but the last build passed.')
+        print(f'   {all_passed} had only successful builds.')
+        print(f'   {fail_last} were published with a failing build.')
+            
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
