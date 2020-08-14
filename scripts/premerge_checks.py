@@ -159,7 +159,8 @@ if __name__ == '__main__':
             msg = ': ' + '\n  '.join(s.messages)
         print(f'{mark} {s.name}{msg}', flush=True)
     print('--- Reproduce build locally', flush=True)
-    print(f'git clone {os.getenv("BUILDKITE_REPO")}')
+    print(f'git clone {os.getenv("BUILDKITE_REPO")} llvm-project')
+    print('cd llvm-project')
     print(f'git checkout {os.getenv("BUILDKITE_BRANCH")}')
     for s in report.steps:
         if len(s.reproduce_commands) == 0:
