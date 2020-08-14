@@ -161,7 +161,7 @@ if __name__ == '__main__':
     print('--- Reproduce build locally', flush=True)
     print(f'git clone {os.getenv("BUILDKITE_REPO")} llvm-project')
     print('cd llvm-project')
-    print(f'git checkout {os.getenv("BUILDKITE_BRANCH")}')
+    print(f'git checkout {os.getenv("BUILDKITE_COMMIT")}')
     for s in report.steps:
         if len(s.reproduce_commands) == 0:
             continue
