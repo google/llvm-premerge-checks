@@ -163,7 +163,7 @@ class ChooseProjects:
     def add_dependencies(self, projects: Set[str]) -> Set[str]:
         """Return projects and their dependencies.
 
-        All all dependencies to `projects` so that they can be built.
+        Add all dependencies to `projects` so that they can be built.
         """
         result = set(projects)
         last_len = -1

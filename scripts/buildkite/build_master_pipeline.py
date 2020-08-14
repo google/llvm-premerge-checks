@@ -22,7 +22,7 @@ if __name__ == '__main__':
     queue_prefix = os.getenv("ph_queue_prefix", "")
     no_cache = os.getenv('ph_no_cache') is not None
     filter_output = '--filter-output' if os.getenv('ph_no_filter_output') is None else ''
-    projects = os.getenv('ph_projects', 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;openmp;polly')
+    projects = os.getenv('ph_projects', 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;openmp;polly;lldb')
     log_level = os.getenv('ph_log_level', 'WARNING')
     notify_emails = list(filter(None, os.getenv('ph_notify_emails', '').split(',')))
     steps = []
@@ -64,7 +64,7 @@ if __name__ == '__main__':
                     'Remove-Item -Recurse -Force -ErrorAction Ignore \\$env:SCCACHE_DIR; ' \
                     'sccache --start-server"'
     # FIXME: openmp is removed as it constantly fails. Make this project list be evaluated through "choose_projects".
-    projects = os.getenv('ph_projects', 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;polly')
+    projects = os.getenv('ph_projects', 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;polly;lldb')
     win_agents = {'queue': f'{queue_prefix}windows'}
     t = os.getenv('ph_windows_agents')
     if t is not None:
