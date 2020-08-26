@@ -123,12 +123,10 @@ def _create_args(config: Configuration, llvm_enable_projects: str, use_cache: bo
                 '-DCMAKE_CXX_COMPILER_LAUNCHER=sccache',
             ])
         # enable ccache if the path is set in the environment
-        elif 'CCACHE_PATH' in os.environ:
+        elif 'CCACHE_DIR' in os.environ:
             logging.info("using ccache")
             arguments.extend([
                 '-D LLVM_CCACHE_BUILD=ON',
-                '-D LLVM_CCACHE_DIR={}'.format(os.environ['CCACHE_PATH']),
-                '-D LLVM_CCACHE_MAXSIZE=20G',
             ])
     return arguments
 
