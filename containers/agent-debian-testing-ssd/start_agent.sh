@@ -26,8 +26,8 @@ mkdir -p "${AGENT_ROOT}"
 chown -R jenkins:jenkins "${AGENT_ROOT}"
 
 # prepare folder for ccache
-mkdir -p "${CCACHE_PATH}"
-chown -R jenkins:jenkins "${CCACHE_PATH}"
+mkdir -p "${CCACHE_DIR}"
+chown -R jenkins:jenkins "${CCACHE_DIR}"
 
 # copy ssh keys to user jenkins
 mkdir -p ${SSH_KEY_TARGET}

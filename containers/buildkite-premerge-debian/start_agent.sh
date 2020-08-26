@@ -20,9 +20,10 @@ USER=buildkite-agent
 mkdir -p "${BUILDKITE_BUILD_PATH}"
 chown -R ${USER}:${USER} "${BUILDKITE_BUILD_PATH}"
 
-export CCACHE_PATH="${BUILDKITE_BUILD_PATH}"/ccache
-mkdir -p "${CCACHE_PATH}"
-chown -R ${USER}:${USER} "${CCACHE_PATH}"
+export CCACHE_DIR="${BUILDKITE_BUILD_PATH}"/ccache
+export CCACHE_MAXSIZE=20G
+mkdir -p "${CCACHE_DIR}"
+chown -R ${USER}:${USER} "${CCACHE_DIR}"
 
 # /mnt/ssh should contain known_hosts, id_rsa and id_rsa.pub .
 mkdir -p /var/lib/buildkite-agent/.ssh

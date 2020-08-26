@@ -24,7 +24,7 @@ arguments:
     - '-D LLVM_BUILD_EXAMPLES=ON'
     - '-D LLVM_LIT_ARGS="-v --xunit-xml-output test-results.xml"'
   linux:
-    # CCACHE is enabled in script iff environment variable `CCACHE_PATH` is set
+    # CCACHE is enabled in script iff environment variable `CCACHE_DIR` is set
     - '-D LLVM_ENABLE_LLD=ON'
     - '-D CMAKE_CXX_FLAGS=-gmlt'
   windows: []

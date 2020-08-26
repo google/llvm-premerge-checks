@@ -15,7 +15,7 @@
 set -eux
 
 # Runs Cmake.
-# Inputs: CCACHE_PATH, WORKSPACE, TARGET_DIR; $WORKSPACE/build must exist.
+# Inputs: CCACHE_DIR, WORKSPACE, TARGET_DIR; $WORKSPACE/build must exist.
 # Outputs: $TARGET_DIR/CMakeCache.txt, $WORKSPACE/compile_commands.json (symlink).
 
 echo "Running CMake... ======================================"
@@ -27,7 +27,7 @@ cd "$WORKSPACE"/build
 set +e
 cmake -GNinja ../llvm -DCMAKE_BUILD_TYPE=Release -D LLVM_ENABLE_LLD=ON \
     -D LLVM_ENABLE_PROJECTS="clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;flang" \
-    -D LLVM_CCACHE_BUILD=ON -D LLVM_CCACHE_DIR="${CCACHE_PATH}" -D LLVM_CCACHE_MAXSIZE=20G \
+    -D LLVM_CCACHE_BUILD=ON -D LLVM_CCACHE_DIR="${CCACHE_DIR}" -D LLVM_CCACHE_MAXSIZE=20G \
     -D LLVM_ENABLE_ASSERTIONS=ON -DCMAKE_CXX_FLAGS=-gmlt \
     -DLLVM_LIT_ARGS="-v --xunit-xml-output ${WORKSPACE}/build/test-results.xml"
 RETURN_CODE="${PIPESTATUS[0]}"

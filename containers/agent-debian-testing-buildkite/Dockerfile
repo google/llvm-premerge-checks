@@ -40,7 +40,8 @@ RUN groupadd -g ${gid} ${group} ;\
 RUN chown -R ${user}:${user} /home/${user}
 
 WORKDIR /home/${user}
-ENV CCACHE_PATH=/mnt/disks/ssd0/ccache
+ENV CCACHE_DIR=/mnt/disks/ssd0/ccache
+ENV CCACHE_MAXSIZE=20G
 
 # configure locale
 RUN sed --in-place '/en_US.UTF-8/s/^#//' /etc/locale.gen ;\

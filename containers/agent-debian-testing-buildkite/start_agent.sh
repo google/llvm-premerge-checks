@@ -22,8 +22,8 @@ mkdir -p "${AGENT_ROOT}"
 chown -R ${USER}:${USER} "${AGENT_ROOT}"
 
 # prepare folder for ccache
-mkdir -p "${CCACHE_PATH}"
-chown -R ${USER}:${USER} "${CCACHE_PATH}"
+mkdir -p "${CCACHE_DIR}"
+chown -R ${USER}:${USER} "${CCACHE_DIR}"
 
 # TODO(kuhnel): wipe the disk(s) on startup
 
