@@ -21,7 +21,6 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ROOT_DIR="$(dirname ${DIR})"
 
 # get config options
-# shellcheck source=../k8s_config
 source "${ROOT_DIR}/k8s_config"
 NAME=$1
 

@@ -1,24 +1,22 @@
 - [Playbooks](#playbooks)
   * [deployment to a clean infrastructure](#deployment-to-a-clean-infrastructure)
-  * [creating basic authentication for reverse proxy](#creating-basic-authentication-for-reverse-proxy)
   * [Creating docker containers on Windows](#creating-docker-containers-on-windows)
   * [Spawning a new windows agent](#spawning-a-new-windows-agent)
     + [Buildkite](#buildkite)
-    + [Jenkins](#jenkins)
   * [Testing scripts locally](#testing-scripts-locally)
   * [Custom environment variables](#custom-environment-variables)
   * [Testing changes before merging](#testing-changes-before-merging)
-- [Update HTTP auth credentials](#update-http-auth-credentials)
-- [Phabricator integration](#phabricator-integration)
-  * [Herald](#herald)
-  * [Harbormaster](#harbormaster)
+  * [Update HTTP auth credentials](#update-http-auth-credentials)
   
 # Playbooks
 
 ## deployment to a clean infrastructure
 
 General remarks:
-* GCP does not route any traffic to your services unless the service is "healthy". It might take a few minutes after startup before the services is classified as healthy. Until then you will only see some generic error message.
+* GCP does not route any traffic to your services unless the service is
+"healthy". It might take a few minutes after startup before the services is
+classified as healthy. Until then, you will only see some generic error
+message.
 
 These are the steps to set up the build server on a clean infrastructure:  
 1. Configure the tools on your local machine:
@@ -38,18 +36,6 @@ These are the steps to set up the build server on a clean infrastructure:
     cd kubernetes/cluster
     ./cluster_create.sh
     ```
-1. Create the disk storage, if it does not yet exist:
-    ```bash
-    cd kubernetes/cluster
-    ./disk_create.sh
-    ```
-1. SSH into the VM instance mounting the volume, find the mount point and then set
-    ```bash
-    # go to the mount point of the volume
-    cd  /var/lib/kubelet/plugins/kubernetes.io/gce-pd/mounts/jenkins-home
-    # change the permissions
-    sudo chmod a+rwx
-    ```
 1. Push the docker images to gcr.io:
     ```bash
     cd containers
@@ -62,17 +48,6 @@ These are the steps to set up the build server on a clean infrastructure:
     ./deploy.sh
     ```
 1. Configure it
-
-## creating basic authentication for reverse proxy
-
-1. create auth file, based on [ingress-nginx documentation](https://github.com/kubernetes/ingress-nginx/tree/master/docs/examples/auth/basic)
-    ```bash
-    cd kubernetes/reverse-proxy
-    htpasswd -c auth <username>
-    # enter password at prompt
-    # add more users as required
-    kubectl create secret generic proxy-auth --from-file=auth --namespace=jenkins
-    ```
 
 ## Creating docker containers on Windows
 
@@ -116,8 +91,8 @@ Here are the instructions to set up such a machine on GCP.
     cd c:\
     git clone https://github.com/google/llvm-premerge-checks
     cd llvm-premerge-checks\containers
-    .\build_deploy.ps1 agent-windows-buildkite # or agent-windows-jenkins
-    c:\llvm-premerge-check\scripts\windows_agent_start_buildkite.ps1 # or windows_agent_start_jenkins.ps1
+    .\build_deploy.ps1 agent-windows-buildkite
+    c:\llvm-premerge-check\scripts\windows_agent_start_buildkite.ps1
     ```
 
 ## Spawning a new windows agent
@@ -155,22 +130,10 @@ To spawn a new windows agent:
 git clone https://github.com/google/llvm-premerge-checks.git C:\llvm-premerge-checks
 schtasks.exe /create /tn "Start Buildkite agent" /ru SYSTEM /SC ONSTART /DELAY 0005:00 /tr "powershell -command 'C:\llvm-premerge-checks\scripts\windows_agent_start_buildkite.ps1 -workdir c:\ws'"
 ```
-   
-### Jenkins
-   1. Create `c:\credentials` folder with `build-agent-results_key.json` to access cloud storage copy from one of the existing machines.
-   1. Run
-   ```powershell
-   git clone https://github.com/google/llvm-premerge-checks.git "c:\llvm-premerge-checks"
-   C:\llvm-premerge-checks\scripts\windows_agent_start_buildkite.ps1 [-testing] [-version latest]
-   ```
-
-Metrics are exported as "custom/statsd/gauge".
 
 ## Testing scripts locally
 
-Build and run agent docker image `sudo ./containers/build_run.sh agent-debian-testing-ssd /bin/bash`.
-
-Within a container set environment variables similar to [pipeline](https://github.com/google/llvm-premerge-checks/blob/master/Jenkins/Phabricator-pipeline/Jenkinsfile).
+Build and run agent docker image `sudo ./containers/build_run.sh buildkite-premerge-debian /bin/bash`.
 
 Additionally set `WORKSPACE`, `PHID` and `DIFF_ID` parameters. Set `CONDUIT_TOKEN` with your personal one from `https://reviews.llvm.org/settings/user/<USERNAME>/page/apitokens/`.
 
@@ -200,7 +163,7 @@ It's recommended to test even smallest changes before committing them to the `ma
    `scripts_branch="my-feature"` (see also "Custom environment variables" for other options above). To test "premerge-tests" pipeline pick an existing build and copy parameters from it, omitting "ph_target_phid", namely: "ph_build_id", "ph_buildable_diff", "ph_buildable_revision", "ph_initiator_phid" and "scripts_branch" variables.
 1. Wait for build to complete and maybe attach a link to it to your PR.
 
-# Update HTTP auth credentials
+## Update HTTP auth credentials
 
 To update e.g. buildkite http-auth:
 ```shell script
@@ -213,31 +176,3 @@ htpasswd -b auth <user> <pass>
 kubectl delete secret http-auth -n buildkite
 kubectl create secret generic http-auth -n buildkite --from-file=./auth
 ```
-
-# Phabricator integration
-
-The general flow for builds on Phabricator is:
-1. A user uploads a *Diff* (=patch) to a *Revision* (set of Diffs with comments and buildstatus, ... ).
-2. A *Herald* checks if one of the *rules* matches this event. 
-3. You can use the rules to trigger a *Build* in *Harbormaster*.
-4. Harbor sends an HTTP request to the Jenkins server.
-5. Jenkins executes the build. In the last step of the build, a script is uploading the results to Phabricator.
-6. Phabricator sets the build status and displays the results.
-
-## Herald
-
-We currently have these Herald rules to configure the builds:
-* Triggering builds for everyone:
-    * [H576](https://reviews.llvm.org/H576) This will only trigger for non-beta testers.
-* Triggering the beta-test builds:
-    * [H511](https://reviews.llvm.org/H511) or the beta testers, this is for testing new features.
-    * [H552](https://reviews.llvm.org/H552) for all changes to MLIR (archived)
-    * [H527](https://reviews.llvm.org/H527) for all changes to clang-extra-tools (archived)
-
-You can *archive* a rule to disable it.
-
-## Harbormaster
-
-We have these build plans in Harbormaster:
-* [Plan 4](https://reviews.llvm.org/harbormaster/plan/4/) Builds for everyone
-* [Plan 3](https://reviews.llvm.org/harbormaster/plan/3/) Builds for beta testers
