@@ -6,6 +6,9 @@ ij_formatter_on_tag = @formatter:on
 ij_formatter_tags_enabled = false
 ij_smart_tabs = false
 
+[*.md]
+max_line_length = 80
+ij_visual_guides = 80,100
 
 [{*.pyw,*.py,*.pi}]
 indent_style = space
@@ -106,13 +109,6 @@ ij_html_space_around_equality_in_attribute = false
 ij_html_space_inside_empty_tag = false
 ij_html_text_wrap = normal
 
-[{*.vsl,*.vm,*.ft}]
-ij_vtl_keep_indents_on_empty_lines = false
-
-[{*.xjsp,*.tag,*.jsp,*.jsf,*.jspf,*.tagf}]
-ij_jsp_jsp_prefer_comma_separated_import_list = false
-ij_jsp_keep_indents_on_empty_lines = false
-
 [{*.yml,*.yaml}]
 indent_size = 2
 ij_yaml_keep_indents_on_empty_lines = false
@@ -139,10 +135,3 @@ ij_json_space_before_comma = false
 ij_json_spaces_within_braces = false
 ij_json_spaces_within_brackets = false
 ij_json_wrap_long_lines = false
-
-[{BUILD,WORKSPACE,*.bzl}]
-ij_continuation_indent_size = 4
-ij_build_keep_indents_on_empty_lines = false
-
-[{spring.schemas,spring.handlers,*.properties}]
-ij_properties_align_group_field_declarations = false
