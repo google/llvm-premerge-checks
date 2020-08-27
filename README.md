@@ -1,39 +1,66 @@
 # Overview
 
-This repository contains the configuration files for the pre-merge checks for the LLVM project. This github project contains the documentation and the server configuration cluster of build machines that are used to check all incoming commits to the LLVM project.
+The *pre-merge checks* for the [LLVM project](http://llvm.org/) are a [continuous integration (CI)](https://en.wikipedia.org/wiki/Continuous_integration) workflow. The workflow checks the patches the developers upload to the [LLVM Phabricator](https://reviews.llvm.org) instance. *Phabricator* is the code review tool in the LLVM project. The workflow checks the patches before a user merges them the master branch - thus the term *pre-merge testing*. When a user uploads a patch to the LLVM Phabricator, Phabricator triggers the checks and then displays the results.
 
-# User documentation
-If you are interested in a high-level overview and how to best use the tool see [docs/user_doc.md](docs/user_doc.md)
+The CI system checks the patches **before** a user merges them to the master branch. This way bugs in a patch are contained during the code review stage and do not pollute the master branch. The more bugs the CI system can catch during the code review phase, the more stable and bug-free the master branch will become.
 
-# Cluster overview
+This repository contains the configurations and script to run pre-merge checks for the LLVM project.
 
-The cluster consists of these services:
-* Jenkins build server: http://jenkins.llvm-merge-guard.org
-* a set of Jenkins agents running the builds
-* an nginx server with the build results/logs http://results.llvm-merge-guard.org
+## Feedback
 
-![deployment diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/google/llvm-premerge-checks/master/docs/deployment.plantuml)
+If you notice issues or have an idea on how to improve pre-merge checks, please create a [new issue](https://github.com/google/llvm-premerge-checks/issues/new) or give a
+:heart: to an existing one.
+ 
+## Sign up for beta-test
 
-# Jenkins-Phabricator integration
+To get the latest features and help us developing the project, sign up for the pre-merge beta testing by adding yourself to the ["pre-merge beta testing" project](https://reviews.llvm.org/project/members/78/) on Phabricator.
 
-The Jenkins-Phabricator is based on the instructions provided with the [Phabricator-Jenkins Plugin](https://github.com/uber/phabricator-jenkins-plugin).
+## Opt-out
 
-On the Phabricator side these things were configured:
-* the Harbormaster [build plan](https://reviews.llvm.org/harbormaster/plan/3/)
-* the Herald [rule](https://reviews.llvm.org/H511)
-* the [merge_guards_bot user](https://reviews.llvm.org/p/merge_guards_bot/) writing the comments
+In case you want to opt-out entirely of pre-merge testing, add yourself to the [OPT OUT project](https://reviews.llvm.org/project/view/83/).
 
-On the Jenkins side:
-* in the Jenkins configuration page as explained in the instrucitons
-* in the build [job](http://jenkins.llvm-merge-guard.org/job/Phabricator/)
-* The Phabricator pluging is *not* used, as it's not flexible enough. Rather Phabricator just triggers the build via an HTTP request. The `arc patch` operations by scripts. The build feedback is also uploaded by scripts via the [harbormaster.sendmessage](https://secure.phabricator.com/conduit/method/harbormaster.sendmessage/) and [differential.revision.edit](https://secure.phabricator.com/conduit/method/differential.revision.edit/) APIs.
+If you decide to opt-out, please let us know why, so we might be able to improve in the future.
 
-There is no backup of the credentials. If you need to change it, generate a new one and update it in Jenkins and Phabricator.
+# Requirements
+
+The builds are only triggered if the Revision in Phabricator is created/updated via `arc diff`.
+If you update a Revision via the Web UI it will [not trigger](https://secure.phabricator.com/Q447) a build. 
+
+To get a patch on Phabricator tested the build server must be able to apply the patch to the checked out git repository.
+If you want to get your patch tested, please make sure that either:
+
+* You set a git hash as `sourceControlBaseRevision` in Phabricator which is available on the Github repository,
+* **or** you define the dependencies of your patch in Phabricator, 
+* **or** your patch can be applied to the master branch.
+
+Only then can the build server apply the patch locally and run the builds and tests.
+
+# Accessing results on Phabricator 
+
+TODO: move closer to top and explain what different links mean currently. Update screenshots.
+
+Phabricator will automatically trigger a build for every new patch you upload or modify.
+Phabricator shows the build results at the top of the entry:
+![build status](docs/images/diff_detail.png)
+
+CI will compile and run tests, run clang-format and [clang-tidy](docs/clang_tidy.md) on lines changed. 
+
+If a unit test failed, this is shown below the build status. You can also expand the unit test to see the details:
+![unit test results](docs/images/unit_tests.png).
+
+# Contributing
+
+We're happy to get help on improving the infrastructure and workflows!
+
+Please check [contibuting](docs/contributing.md) first.
+[Development](docs/development.md) gives an overview how different parts interact together.
+[Playbooks](docs/playbooks.md) shows concrete examples how to, for example, build and run agents locally.
+
+If you have any questions please contact [Christian Kühnel](mailto:kuhnel@google.com) or [Mikhail Goncharov](mailto:goncahrov@google.com).
 
 # Additional Information
 * [Playbooks](docs/playbooks.md) for installing/upgrading agents and testing changes.
-* [User documentation](docs/user_doc.md)
 * [Log of the service operations](https://github.com/google/llvm-premerge-checks/wiki/LLVM-pre-merge-tests-operations-blog)
 
 # License
-This project is licensed unter the "Apache 2.0 with LLVM Exception" license. See [LICENSE](LICENSE) for details.
+This project is licensed under the "Apache 2.0 with LLVM Exception" license. See [LICENSE](LICENSE) for details.

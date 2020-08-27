@@ -1,5 +1,20 @@
-# Playbooks
+- [Playbooks](#playbooks)
+  * [deployment to a clean infrastructure](#deployment-to-a-clean-infrastructure)
+  * [creating basic authentication for reverse proxy](#creating-basic-authentication-for-reverse-proxy)
+  * [Creating docker containers on Windows](#creating-docker-containers-on-windows)
+  * [Spawning a new windows agent](#spawning-a-new-windows-agent)
+    + [Buildkite](#buildkite)
+    + [Jenkins](#jenkins)
+  * [Testing scripts locally](#testing-scripts-locally)
+  * [Custom environment variables](#custom-environment-variables)
+  * [Testing changes before merging](#testing-changes-before-merging)
+- [Phabricator integration](#phabricator-integration)
+  * [Herald](#herald)
+  * [Harbormaster](#harbormaster)
+  
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
+# Playbooks
 
 ## deployment to a clean infrastructure
 
@@ -149,20 +164,6 @@ schtasks.exe /create /tn "Start Buildkite agent" /ru SYSTEM /SC ONSTART /DELAY 0
    git clone https://github.com/google/llvm-premerge-checks.git "c:\llvm-premerge-checks"
    C:\llvm-premerge-checks\scripts\windows_agent_start_buildkite.ps1 [-testing] [-version latest]
    ```
-
-## Buildkite monitoring
-
-VM instance `buildkite-monitoring` exposes Buildkite metrics to GCP.
-To setup a new instance:
-1. Create as small linux VM with full access to *Stackdriver Monitoring API*.
-2. Follow instructions to [install moninorign agent](https://cloud.google.com/monitoring/agent/install-agent) and [enable statsd plugin](https://cloud.google.com/monitoring/agent/plugins/statsd).
-3. Download recent release of [buildkite-agent-metrics](https://github.com/buildkite/buildkite-agent-metrics/releases).
-4. Run in SSH session:
-```bash
-chmod +x buildkite-agent-metrics-linux-amd64
-nohup ./buildkite-agent-metrics-linux-amd64 -token XXXX -interval 30s -backend statsd &
-```
-.
 
 Metrics are exported as "custom/statsd/gauge".
 
