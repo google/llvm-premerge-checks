@@ -25,10 +25,9 @@ source "${ROOT_DIR}/k8s_config"
 gcloud container clusters create $GCP_CLUSTER --zone $GCP_ZONE \
     --machine-type=n1-standard-4 --num-nodes=1
 
-# Jenkins agents with local ssd
-# as per instructions
+# Linux agents node pool with local ssd.
 # https://cloud.google.com/kubernetes-engine/docs/how-to/persistent-volumes/local-ssd
-gcloud container node-pools create jenkins-agents --cluster $GCP_CLUSTER --zone $GCP_ZONE \
+gcloud container node-pools create linux-agents --cluster $GCP_CLUSTER --zone $GCP_ZONE \
     --machine-type=n1-standard-32 --num-nodes=2 --local-ssd-count=1
 
 # created separate cluster for windows, as we need "ip-alias" enabled

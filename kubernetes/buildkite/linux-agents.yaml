@@ -15,7 +15,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: premerge-debian
+  name: linux-agents
   namespace: buildkite
 spec:
   replicas: 4
@@ -53,8 +53,12 @@ spec:
                 secretKeyRef:
                   name: buildkite-agent-token
                   key: token
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                 fieldPath: metadata.name
             - name: BUILDKITE_AGENT_TAGS
-              value: "queue=linux"
+              value: "queue=linux,name=$(POD_NAME)"
             - name: BUILDKITE_BUILD_PATH
               value: "/mnt/disks/ssd0/agent"
             - name: CONDUIT_TOKEN
@@ -72,4 +76,4 @@ spec:
           secret:
             secretName: github-ssh
       nodeSelector:
-        cloud.google.com/gke-nodepool: jenkins-agents
+        cloud.google.com/gke-nodepool: linux-agents

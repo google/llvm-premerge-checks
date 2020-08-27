@@ -99,6 +99,8 @@ proxy](https://kubernetes.github.io/ingress-nginx/deploy/#gce-gke) and
 [certificate
 manager](http://docs.cert-manager.io/en/latest/getting-started/install/kubernetes.html).
 
+[lets-encrypt configuration](../kubernetes/cert-issuer.yaml).
+
 Access to the service is restricted with basic HTTP auth. It's configured with
 k8s secret 'http-auth' in 'buildkite' namespace (see [how to update
 auth](playbooks.md#update-http-auth-credentials))
@@ -177,4 +179,7 @@ chmod +x buildkite-agent-metrics-linux-amd64
 nohup ./buildkite-agent-metrics-linux-amd64 -token XXXX -interval 30s -backend statsd &
 ```
 
+Metrics are exported as "custom/statsd/gauge".
+
 TODO: update "Testing scripts locally" playbook on how to run Linux build locally with Docker.
+TODO: migrate 'builkite-monitoring' to k8s deployment.
