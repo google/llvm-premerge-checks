@@ -9,6 +9,8 @@ ij_smart_tabs = false
 [*.md]
 max_line_length = 80
 ij_visual_guides = 80,100
+indent_size = 2
+tab_width = 2
 
 [{*.pyw,*.py,*.pi}]
 indent_style = space

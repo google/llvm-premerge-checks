@@ -111,6 +111,7 @@ def _create_args(config: Configuration, llvm_enable_projects: str, use_cache: bo
     arguments = [
         os.path.join('..', 'llvm'),
         '-D LLVM_ENABLE_PROJECTS="{}"'.format(llvm_enable_projects),
+        '-D LLVM_TARGETS_TO_BUILD=X86',
     ]
     arguments.extend(config.general_cmake_arguments)
     arguments.extend(config.specific_cmake_arguments)

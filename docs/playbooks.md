@@ -1,4 +1,5 @@
 - [Playbooks](#playbooks)
+  * [Testing changes to the build scripts](#testing-changes-to-the-build-scripts)
   * [deployment to a clean infrastructure](#deployment-to-a-clean-infrastructure)
   * [creating basic authentication for reverse proxy](#creating-basic-authentication-for-reverse-proxy)
   * [Creating docker containers on Windows](#creating-docker-containers-on-windows)
@@ -7,12 +8,32 @@
     + [Jenkins](#jenkins)
   * [Testing scripts locally](#testing-scripts-locally)
   * [Custom environment variables](#custom-environment-variables)
-  * [Testing changes before merging](#testing-changes-before-merging)
 - [Phabricator integration](#phabricator-integration)
   * [Herald](#herald)
   * [Harbormaster](#harbormaster)
   
 # Playbooks
+
+## Testing changes to the build scripts
+
+It's recommended to test even smallest changes before committing them to the `master` branch.
+
+1. Create a branch with your changes, e.g. "my-feature" and push it to origin.
+2. Manually create a buildkite build in the pipeline you are updating and
+    specify environment variable `scripts_branch="my-feature"` (see also [custom
+    environment variables](#custom-environment-variables) for other options).
+    To test "premerge-tests" pipeline pick an existing build and copy parameters
+    from it, omitting "ph_target_phid", namely: "ph_build_id",
+    "ph_buildable_diff", "ph_buildable_revision", "ph_initiator_phid" and
+    "scripts_branch" variables.
+    **Or** use Buildkite REST API, e.g. to run 'llvm-master-build':
+    ```shell script
+    curl -H "Authorization: Bearer MY-API-TOKEN" \
+    -X POST "https://api.buildkite.com/v2/organizations/llvm-project/pipelines/llvm-master-build/builds" \
+    -d '{"branch": "master", "commit": "HEAD", "env": {"scripts_branch": "my-feature"}}'
+    ```
+1. Wait for build to complete and maybe attach a link to it to your Pull
+    Request.
 
 ## deployment to a clean infrastructure
 
@@ -189,15 +210,6 @@ Most commonly used are:
 - `ph_no_filter_output` (if set to any value): do not filter output of `ninja all` and other commands from buildkite log.
 - `ph_linux_agents`, `ph_windows_agents`: custom JSON constraints on agents. For example you might put one machine to a custom queue if it's errornous and send jobs to it with `ph_windows_agents="{{\"queue\": \"custom\"}}"`.
 - `ph_skip_linux`, `ph_skip_windows` (if set to any value): skip build on this OS.
-
-## Testing changes before merging
-
-It's recommended to test even smallest changes before committing them to the `master` branch.
-
-1. Create a branch with your changes, e.g. "my-feature" and push it to origin.
-1. Manually create a buildkite build in the pipeline you are updating and specify environment variable
-   `scripts_branch="my-feature"` (see also "Custom environment variables" for other options above). To test "premerge-tests" pipeline pick an existing build and copy parameters from it, omitting "ph_target_phid", namely: "ph_build_id", "ph_buildable_diff", "ph_buildable_revision", "ph_initiator_phid" and "scripts_branch" variables.
-1. Wait for build to complete and maybe attach a link to it to your PR.
 
 # Phabricator integration
 
