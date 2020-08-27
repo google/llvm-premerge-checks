@@ -1,13 +1,11 @@
 - [Overview](#overview)
 - [Phabricator integration](#phabricator-integration)
 - [Buildkite pipelines](#buildkite-pipelines)
-- [Life of pre-merge check](#life-of-pre-merge-check)
+- [Life of a pre-merge check](#life-of-a-pre-merge-check)
 - [Enabled projects and project detection](#enabled-projects-and-project-detection)
 - [Agent machines](#agent-machines)
 - [Compilation caching](#compilation-caching)
 - [Buildkite monitoring](#buildkite-monitoring)
-
-<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
 # Overview
 
@@ -59,7 +57,7 @@ One typically edits corresponding script, not a pipeline definition in the
 Buildkite interface. [How to test
 changes](playbooks.md#testing-changes-before-merging).
 
-# Life of pre-merge check
+# Life of a pre-merge check
 
 When new diff arrives for review it triggers a Herald rule ("everyone" or "beta
 testers").
