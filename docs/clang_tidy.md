@@ -26,4 +26,4 @@ If your are confident that some files are in good shape already, please
 
 ----
 
-[about pre-merge checks](docs/user_doc.md)
+[about pre-merge checks](../README.md)

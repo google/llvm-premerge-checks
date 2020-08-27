@@ -1,53 +1,24 @@
 @startuml
-
-node Phabricator
+component phabricator
+component buildkite
 
 node github {
-component LLVM_monorepo
+ component "llvm-project"
+ component "llvm-project fork"
+ component "llvm-premerge-checks"
 }
 
-cloud "Google Cloud" {
-
-node "premerge-test Kubernetes cluster" {
-
-
-node "reverse proxy" {
-component nginx
-}
-
-node "nginx results" {
-component "Linux results"
-}
-
-node "Jenkins" {
-component "Jenkins master"
-}
-
-node "Linux agent" {
-component "Swarm plugin (Linux)"
-component "LLVM build tools (Linux)"
-[Swarm plugin (Linux)] -- [Jenkins master]
-[Swarm plugin (Linux)] --> [Linux results]
-}
+node "GCP" {
+ component "buildkite agents"
+ component "phab-proxy"
 }
 
 
-node "Google Cloud Storage" {
-component "Windows results"
-}
-
-node "Windows agent" {
-component "Swarm plugin (Win)"
-component "LLVM build tools (Win)"
-[Swarm plugin (Win)] -- [Jenkins master]
-[Swarm plugin (Win)] --> [Windows results]
-}
-
-}
-Phabricator --> nginx
-nginx --> [Jenkins master]
-[Jenkins master] --> LLVM_monorepo
-[Swarm plugin (Linux)] --> LLVM_monorepo
-[Swarm plugin (Win)] --> LLVM_monorepo
-
+[phabricator] --> [phab-proxy]
+[phab-proxy] --> [buildkite]
+[buildkite] <-- [buildkite agents]
+[buildkite agents] <-- [llvm-project]
+[buildkite agents] <--> [llvm-project fork]
+[buildkite agents] --> [phabricator]
+[buildkite agents] <-- [llvm-premerge-checks]
 @enduml
