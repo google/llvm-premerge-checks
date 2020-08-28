@@ -2,6 +2,10 @@
 - [Phabricator integration](#phabricator-integration)
 - [Buildkite pipelines](#buildkite-pipelines)
 - [Life of a pre-merge check](#life-of-a-pre-merge-check)
+- [Cluster parts](#cluster-parts)
+  * [Ingress and public addresses](#ingress-and-public-addresses)
+  * [Linux agents](#linux-agents)
+  * [Windows agents](#windows-agents)
 - [Enabled projects and project detection](#enabled-projects-and-project-detection)
 - [Agent machines](#agent-machines)
 - [Compilation caching](#compilation-caching)
@@ -81,6 +85,40 @@ branches older than 30 days.
 ([build_branch_pipeline.py](../scripts/buildkite/build_branch_pipeline.py))
 builds and tests changes on Linux and Windows agents. Then it uploads a
 combined result to Phabricator.
+
+# Cluster parts
+
+## Ingress and public addresses
+
+https://build.llvm-merge-guard.org/ URL points to [phabricator
+proxy](../phabricator-proxy) application.
+
+We use NGINX ingress for Kubernetes and Let's Encrypt certificate manager.
+Follow up to date docs to install [reverse
+proxy](https://kubernetes.github.io/ingress-nginx/deploy/#gce-gke) and
+[certificate
+manager](http://docs.cert-manager.io/en/latest/getting-started/install/kubernetes.html).
+
+Access to the service is restricted with basic HTTP auth. It's configured with
+k8s secret 'http-auth' in 'buildkite' namespace (see [how to update
+auth](playbooks.md#update-http-auth-credentials))
+
+llvm-merge-guard.org domain is managed by [Google
+Domains](https://domains.google.com/).
+
+## Linux agents
+
+- docker image [buildkite-premerge-debian](../containers/buildkite-premerge-debian).
+
+- [Kubernetes manifests](../kubernetes/buildkite).
+
+## Windows agents
+
+- docker image [agent-windows-buildkite](../containers/agent-windows-buildkite).
+
+- VMs are manually managed and updated, use RDP to access.
+
+- there is an 'windows development' VM to do Windows-related development.
 
 # Enabled projects and project detection
 

@@ -17,4 +17,6 @@
 # checked out from your SCM provider
 
 set -e
+# Convert https://github.com/llvm-premerge-tests/llvm-project.git -> llvm-project
+# to use the same directory for fork and origin.
 BUILDKITE_BUILD_CHECKOUT_PATH="${BUILDKITE_BUILD_PATH}/$(echo $BUILDKITE_REPO | sed -E "s#.*/([^/]*)#\1#" | sed "s/.git$//")"

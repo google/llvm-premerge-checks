@@ -8,6 +8,7 @@
   * [Testing scripts locally](#testing-scripts-locally)
   * [Custom environment variables](#custom-environment-variables)
   * [Testing changes before merging](#testing-changes-before-merging)
+- [Update HTTP auth credentials](#update-http-auth-credentials)
 - [Phabricator integration](#phabricator-integration)
   * [Herald](#herald)
   * [Harbormaster](#harbormaster)
@@ -198,6 +199,20 @@ It's recommended to test even smallest changes before committing them to the `ma
 1. Manually create a buildkite build in the pipeline you are updating and specify environment variable
    `scripts_branch="my-feature"` (see also "Custom environment variables" for other options above). To test "premerge-tests" pipeline pick an existing build and copy parameters from it, omitting "ph_target_phid", namely: "ph_build_id", "ph_buildable_diff", "ph_buildable_revision", "ph_initiator_phid" and "scripts_branch" variables.
 1. Wait for build to complete and maybe attach a link to it to your PR.
+
+# Update HTTP auth credentials
+
+To update e.g. buildkite http-auth:
+```shell script
+kubectl get secret http-auth -n buildkite -o yaml
+# base64 decode it's data to 'auth'.
+echo <data/auth from yaml> | base64 --decode > auth
+# add / update passwords
+htpasswd -b auth <user> <pass> 
+# update secret
+kubectl delete secret http-auth -n buildkite
+kubectl create secret generic http-auth -n buildkite --from-file=./auth
+```
 
 # Phabricator integration
 
