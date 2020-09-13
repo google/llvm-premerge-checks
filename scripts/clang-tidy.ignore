@@ -32,6 +32,9 @@ llgo/test
 compiler-rt/test
 compiler-rt/test/builtins/Unit/ppc/test
 compiler-rt/test/builtins/Unit/test
+compiler-rt/lib/sanitizer_common/sanitizer_syscall_linux_.*.inc
+compiler-rt/lib/sanitizer_common/sanitizer_linux.cpp
+compiler-rt/lib/sanitizer_common/sanitizer_common_syscalls.inc
 debuginfo-tests/dexter/dex/tools/test
 debuginfo-tests/dexter/feature_tests/subtools/test
 clang/test
