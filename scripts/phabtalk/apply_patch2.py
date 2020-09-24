@@ -56,12 +56,13 @@ class ApplyPatch:
     """
 
     def __init__(self, path: str, diff_id: int, token: str, url: str, git_hash: str,
-                 push_branch: bool = False):
+                 phid: str, push_branch: bool = False):
         self.push_branch = push_branch  # type: bool
         self.conduit_token = token  # type: Optional[str]
         self.host = url  # type: Optional[str]
         self._load_arcrc()
         self.diff_id = diff_id  # type: int
+        self.phid = phid # type: str
         if not self.host.endswith('/api/'):
             self.host += '/api/'
         self.phab = self._create_phab()
@@ -181,8 +182,12 @@ class ApplyPatch:
             return
 
         self.repo.git.add('-A')
-        self.repo.index.commit(message='applying Diff {}'.format(
-            self.diff_id))
+        message = """
+Applying diff {}
+
+Phabricator-ID: {}
+""".format(self.diff_id, self.phid)
+        self.repo.index.commit(message=message)
         self.repo.git.push('--force', 'origin', self.branch_name)
         logging.info('Branch {} pushed to origin'.format(self.branch_name))
         pass
@@ -319,6 +324,7 @@ if __name__ == "__main__":
                         help='Use this commit as a base. For "auto" tool tries to pick the base commit itself')
     parser.add_argument('--push-branch', action='store_true', dest='push_branch',
                         help='choose if branch shall be pushed to origin')
+    parser.add_argument('--phid', type=str, default=None, help='Phabricator ID of the review this commit pertains to')
     parser.add_argument('--log-level', type=str, default='INFO')
     args = parser.parse_args()
     logging.basicConfig(level=args.log_level, format='%(levelname)-7s %(message)s')

@@ -24,6 +24,7 @@ scripts/phabtalk/apply_patch2.py $ph_buildable_diff \
   --url $PHABRICATOR_HOST \
   --log-level $LOG_LEVEL \
   --commit $BASE_COMMIT \
+  --phid ${ph_target_phid} \
   --push-branch
 
 EXIT_STATUS=$?
