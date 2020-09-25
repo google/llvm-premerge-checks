@@ -163,8 +163,11 @@ class ApplyPatch:
 
     def _create_branch(self, base_revision: Optional[str]):
         self.repo.git.fetch('--all')
-        if self.branch_name in self.repo.heads:
-            self.repo.delete_head('--force', self.branch_name)
+        try:
+            if self.branch_name in self.repo.heads:
+                self.repo.delete_head('--force', self.branch_name)
+        except:
+            logging.warning('cannot delete branch {}'.format(self.branch_name))
         try:
             commit = self.repo.commit(base_revision)
         except Exception as e:
