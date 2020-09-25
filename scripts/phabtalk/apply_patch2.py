@@ -328,5 +328,5 @@ if __name__ == "__main__":
     parser.add_argument('--log-level', type=str, default='INFO')
     args = parser.parse_args()
     logging.basicConfig(level=args.log_level, format='%(levelname)-7s %(message)s')
-    patcher = ApplyPatch(args.path, args.diff_id, args.token, args.url, args.commit, args.push_branch)
+    patcher = ApplyPatch(args.path, args.diff_id, args.token, args.url, args.commit, args.phid, args.push_branch)
     sys.exit(patcher.run())
