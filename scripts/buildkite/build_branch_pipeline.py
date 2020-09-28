@@ -110,9 +110,10 @@ if __name__ == '__main__':
     if os.getenv('ph_skip_linux') is None:
         steps.append(linux_buld_step)
         deps.append(linux_buld_step['key'])
-    if os.getenv('ph_skip_windows') is None:
-        steps.append(windows_buld_step)
-        deps.append(windows_buld_step['key'])
+    # TODO: temporary disable windows step
+    # if os.getenv('ph_skip_windows') is None:
+    #     steps.append(windows_buld_step)
+    #     deps.append(windows_buld_step['key'])
     report_step = {
         'label': ':spiral_note_pad: report',
         'depends_on': deps,
