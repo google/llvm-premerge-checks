@@ -105,8 +105,9 @@ if __name__ == '__main__':
     }
     if os.getenv('ph_skip_linux') is None:
         steps.append(linux_buld_step)
-    if os.getenv('ph_skip_windows') is None:
-        steps.append(windows_buld_step)
+    # TODO: windows builds are temporary disabled #243
+    # if os.getenv('ph_skip_windows') is None:
+    #     steps.append(windows_buld_step)
     notify = []
     for e in notify_emails:
         notify.append({'email': e})
