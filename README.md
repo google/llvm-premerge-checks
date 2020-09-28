@@ -1,3 +1,8 @@
+# Status
+
+:exclamation: We have ongoing issue with windows build taking more that 2 hours to complete.
+That also causes follow up builds to fail. Thus **windows builds are temporary disabled**.
+
 # Overview
 
 The *pre-merge checks* for the [LLVM project](http://llvm.org/) are a
