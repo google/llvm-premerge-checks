@@ -129,7 +129,7 @@ class ApplyPatch:
             logging.info('applying original diff')
             self._apply_diff(self.diff_id, revision_id)
             if self.push_branch:
-                self._commit_and_push()
+                self._commit_and_push(revision_id)
             else:
                 self.repo.git.add('-u', '.')
             return 0
@@ -179,7 +179,7 @@ class ApplyPatch:
         self.repo.head.reset(index=True, working_tree=True)
         logging.info('Base branch revision is {}'.format(self.repo.head.commit.hexsha))
 
-    def _commit_and_push(self):
+    def _commit_and_push(self, revision_id):
         """Commit the patch and push it to origin."""
         if not self.push_branch:
             return
@@ -189,7 +189,8 @@ class ApplyPatch:
 Applying diff {}
 
 Phabricator-ID: {}
-""".format(self.diff_id, self.phid)
+Review-ID: {}
+""".format(self.diff_id, self.phid, diff_to_str(revision_id))
         self.repo.index.commit(message=message)
         self.repo.git.push('--force', 'origin', self.branch_name)
         logging.info('Branch {} pushed to origin'.format(self.branch_name))
