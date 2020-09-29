@@ -43,23 +43,28 @@ account for writing comments.
 
 Buildkite allows [dynamically define pipelines as the output of a
 command](https://buildkite.com/docs/pipelines/defining-steps#dynamic-pipelines).
-That gives us the flexibility to generate pipeline code using a script from a
-specific branch of pre-merge checks.
+That gives us the flexibility to generate pipeline code using the code from a
+specific branch of pre-merge checks. Thus, 
+[changes can be tested](./playbooks.md#testing-changes-before-merging)
+before affecting everyone.
 
-For example, "pre-merge" pipeline has a single fixed step, that checks out this
+For example, "pre-merge" pipeline has a single "setup" step, that checks out this
 repo and runs a python script to generate further steps:
 
 ```shell script
-export SRC=${BUILDKITE_BUILD_PATH}/llvm-premerge-checks
-rm -rf ${SRC}
-git clone --depth 1 --branch ${scripts_branch:-master} https://github.com/google/llvm-premerge-checks.git ${SRC}
-export SCRIPT_DIR=${SRC}/scripts
+export SRC="${BUILDKITE_BUILD_PATH}"/llvm-premerge-checks
+export SCRIPT_DIR="${SRC}"/scripts
+rm -rf "${SRC}"
+git clone --depth 1 https://github.com/google/llvm-premerge-checks.git "${SRC}"
+cd "${SRC}"
+git fetch origin "${ph_scripts_refspec:-master}":x
+git checkout x
+cd "$BUILDKITE_BUILD_CHECKOUT_PATH"
 ${SCRIPT_DIR}/buildkite/build_branch_pipeline.py | tee /dev/tty | buildkite-agent pipeline upload
 ```
 
-One typically edits corresponding script, not a pipeline definition in the
-Buildkite interface. [How to test
-changes](playbooks.md#testing-changes-before-merging).
+One typically edits corresponding script, instead of manually updating a pipeline
+in the Buildkite interface.
 
 # Life of a pre-merge check
 
@@ -69,8 +74,8 @@ testers").
 That in sends an HTTP POST request to [**phab-proxy**](../phabricator-proxy)
 that submits a new buildkite job **diff-checks**. All parameters from the
 original request are put in the build's environment with `ph_` prefix (to avoid
-shadowing any Buildkite environment variable). "scripts_branch" parameter
-defines which branch of llvm-premerge-checks to use.
+shadowing any Buildkite environment variable). "ph_scripts_refspec" parameter
+defines refspec of llvm-premerge-checks to use ("master" by default).
 
 **diff-checks** pipeline
 ([create_branch_pipeline.py](../scripts/buildkite/create_branch_pipeline.py))

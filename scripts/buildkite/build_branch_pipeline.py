@@ -18,13 +18,14 @@ import os
 import yaml
 
 if __name__ == '__main__':
-    scripts_branch = os.getenv("scripts_branch", "master")
+    scripts_refspec = os.getenv("ph_scripts_refspec", "master")
     queue_prefix = os.getenv("ph_queue_prefix", "")
     diff_id = os.getenv("ph_buildable_diff", "")
     no_cache = os.getenv('ph_no_cache') is not None
     filter_output = '--filter-output' if os.getenv('ph_no_filter_output') is None else ''
     projects = os.getenv('ph_projects', 'detect')
     log_level = os.getenv('ph_log_level', 'WARNING')
+
     steps = []
     linux_agents = {'queue': f'{queue_prefix}linux'}
     t = os.getenv('ph_linux_agents')
@@ -40,12 +41,17 @@ if __name__ == '__main__':
             'ccache --show-config',
             'mkdir -p artifacts',
             'dpkg -l >> artifacts/packages.txt',
+            # Clone scripts.
             'export SRC=${BUILDKITE_BUILD_PATH}/llvm-premerge-checks',
             'rm -rf ${SRC}',
-            f'git clone --depth 1 --branch {scripts_branch} https://github.com/google/llvm-premerge-checks.git '
-            '${SRC}',
+            'git clone --depth 1 https://github.com/google/llvm-premerge-checks.git "${SRC}"',
+            'cd ${SRC}',
+            f'git fetch origin "{scripts_refspec}":x',
+            'git checkout x',
             'echo "llvm-premerge-checks commit"',
-            'git --git-dir ${SRC}/.git rev-parse HEAD',
+            'git rev-parse HEAD',
+            'cd "$BUILDKITE_BUILD_CHECKOUT_PATH"',
+
             'set +e',
             # Add link in review to the build.
             '${SRC}/scripts/phabtalk/add_url_artifact.py '
@@ -81,11 +87,18 @@ if __name__ == '__main__':
         'commands': [
             clear_sccache if no_cache else '',
             'sccache --zero-stats',
+
+            # Clone scripts.
             'set SRC=%BUILDKITE_BUILD_PATH%/llvm-premerge-checks',
             'rm -rf %SRC%',
-            f'git clone --depth 1 --branch {scripts_branch} https://github.com/google/llvm-premerge-checks.git %SRC%',
+            'git clone --depth 1 https://github.com/google/llvm-premerge-checks.git %SRC%',
+            'cd %SRC%',
+            f'git fetch origin "{scripts_refspec}":x',
+            'git checkout x',
             'echo llvm-premerge-checks commit:',
-            'git --git-dir %SRC%/.git rev-parse HEAD',
+            'git rev-parse HEAD',
+            'cd %BUILDKITE_BUILD_CHECKOUT_PATH%',
+
             'powershell -command "'
             f'%SRC%/scripts/premerge_checks.py --projects=\'{projects}\' --log-level={log_level} {filter_output}; '
             '\\$exit=\\$?;'
@@ -122,7 +135,7 @@ if __name__ == '__main__':
             'buildkite-agent artifact download "*_result.json" .',
             'export SRC=${BUILDKITE_BUILD_PATH}/llvm-premerge-checks',
             'rm -rf ${SRC}',
-            f'git clone --depth 1 --branch {scripts_branch} https://github.com/google/llvm-premerge-checks.git '
+            f'git clone --depth 1 --branch {scripts_refspec} https://github.com/google/llvm-premerge-checks.git '
             '${SRC}',
             '${SRC}/scripts/buildkite/summary.py',
         ],

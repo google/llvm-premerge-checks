@@ -27,12 +27,12 @@ def build():
         for k, v in params.items():
             if len(v) == 1:
                 build_env['ph_' + k] = v[0]
-        branch = 'master'
-        if 'ph_scripts_branch' in build_env:
-            branch = build_env['ph_scripts_branch']
+        refspec = 'master'
+        if 'ph_scripts_refspec' in build_env:
+            refspec = build_env['ph_scripts_refspec']
         build_request = {
             'commit': 'HEAD',
-            'branch':  branch,
+            'branch':  refspec,
             'env': build_env,
             'message': f'D{build_env["ph_buildable_revision"]}',
         }

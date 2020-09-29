@@ -41,12 +41,15 @@ if __name__ == '__main__':
         'depends_on': 'create-branch',
         'build': {
             'branch': f'phab-diff-{diff_id}',
-            'env': {'scripts_branch': '${BUILDKITE_BRANCH}'},
+            'env': {},
         },
     }
     for e in os.environ:
         if e.startswith('ph_'):
             build_linux_step['build']['env'][e] = os.getenv(e)
+    # Set scripts source from the current build if it's not yet defined.
+    if 'ph_scripts_refspec' not in build_linux_step['build']['env']:
+        build_linux_step['build']['env']['ph_scripts_refspec'] = '${BUILDKITE_BRANCH}'
     steps.append(create_branch_step)
     if run_build:
         steps.append(build_linux_step)
