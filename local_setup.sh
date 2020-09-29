@@ -24,9 +24,9 @@ sudo apt install -y google-cloud-sdk kubectl docker
 
 # configure gCloud
 source "${ROOT_DIR}/k8s_config"
+gcloud auth login
 gcloud config set project ${GCP_PROJECT}
 gcloud config set compute/zone ${GCP_ZONE}
-
 # setup docker for pushing containers
 gcloud auth configure-docker
 gcloud container clusters get-credentials $GCP_CLUSTER

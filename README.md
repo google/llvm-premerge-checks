@@ -1,6 +1,8 @@
 # Status
 
-:exclamation: We have ongoing [issue](https://github.com/google/llvm-premerge-checks/issues/243) with windows build taking more that 2 hours to complete.
+:exclamation: We have ongoing [issue](
+https://github.com/google/llvm-premerge-checks/issues/243) with windows build
+taking more that 2 hours to complete.
 That also causes follow up builds to fail. Thus **windows builds are temporary disabled**.
 
 # Overview

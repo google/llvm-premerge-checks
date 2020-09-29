@@ -90,23 +90,20 @@ combined result to Phabricator.
 
 ## Ingress and public addresses
 
-https://build.llvm-merge-guard.org/ URL points to [phabricator
-proxy](../phabricator-proxy) application.
+We use NGINX ingress for Kubernetes. Right now it's only used to provide basic
+HTTP authentication and forwards all requests from load balancer to
+[phabricator proxy](../phabricator-proxy) application.
 
-We use NGINX ingress for Kubernetes and Let's Encrypt certificate manager.
 Follow up to date docs to install [reverse
-proxy](https://kubernetes.github.io/ingress-nginx/deploy/#gce-gke) and
-[certificate
-manager](http://docs.cert-manager.io/en/latest/getting-started/install/kubernetes.html).
+proxy](https://kubernetes.github.io/ingress-nginx/deploy/#gce-gke).
+ 
+We also have [certificate manager](
+http://docs.cert-manager.io/en/latest/getting-started/install/kubernetes.html) and 
+[lets-encrypt configuration](../kubernetes/cert-issuer.yaml) in place, but they are
+not used at the moment and should be removed if we decide to live with static IP.
 
-[lets-encrypt configuration](../kubernetes/cert-issuer.yaml).
-
-Access to the service is restricted with basic HTTP auth. It's configured with
-k8s secret 'http-auth' in 'buildkite' namespace (see [how to update
-auth](playbooks.md#update-http-auth-credentials))
-
-llvm-merge-guard.org domain is managed by [Google
-Domains](https://domains.google.com/).
+HTTP auth is configured with k8s secret 'http-auth' in 'buildkite' namespace 
+(see [how to update auth](playbooks.md#update-http-auth-credentials)).
 
 ## Linux agents
 
