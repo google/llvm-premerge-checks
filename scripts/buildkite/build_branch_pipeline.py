@@ -16,6 +16,8 @@
 import json
 import os
 import yaml
+import sys
+from git import Repo
 
 if __name__ == '__main__':
     scripts_branch = os.getenv("scripts_branch", "master")
@@ -25,6 +27,11 @@ if __name__ == '__main__':
     filter_output = '--filter-output' if os.getenv('ph_no_filter_output') is None else ''
     projects = os.getenv('ph_projects', 'detect')
     log_level = os.getenv('ph_log_level', 'WARNING')
+
+    repo = Repo('.')
+    patch = repo.git.diff("HEAD~1")
+    print(sys.stderr, "diff: {}".format(patch))
+
     steps = []
     linux_agents = {'queue': f'{queue_prefix}linux'}
     t = os.getenv('ph_linux_agents')
