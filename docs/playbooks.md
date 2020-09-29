@@ -1,16 +1,41 @@
 - [Playbooks](#playbooks)
-  * [deployment to a clean infrastructure](#deployment-to-a-clean-infrastructure)
+  * [Testing scripts locally](#testing-scripts-locally)
+  * [Testing changes before merging](#testing-changes-before-merging)
+  * [Deployment to a clean infrastructure](#deployment-to-a-clean-infrastructure)
   * [Creating docker containers on Windows](#creating-docker-containers-on-windows)
   * [Spawning a new windows agent](#spawning-a-new-windows-agent)
     + [Buildkite](#buildkite)
-  * [Testing scripts locally](#testing-scripts-locally)
   * [Custom environment variables](#custom-environment-variables)
-  * [Testing changes before merging](#testing-changes-before-merging)
   * [Update HTTP auth credentials](#update-http-auth-credentials)
   
 # Playbooks
 
-## deployment to a clean infrastructure
+## Testing scripts locally
+
+Build and run agent docker image `sudo ./containers/build_run.sh buildkite-premerge-debian /bin/bash`.
+
+Set `CONDUIT_TOKEN` with your personal one from `https://reviews.llvm.org/settings/user/<USERNAME>/page/apitokens/`.
+
+## Testing changes before merging
+
+It's recommended to test even smallest changes before committing them to the `master` branch.
+
+1. Create a pull request here.
+1. Manually create a buildkite build in the pipeline you are updating and specify
+    environment variable `ph_scripts_refspec="pull/123/head"`. Replace `123` 
+    with your PR number. If you don't have access to create buildkite builds, 
+    please ask a reviewer to do that.
+  
+   To test "premerge-tests" pipeline pick an existing build and copy "ph_"
+   parameters from it, omitting "ph_target_phid" (so that build does not update 
+   existing review. That will likely lead to an error though).   
+   
+   See also [custom environment variables](#custom-environment-variables).
+1. Wait for build to complete and maybe attach a link to it to your PR.
+
+To test changes for the pipeline "setup" step please experiment on a copy first. 
+
+## Deployment to a clean infrastructure
 
 General remarks:
 * GCP does not route any traffic to your services unless the service is
@@ -131,12 +156,6 @@ git clone https://github.com/google/llvm-premerge-checks.git C:\llvm-premerge-ch
 schtasks.exe /create /tn "Start Buildkite agent" /ru SYSTEM /SC ONSTART /DELAY 0005:00 /tr "powershell -command 'C:\llvm-premerge-checks\scripts\windows_agent_start_buildkite.ps1 -workdir c:\ws'"
 ```
 
-## Testing scripts locally
-
-Build and run agent docker image `sudo ./containers/build_run.sh buildkite-premerge-debian /bin/bash`.
-
-Additionally set `WORKSPACE`, `PHID` and `DIFF_ID` parameters. Set `CONDUIT_TOKEN` with your personal one from `https://reviews.llvm.org/settings/user/<USERNAME>/page/apitokens/`.
-
 ## Custom environment variables
 
 Buildkite pipelines have a number of custom environment variables one can set to change their behavior. That is useful to debug issues
@@ -145,7 +164,7 @@ please refer to the source code for the details. These variables have `ph_` pref
 
 Most commonly used are:
 
-- `scripts_branch` ("master" by default): which branch of llvm-premerge-checks to use. This variable is also used in pipeline "bootstrap" in Buildkite interface.
+- `ph_scripts_refspec` ("master" by default): refspec branch of llvm-premerge-checks to use. This variable is also used in pipeline "bootstrap" in Buildkite interface.
 - `ph_no_cache`: (if set to any value) clear compilation cache before the build.
 - `ph_projects`: which projects to use, "detect" will look on diff to infer the projects, "default" selects all projects.
 - `ph_notify_email`: comma-separated list of email addresses to be notified when build is complete.
@@ -153,15 +172,6 @@ Most commonly used are:
 - `ph_no_filter_output` (if set to any value): do not filter output of `ninja all` and other commands from buildkite log.
 - `ph_linux_agents`, `ph_windows_agents`: custom JSON constraints on agents. For example you might put one machine to a custom queue if it's errornous and send jobs to it with `ph_windows_agents="{{\"queue\": \"custom\"}}"`.
 - `ph_skip_linux`, `ph_skip_windows` (if set to any value): skip build on this OS.
-
-## Testing changes before merging
-
-It's recommended to test even smallest changes before committing them to the `master` branch.
-
-1. Create a branch with your changes, e.g. "my-feature" and push it to origin.
-1. Manually create a buildkite build in the pipeline you are updating and specify environment variable
-   `scripts_branch="my-feature"` (see also "Custom environment variables" for other options above). To test "premerge-tests" pipeline pick an existing build and copy parameters from it, omitting "ph_target_phid", namely: "ph_build_id", "ph_buildable_diff", "ph_buildable_revision", "ph_initiator_phid" and "scripts_branch" variables.
-1. Wait for build to complete and maybe attach a link to it to your PR.
 
 ## Update HTTP auth credentials
 
