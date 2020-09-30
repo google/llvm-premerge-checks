@@ -16,6 +16,14 @@
 import json
 import os
 import yaml
+import git
+import sys
+import logging
+
+if __name__ == '__main__':
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import choose_projects
 
 if __name__ == '__main__':
     scripts_refspec = os.getenv("ph_scripts_refspec", "master")
@@ -25,8 +33,37 @@ if __name__ == '__main__':
     filter_output = '--filter-output' if os.getenv('ph_no_filter_output') is None else ''
     projects = os.getenv('ph_projects', 'detect')
     log_level = os.getenv('ph_log_level', 'WARNING')
+    logging.basicConfig(level=log_level, format='%(levelname)-7s %(message)s')
+
+    # List all affected projects.
+    repo = git.Repo('.')
+    patch = repo.git.diff("HEAD~1")
+    cp = choose_projects.ChooseProjects('.')
+    affected_projects = cp.choose_projects(patch)
+    print('# all affected projects')
+    for p in affected_projects:
+        print(f'# {p}')
 
     steps = []
+    deps = []
+
+    if 'libcxx' in affected_projects or 'libcxxabi' in affected_projects:
+        start_libcxx_step = {
+            'trigger': 'libcxx-ci',
+            'label': 'libcxx',
+            'key': 'libcxx',
+            'async': False,
+            'build': {
+                'branch': os.getenv('BUILDKITE_BRANCH'),
+                'env': {},
+            },
+        }
+        for e in os.environ:
+            if e.startswith('ph_'):
+                start_libcxx_step['build']['env'][e] = os.getenv(e)
+        steps.append(start_libcxx_step)
+        deps.append(start_libcxx_step['key'])
+
     linux_agents = {'queue': f'{queue_prefix}linux'}
     t = os.getenv('ph_linux_agents')
     if t is not None:
@@ -119,7 +156,6 @@ if __name__ == '__main__':
             {'exit_status': 255, 'limit': 2},  # Forced agent shutdown
         ]},
     }
-    deps = []
     if os.getenv('ph_skip_linux') is None:
         steps.append(linux_buld_step)
         deps.append(linux_buld_step['key'])
