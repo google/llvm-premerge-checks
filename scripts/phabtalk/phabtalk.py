@@ -21,6 +21,7 @@ import time
 import uuid
 from typing import Optional, List, Dict
 from phabricator import Phabricator
+import logging
 
 
 class PhabTalk:
@@ -28,7 +29,7 @@ class PhabTalk:
        See https://secure.phabricator.com/conduit/method/harbormaster.sendmessage/
     """
 
-    def __init__(self, token: Optional[str], host: Optional[str], dryrun: bool):
+    def __init__(self, token: Optional[str], host: Optional[str] = 'https://reviews.llvm.org/api/', dryrun: bool = False):
         self._phab = None  # type: Optional[Phabricator]
         if not dryrun:
             self._phab = Phabricator(token=token, host=host)
@@ -118,16 +119,6 @@ class PhabTalk:
         print('Uploaded build status {}, {} test results and {} lint results'.format(
             result_type, len(unit), len(lint_messages)))
 
-    # TODO: deprecate
-    def add_artifact(self, phid: str, file: str, name: str, results_url: str):
-        artifactKey = str(uuid.uuid4())
-        artifactType = 'uri'
-        artifactData = {'uri': '{}/{}'.format(results_url, file),
-                        'ui.external': True,
-                        'name': name}
-        self.create_artifact(phid, artifactKey, artifactType, artifactData)
-        print('Created artifact "{}"'.format(name))
-
     def create_artifact(self, phid, artifact_key, artifact_type, artifact_data):
         if self.dryrun:
             print('harbormaster.createartifact =================')
@@ -140,6 +131,12 @@ class PhabTalk:
             artifactKey=artifact_key,
             artifactType=artifact_type,
             artifactData=artifact_data))
+
+    def maybe_add_url_artifact(self, phid: str, url: str, name: str):
+        if phid is None:
+            logging.warning('PHID is not provided, cannot create URL artifact')
+            return
+        self.create_artifact(phid, str(uuid.uuid4()), 'uri', {'uri': url, 'ui.external': True, 'name': name})
 
 
 class Step:

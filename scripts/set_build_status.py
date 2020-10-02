@@ -16,29 +16,23 @@
 import argparse
 import logging
 import os
-import sys
-import uuid
 
-if __name__ == '__main__':
-    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from phabtalk.phabtalk import PhabTalk
-
-
-def maybe_add_url_artifact(phab: PhabTalk, phid: str, url: str, name: str):
-    if phid is None:
-        logging.warning('PHID is not provided, cannot create URL artifact')
-        return
-    phab.create_artifact(phid, str(uuid.uuid4()), 'uri', {'uri': url, 'ui.external': True, 'name': name})
-
+from buildkite_utils import format_url
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Runs premerge checks8')
-    parser.add_argument('--url', type=str)
-    parser.add_argument('--name', type=str)
-    parser.add_argument('--phid', type=str)
+    parser = argparse.ArgumentParser()
     parser.add_argument('--log-level', type=str, default='WARNING')
+    parser.add_argument('--success', action='store_true')
     args = parser.parse_args()
-
     logging.basicConfig(level=args.log_level, format='%(levelname)-7s %(message)s')
-    phabtalk = PhabTalk(os.getenv('CONDUIT_TOKEN'), 'https://reviews.llvm.org/api/', False)
-    maybe_add_url_artifact(phabtalk, args.phid, args.url, args.name)
+    phabtalk = PhabTalk(os.getenv('CONDUIT_TOKEN'))
+    build_url = f'https://reviews.llvm.org/harbormaster/build/{os.getenv("ph_build_id")}'
+    print(f'Reporting results to Phabricator build {format_url(build_url)}', flush=True)
+    ph_buildable_diff = os.getenv('ph_buildable_diff')
+    ph_target_phid = os.getenv('ph_target_phid')
+    phabtalk.update_build_status(ph_buildable_diff, ph_target_phid, False, args.success)
+    bug_url = f'https://github.com/google/llvm-premerge-checks/issues/new?assignees=&labels=bug' \
+              f'&template=bug_report.md&title=buildkite build {os.getenv("BUILDKITE_PIPELINE_SLUG")} ' \
+              f'{os.getenv("BUILDKITE_BUILD_NUMBER")}'
+    print(f'{format_url(bug_url, "report issue")}', flush=True)

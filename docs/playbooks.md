@@ -159,7 +159,7 @@ schtasks.exe /create /tn "Start Buildkite agent" /ru SYSTEM /SC ONSTART /DELAY 0
 ## Custom environment variables
 
 Buildkite pipelines have a number of custom environment variables one can set to change their behavior. That is useful to debug issues
-or test changes. They are mostly used by pipleine generators, e.g. [build_master_pipeline](../scripts/buildkite/build_master_pipeline.py),
+or test changes. They are mostly used by pipleine generators, e.g. [build_master_pipeline](../scripts/build_master_pipeline.py),
 please refer to the source code for the details. These variables have `ph_` prefix and can be set with URL parameters in Harbormaster build.
 
 Most commonly used are:
