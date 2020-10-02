@@ -17,7 +17,6 @@ import os
 import yaml
 
 if __name__ == '__main__':
-    queue_prefix = os.getenv("ph_queue_prefix", "")
     diff_id = os.getenv("ph_buildable_diff")
     log_level = os.getenv('ph_log_level', 'INFO')
     base_commit = os.getenv('ph_base_commit', 'auto')
@@ -27,17 +26,17 @@ if __name__ == '__main__':
         trigger = 'premerge-checks'
 
     steps = []
-    create_branch_step = {
+    steps.append({
         'label': 'create branch',
         'key': 'create-branch',
         'commands': ['scripts/apply_patch.sh'],
-        'agents': {'queue': f'{queue_prefix}linux'},
+        'agents': {'queue': 'linux'},
         'timeout_in_minutes': 20,
         'env': {
             'LOG_LEVEL': log_level,
             'BASE_COMMIT': base_commit,
         }
-    }
+    })
     if run_build:
         trigger_build_step = {
             'trigger': trigger,
@@ -56,5 +55,4 @@ if __name__ == '__main__':
         if 'ph_scripts_refspec' not in trigger_build_step['build']['env']:
             trigger_build_step['build']['env']['ph_scripts_refspec'] = '${BUILDKITE_BRANCH}'
         steps.append(trigger_build_step)
-    steps.append(create_branch_step)
     print(yaml.dump({'steps': steps}))

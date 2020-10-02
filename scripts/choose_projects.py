@@ -73,6 +73,8 @@ class ChooseProjects:
         return 'linux'
 
     def choose_projects(self, patch: str = None) -> List[str]:
+        """List all touched project with all projects that they depend on and also
+        all projects that depend on them"""
         if self.llvm_dir is None:
             raise ValueError('path to llvm folder must be set in ChooseProject.')
 
@@ -119,7 +121,7 @@ class ChooseProjects:
 
     @staticmethod
     def get_changed_files(patch_str: str = None) -> Set[str]:
-        """get list of changed files from the patch from STDIN."""
+        """get list of changed files from the patch or from STDIN."""
         if patch_str is None:
             patch_str = sys.stdin
         patch = PatchSet(patch_str)

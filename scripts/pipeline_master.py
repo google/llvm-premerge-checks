@@ -13,113 +13,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 import os
+
+from steps import generic_linux, generic_windows
 import yaml
 
 if __name__ == '__main__':
     scripts_refspec = os.getenv("ph_scripts_refspec", "master")
-    queue_prefix = os.getenv("ph_queue_prefix", "")
     no_cache = os.getenv('ph_no_cache') is not None
     filter_output = '--filter-output' if os.getenv('ph_no_filter_output') is None else ''
     projects = os.getenv('ph_projects', 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;openmp;polly')
     log_level = os.getenv('ph_log_level', 'WARNING')
     notify_emails = list(filter(None, os.getenv('ph_notify_emails', '').split(',')))
     steps = []
-    linux_agents = {'queue': f'{queue_prefix}linux'}
-    t = os.getenv('ph_linux_agents')
-    if t is not None:
-        linux_agents = json.loads(t)
-    linux_buld_step = {
-        'label': ':linux: build and test linux',
-        'key': 'linux',
-        'commands': [
-            'set -euo pipefail',
-            'ccache --clear' if no_cache else '',
-            'ccache --zero-stats',
-            'ccache --show-config',
-            'mkdir -p artifacts',
-            'dpkg -l >> artifacts/packages.txt',
-            # Clone scripts.
-            'export SRC=${BUILDKITE_BUILD_PATH}/llvm-premerge-checks',
-            'rm -rf ${SRC}',
-            'git clone --depth 1 https://github.com/google/llvm-premerge-checks.git "${SRC}"',
-            'cd ${SRC}',
-            f'git fetch origin "{scripts_refspec}":x',
-            'git checkout x',
-            'echo "llvm-premerge-checks commit"',
-            'git rev-parse HEAD',
-            'cd "$BUILDKITE_BUILD_CHECKOUT_PATH"',
-
-            'set +e',
-            f'${{SRC}}/scripts/premerge_checks.py --projects="{projects}" --log-level={log_level} {filter_output}',
-            'EXIT_STATUS=\\$?',
-            'echo "--- ccache stats"',
-            'ccache --print-stats',
-            'ccache --show-stats',
-            'exit \\$EXIT_STATUS',
-        ],
-        'artifact_paths': ['artifacts/**/*', '*_result.json'],
-        'agents': linux_agents,
-        'timeout_in_minutes': 120,
-        'retry': {'automatic': [
-            {'exit_status': -1, 'limit': 2},  # Agent lost
-            {'exit_status': 255, 'limit': 2},  # Forced agent shutdown
-        ]},
-    }
-    clear_sccache = 'powershell -command "sccache --stop-server; echo \\$env:SCCACHE_DIR; ' \
-                    'Remove-Item -Recurse -Force -ErrorAction Ignore \\$env:SCCACHE_DIR; ' \
-                    'sccache --start-server"'
-    # FIXME: openmp is removed as it constantly fails. Make this project list be evaluated through "choose_projects".
-    projects = os.getenv('ph_projects', 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;polly')
-    win_agents = {'queue': f'{queue_prefix}windows'}
-    t = os.getenv('ph_windows_agents')
-    if t is not None:
-        win_agents = json.loads(t)
-    windows_buld_step = {
-        'label': ':windows: build and test windows',
-        'key': 'windows',
-        'commands': [
-            clear_sccache if no_cache else '',
-            'sccache --zero-stats',
-
-            # Clone scripts.
-            'set SRC=%BUILDKITE_BUILD_PATH%/llvm-premerge-checks',
-            'rm -rf %SRC%',
-            'git clone --depth 1 https://github.com/google/llvm-premerge-checks.git %SRC%',
-            'cd %SRC%',
-            f'git fetch origin "{scripts_refspec}":x',
-            'git checkout x',
-            'echo llvm-premerge-checks commit:',
-            'git rev-parse HEAD',
-            'cd %BUILDKITE_BUILD_CHECKOUT_PATH%',
-
-            'powershell -command "'
-            f'%SRC%/scripts/premerge_checks.py --projects=\'{projects}\' --log-level={log_level} {filter_output}; '
-            '\\$exit=\\$?;'
-            'echo \'--- sccache stats\';'
-            'sccache --show-stats;'
-            'if (\\$exit) {'
-            '  echo success;'
-            '  exit 0; } '
-            'else {'
-            '  echo failure;'
-            '  exit 1;'
-            '}"',
-        ],
-        'artifact_paths': ['artifacts/**/*', '*_result.json'],
-        'agents': win_agents,
-        'timeout_in_minutes': 120,
-        'retry': {'automatic': [
-            {'exit_status': -1, 'limit': 2},  # Agent lost
-            {'exit_status': 255, 'limit': 2},  # Forced agent shutdown
-        ]},
-    }
-    if os.getenv('ph_skip_linux') is None:
-        steps.append(linux_buld_step)
-    # TODO: windows builds are temporary disabled #243
-    # if os.getenv('ph_skip_windows') is None:
-    #     steps.append(windows_buld_step)
+    steps.extend(generic_linux(
+        os.getenv('ph_projects', 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;openmp;polly'),
+        False))
+    # FIXME: openmp is removed as it constantly fails.
+    # TODO: Make this project list be evaluated through "choose_projects".
+    steps.extend(generic_windows(
+        os.getenv('ph_projects', 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;polly')))
     notify = []
     for e in notify_emails:
         notify.append({'email': e})
