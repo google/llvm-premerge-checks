@@ -78,7 +78,7 @@ shadowing any Buildkite environment variable). "ph_scripts_refspec" parameter
 defines refspec of llvm-premerge-checks to use ("master" by default).
 
 **diff-checks** pipeline
-([create_branch_pipeline.py](../scripts/buildkite/create_branch_pipeline.py))
+([create_branch_pipeline.py](../scripts/create_branch_pipeline.py))
 downloads a patch (or series of patches) and applies it to a fork of the
 llvm-project repository. Then it pushes a new state as a new branch (e.g.
 "phab-diff-288211") and triggers "premerge-checks" on it (all "ph_" env
@@ -87,7 +87,7 @@ build or by another tooling. Periodical **cleanup-branches** pipeline deletes
 branches older than 30 days.
 
 **premerge-checks** pipeline
-([build_branch_pipeline.py](../scripts/buildkite/build_branch_pipeline.py))
+([build_branch_pipeline.py](../scripts/build_branch_pipeline.py))
 builds and tests changes on Linux and Windows agents. Then it uploads a
 combined result to Phabricator.
 

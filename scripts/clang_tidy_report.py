@@ -22,7 +22,7 @@ from typing import Optional
 import pathspec
 
 import ignore_diff
-from buildkite.utils import format_url
+from buildkite_utils import format_url
 from phabtalk.phabtalk import Report, Step
 
 

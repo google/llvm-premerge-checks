@@ -14,16 +14,12 @@
 # limitations under the License.
 
 import json
-import os
-import yaml
-import git
-import sys
 import logging
+import os
 
-if __name__ == '__main__':
-    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-import choose_projects
+from choose_projects import ChooseProjects
+import git
+import yaml
 
 if __name__ == '__main__':
     scripts_refspec = os.getenv("ph_scripts_refspec", "master")
@@ -38,7 +34,7 @@ if __name__ == '__main__':
     # List all affected projects.
     repo = git.Repo('.')
     patch = repo.git.diff("HEAD~1")
-    cp = choose_projects.ChooseProjects('.')
+    cp = ChooseProjects('.')
     affected_projects = cp.choose_projects(patch)
     print('# all affected projects')
     for p in affected_projects:
@@ -91,7 +87,7 @@ if __name__ == '__main__':
 
             'set +e',
             # Add link in review to the build.
-            '${SRC}/scripts/phabtalk/add_url_artifact.py '
+            '${SRC}/scripts/add_phabricator_artifact.py '
             '--phid="$ph_target_phid" '
             '--url="$BUILDKITE_BUILD_URL" '
             '--name="Buildkite build"',
@@ -180,7 +176,7 @@ if __name__ == '__main__':
             'echo "llvm-premerge-checks commit"',
             'git rev-parse HEAD',
             'cd "$BUILDKITE_BUILD_CHECKOUT_PATH"',
-            '${SRC}/scripts/buildkite/summary.py',
+            '${SRC}/scripts/summary.py',
         ],
         'allow_dependency_failure': True,
         'artifact_paths': ['artifacts/**/*'],

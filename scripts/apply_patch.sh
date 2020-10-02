@@ -30,8 +30,8 @@ scripts/phabtalk/apply_patch2.py $ph_buildable_diff \
 EXIT_STATUS=$?
 
 if [ $EXIT_STATUS -ne 0 ]; then
-  scripts/phabtalk/add_url_artifact.py --phid="$ph_target_phid" --url="$BUILDKITE_BUILD_URL" --name="Buildkite apply patch"
-  scripts/buildkite/set_build_status.py
+  scripts/add_phabricator_artifact.py --phid="$ph_target_phid" --url="$BUILDKITE_BUILD_URL" --name="Buildkite apply patch"
+  scripts/set_build_status.py
   echo failed
 fi
 

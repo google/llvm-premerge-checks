@@ -30,9 +30,8 @@ import clang_format_report
 import clang_tidy_report
 import run_cmake
 import test_results_report
-from buildkite.utils import upload_file
+from buildkite_utils import upload_file
 from exec_utils import watch_shell, if_not_matches, tee
-from phabtalk.add_url_artifact import maybe_add_url_artifact
 from phabtalk.phabtalk import Report, PhabTalk, Step
 
 
@@ -173,14 +172,14 @@ if __name__ == '__main__':
     ph_target_phid = os.getenv('ph_target_phid')
     ph_buildable_diff = os.getenv('ph_buildable_diff')
     if ph_target_phid is not None:
-        phabtalk = PhabTalk(os.getenv('CONDUIT_TOKEN'), 'https://reviews.llvm.org/api/', False)
+        phabtalk = PhabTalk(os.getenv('CONDUIT_TOKEN'))
         for u in report.unit:
             u['engine'] = step_key
         phabtalk.update_build_status(ph_buildable_diff, ph_target_phid, True, report.success, report.lint, report.unit)
         for a in report.artifacts:
             url = upload_file(a['dir'], a['file'])
             if url is not None:
-                maybe_add_url_artifact(phabtalk, ph_target_phid, url, f'{a["name"]} ({step_key})')
+                phabtalk.maybe_add_url_artifact(ph_target_phid, url, f'{a["name"]} ({step_key})')
     else:
         logging.warning('No phabricator phid is specified. Will not update the build status in Phabricator')
     with open(report_path, 'w') as f:

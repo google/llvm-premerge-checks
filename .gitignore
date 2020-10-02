@@ -6,4 +6,4 @@ __pycache__/
 containers/workspace
 **/.DS_Store
 **/.ipynb_checkpoints
-scripts/buildkite/cache.json
+scripts/metrics/cache.json

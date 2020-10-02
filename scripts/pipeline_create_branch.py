@@ -22,11 +22,15 @@ if __name__ == '__main__':
     log_level = os.getenv('ph_log_level', 'INFO')
     base_commit = os.getenv('ph_base_commit', 'auto')
     run_build = os.getenv('ph_skip_build') is None
+    trigger = os.getenv('ph_trigger_pipeline')
+    if trigger is None:
+        trigger = 'premerge-checks'
+
     steps = []
     create_branch_step = {
         'label': 'create branch',
         'key': 'create-branch',
-        'commands': ['scripts/buildkite/apply_patch.sh'],
+        'commands': ['scripts/apply_patch.sh'],
         'agents': {'queue': f'{queue_prefix}linux'},
         'timeout_in_minutes': 20,
         'env': {
@@ -34,23 +38,23 @@ if __name__ == '__main__':
             'BASE_COMMIT': base_commit,
         }
     }
-    build_linux_step = {
-        'trigger': 'premerge-checks',
-        'label': ':rocket: build and test',
-        'async': False,
-        'depends_on': 'create-branch',
-        'build': {
-            'branch': f'phab-diff-{diff_id}',
-            'env': {},
-        },
-    }
-    for e in os.environ:
-        if e.startswith('ph_'):
-            build_linux_step['build']['env'][e] = os.getenv(e)
-    # Set scripts source from the current build if it's not yet defined.
-    if 'ph_scripts_refspec' not in build_linux_step['build']['env']:
-        build_linux_step['build']['env']['ph_scripts_refspec'] = '${BUILDKITE_BRANCH}'
-    steps.append(create_branch_step)
     if run_build:
-        steps.append(build_linux_step)
+        trigger_build_step = {
+            'trigger': trigger,
+            'label': ':rocket: build and test',
+            'async': False,
+            'depends_on': 'create-branch',
+            'build': {
+                'branch': f'phab-diff-{diff_id}',
+                'env': {},
+            },
+        }
+        for e in os.environ:
+            if e.startswith('ph_'):
+                trigger_build_step['build']['env'][e] = os.getenv(e)
+        # Set scripts source from the current build if it's not yet defined.
+        if 'ph_scripts_refspec' not in trigger_build_step['build']['env']:
+            trigger_build_step['build']['env']['ph_scripts_refspec'] = '${BUILDKITE_BRANCH}'
+        steps.append(trigger_build_step)
+    steps.append(create_branch_step)
     print(yaml.dump({'steps': steps}))
