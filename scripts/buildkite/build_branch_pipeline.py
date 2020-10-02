@@ -169,10 +169,17 @@ if __name__ == '__main__':
         'commands': [
             'mkdir -p artifacts',
             'buildkite-agent artifact download "*_result.json" .',
+
+            # Clone scripts.
             'export SRC=${BUILDKITE_BUILD_PATH}/llvm-premerge-checks',
             'rm -rf ${SRC}',
-            f'git clone --depth 1 --branch {scripts_refspec} https://github.com/google/llvm-premerge-checks.git '
-            '${SRC}',
+            'git clone --depth 1 https://github.com/google/llvm-premerge-checks.git "${SRC}"',
+            'cd ${SRC}',
+            f'git fetch origin "{scripts_refspec}":x',
+            'git checkout x',
+            'echo "llvm-premerge-checks commit"',
+            'git rev-parse HEAD',
+            'cd "$BUILDKITE_BUILD_CHECKOUT_PATH"',
             '${SRC}/scripts/buildkite/summary.py',
         ],
         'allow_dependency_failure': True,
