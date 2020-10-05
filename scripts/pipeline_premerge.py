@@ -66,34 +66,35 @@ if __name__ == '__main__':
     else:
         logging.info('No projects for default checks')
 
-    deps = []
+    if os.getenv('ph_target_phid') is None:
+        logging.warning('ph_target_phid is not specified. Skipping "Report" step')
+    else:
+        steps.append({
+            'wait': '~',
+            'continue_on_failure': True,
+        })
 
-    steps.append({
-        'wait': '~',
-        'continue_on_failure': True,
-    })
+        report_step = {
+            'label': ':spiral_note_pad: report',
+            'commands': [
+                'mkdir -p artifacts',
+                'buildkite-agent artifact download "*_result.json" .',
 
-    report_step = {
-        'label': ':spiral_note_pad: report',
-        'commands': [
-            'mkdir -p artifacts',
-            'buildkite-agent artifact download "*_result.json" .',
-
-            # Clone scripts.
-            'export SRC=${BUILDKITE_BUILD_PATH}/llvm-premerge-checks',
-            'rm -rf ${SRC}',
-            'git clone --depth 1 https://github.com/google/llvm-premerge-checks.git "${SRC}"',
-            'cd ${SRC}',
-            f'git fetch origin "{scripts_refspec}":x',
-            'git checkout x',
-            'echo "llvm-premerge-checks commit"',
-            'git rev-parse HEAD',
-            'cd "$BUILDKITE_BUILD_CHECKOUT_PATH"',
-            '${SRC}/scripts/summary.py',
-        ],
-        'artifact_paths': ['artifacts/**/*'],
-        'agents': {'queue': 'linux'},
-        'timeout_in_minutes': 10,
-    }
-    steps.append(report_step)
+                # Clone scripts.
+                'export SRC=${BUILDKITE_BUILD_PATH}/llvm-premerge-checks',
+                'rm -rf ${SRC}',
+                'git clone --depth 1 https://github.com/google/llvm-premerge-checks.git "${SRC}"',
+                'cd ${SRC}',
+                f'git fetch origin "{scripts_refspec}":x',
+                'git checkout x',
+                'echo "llvm-premerge-checks commit"',
+                'git rev-parse HEAD',
+                'cd "$BUILDKITE_BUILD_CHECKOUT_PATH"',
+                '${SRC}/scripts/summary.py',
+            ],
+            'artifact_paths': ['artifacts/**/*'],
+            'agents': {'queue': 'linux'},
+            'timeout_in_minutes': 10,
+        }
+        steps.append(report_step)
     print(yaml.dump({'steps': steps}))

@@ -27,8 +27,8 @@ It's recommended to test even smallest changes before committing them to the `ma
     please ask a reviewer to do that.
   
    To test "premerge-tests" pipeline pick an existing build and copy "ph_"
-   parameters from it, omitting "ph_target_phid" (so that build does not update 
-   existing review. That will likely lead to an error though).   
+   parameters from it, omitting "ph_target_phid" to skip updating an existing
+   review.   
    
    See also [custom environment variables](#custom-environment-variables).
 1. Wait for build to complete and maybe attach a link to it to your PR.
