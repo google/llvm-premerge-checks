@@ -74,7 +74,7 @@ class PhabTalk:
                                               transactions=transactions)
         print('Uploaded comment to Revision D{}:{}'.format(revision, text))
 
-    def update_build_status(self, diff_id: str, phid: str, working: bool, success: bool, lint: {} = {}, unit: [] = []):
+    def update_build_status(self, phid: str, working: bool, success: bool, lint: {}, unit: []):
         """Submit collected report to Phabricator.
         """
 
