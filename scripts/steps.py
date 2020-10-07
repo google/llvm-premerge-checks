@@ -91,8 +91,6 @@ def generic_linux(projects: str, check_diff: bool) -> List:
 
 
 def generic_windows(projects: str) -> List:
-    # TODO: windows builds are temporary disabled #243
-    return []
     if os.getenv('ph_skip_windows') is not None:
         return []
     scripts_refspec = os.getenv("ph_scripts_refspec", "master")
@@ -138,7 +136,7 @@ def generic_windows(projects: str) -> List:
         ],
         'artifact_paths': ['artifacts/**/*', '*_result.json'],
         'agents': win_agents,
-        'timeout_in_minutes': 120,
+        'timeout_in_minutes': 90,
         'retry': {'automatic': [
             {'exit_status': -1, 'limit': 2},  # Agent lost
             {'exit_status': 255, 'limit': 2},  # Forced agent shutdown
