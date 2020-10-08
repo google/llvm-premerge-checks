@@ -59,10 +59,14 @@ if __name__ == '__main__':
 
     if len(generic_projects) > 0:
         # Add dependencies
-        projects = ';'.join(sorted(cp.add_dependencies(generic_projects)))
-        logging.info(f'Projects for default checks: {projects}')
-        steps.extend(generic_linux(projects, True))
-        steps.extend(generic_windows(projects))
+        projects = cp.add_dependencies(generic_projects)
+        logging.info(f'all projects {projects}')
+        excluded_linux = cp.get_excluded('linux')
+        logging.info(f'excluded for linux: {excluded_linux}')
+        steps.extend(generic_linux(';'.join(sorted(projects - excluded_linux)), True))
+        excluded_windows = cp.get_excluded('windows')
+        logging.info(f'excluded for windows: {excluded_windows}')
+        steps.extend(generic_windows(';'.join(sorted(projects - excluded_windows))))
     else:
         logging.info('No projects for default checks')
 
