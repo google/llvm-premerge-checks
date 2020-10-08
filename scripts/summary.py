@@ -14,18 +14,15 @@
 # limitations under the License.
 
 import argparse
-import glob
-import json
 import logging
 import os
 
 from phabtalk.phabtalk import PhabTalk
-from buildkite_utils import format_url
-
+from buildkite_utils import format_url, BuildkiteApi
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--log-level', type=str, default='WARNING')
+    parser.add_argument('--log-level', type=str, default='INFO')
     args = parser.parse_args()
     logging.basicConfig(level=args.log_level, format='%(levelname)-7s %(message)s')
 
@@ -43,13 +40,17 @@ if __name__ == '__main__':
     if ph_target_phid is None:
         logging.warning('ph_target_phid is not specified. Will not update the build status in Phabricator')
         exit(0)
+
+    bk = BuildkiteApi(os.getenv("BUILDKITE_API_TOKEN"), os.getenv("BUILDKITE_ORGANIZATION_SLUG"))
+    build = bk.get_build(os.getenv("BUILDKITE_PIPELINE_SLUG"), os.getenv("BUILDKITE_BUILD_NUMBER"))
     success = True
-    for path in glob.glob("*_result.json"):
-        logging.info(f'analysing {path}')
-        with open(path, 'r') as f:
-            report = json.load(f)
-            logging.info(report)
-            success = success and report['success']
+    build.setdefault('jobs', [])
+    for j in build['jobs']:
+        j.setdefault('state', '')
+        j.setdefault('id', '')
+        logging.info(f'{j["id"]} state {j["state"]}')
+        success = success and (j['state'] != 'failed')
+
     phabtalk = PhabTalk(os.getenv('CONDUIT_TOKEN'))
     build_url = f'https://reviews.llvm.org/harbormaster/build/{os.getenv("ph_build_id")}'
     print(f'Reporting results to Phabricator build {format_url(build_url)}', flush=True)

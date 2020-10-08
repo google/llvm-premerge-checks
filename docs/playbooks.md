@@ -49,7 +49,7 @@ These are the steps to set up the build server on a clean infrastructure:
     ./local_setup.sh
     ```
    If you not running docker under your user, you might need to
-   `sudo gcloud auth login --no-launch-browser && gcloud auth configure-docker`
+   `sudo gcloud auth login --no-launch-browser && sudo gcloud auth configure-docker`
    before running other commands under sudo.
 1. Delete the old cluster, if it still exists:
     ```bash

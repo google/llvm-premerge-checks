@@ -81,9 +81,6 @@ if __name__ == '__main__':
         report_step = {
             'label': ':spiral_note_pad: report',
             'commands': [
-                'mkdir -p artifacts',
-                'buildkite-agent artifact download "*_result.json" .',
-
                 # Clone scripts.
                 'export SRC=${BUILDKITE_BUILD_PATH}/llvm-premerge-checks',
                 'rm -rf ${SRC}',
@@ -94,6 +91,7 @@ if __name__ == '__main__':
                 'echo "llvm-premerge-checks commit"',
                 'git rev-parse HEAD',
                 'cd "$BUILDKITE_BUILD_CHECKOUT_PATH"',
+
                 '${SRC}/scripts/summary.py',
             ],
             'artifact_paths': ['artifacts/**/*'],

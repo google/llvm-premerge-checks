@@ -3,6 +3,7 @@ import os
 import re
 import subprocess
 from typing import Optional
+import requests
 
 
 def upload_file(base_dir: str, file: str):
@@ -22,8 +23,22 @@ def upload_file(base_dir: str, file: str):
         return None
 
 
+class BuildkiteApi:
+    def __init__(self, token: str, organization: str):
+        self.token = token
+        self.organization = organization
+
+    def get_build(self, pipeline: str, build_number: str):
+        authorization = f'Bearer {self.token}'
+        # https://buildkite.com/docs/apis/rest-api/builds#get-a-build
+        url = f'https://api.buildkite.com/v2/organizations/{self.organization}/pipelines/{pipeline}/builds/{build_number}'
+        response = requests.get(url, headers={'Authorization': authorization})
+        if response.status_code != 200:
+            raise Exception(f'Builkite responded with non-OK status: {re.status_code}')
+        return response.json()
+
+
 def format_url(url: str, name: Optional[str] = None):
     if name is None:
         name = url
     return f"\033]1339;url='{url}';content='{name}'\a\n"
-

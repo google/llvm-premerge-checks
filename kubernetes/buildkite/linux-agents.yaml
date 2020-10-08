@@ -66,6 +66,11 @@ spec:
                 secretKeyRef:
                   name: conduit-api-token
                   key: token
+            - name: BUILDKITE_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: buildkite-api-token-readonly
+                  key: token
       volumes:
         - name: ssd
           hostPath:
