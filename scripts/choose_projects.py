@@ -49,21 +49,22 @@ class ChooseProjects:
         self.dependencies = dict()  # type: Dict[str,List[str]]
         self.usages = dict()   # type: Dict[str,List[str]]
         self.all_projects = []  # type: List[str]
-        self.excluded_projects = set()  # type: Set[str]
-        self.operating_system = self._detect_os()  # type: str
+        self.config = {}
         self._load_config()
 
     def _load_config(self):
         logging.info('loading project config from {}'.format(self.DEPENDENCIES_FILE))
         with open(self.DEPENDENCIES_FILE) as dependencies_file:
-            config = yaml.load(dependencies_file, Loader=yaml.SafeLoader)
-        self.dependencies = config['dependencies']
+            self.config = yaml.load(dependencies_file, Loader=yaml.SafeLoader)
+        self.dependencies = self.config['dependencies']
         for user, used_list in self.dependencies.items():
             for used in used_list:
                 self.usages.setdefault(used, []).append(user)
-        self.all_projects = config['allprojects']
-        excluded = config['excludedProjects'][self.operating_system]
-        self.excluded_projects = set(excluded if excluded is not None else [])
+        self.all_projects = self.config['allprojects']
+
+    def get_excluded(self, target: str) -> Set[str]:
+        excluded = self.config['excludedProjects'][target]
+        return set(excluded if excluded is not None else [])
 
     @staticmethod
     def _detect_os() -> str:
@@ -97,7 +98,7 @@ class ChooseProjects:
         logging.info(f'with affected projects: {affected_projects}')
         affected_projects = self.add_dependencies(affected_projects)
         logging.info(f'with dependencies: {affected_projects}')
-        to_exclude = affected_projects.intersection(self.excluded_projects)
+        to_exclude = affected_projects.intersection(self.get_excluded(self._detect_os()))
         if len(to_exclude) != 0:
             affected_projects = affected_projects - to_exclude
             logging.warning(f'{to_exclude} projects are excluded')
