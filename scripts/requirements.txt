@@ -1,8 +1,9 @@
-phabricator==0.7.0
-lxml==4.4.1
+backoff==1.10.0
 gitpython==3.0.6
-retrying==1.3.3
+lxml==4.4.1
 pathspec==0.7.0
+phabricator==0.7.0
 pyaml==19.12.0
-unidiff==0.5.5
 requests==2.22.0
+retrying==1.3.3
+unidiff==0.5.5
