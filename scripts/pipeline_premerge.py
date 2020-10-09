@@ -51,10 +51,14 @@ if __name__ == '__main__':
     logging.info(f'projects with dependencies: {projects}')
     excluded_linux = cp.get_excluded('linux')
     logging.info(f'excluded for linux: {excluded_linux}')
-    steps.extend(generic_linux(';'.join(sorted(projects - excluded_linux)), True))
+    linux_projects = projects - excluded_linux
+    if len(linux_projects) > 0:
+        steps.extend(generic_linux(';'.join(sorted(linux_projects)), True))
     excluded_windows = cp.get_excluded('windows')
     logging.info(f'excluded for windows: {excluded_windows}')
-    steps.extend(generic_windows(';'.join(sorted(projects - excluded_windows))))
+    windows_projects = projects - excluded_windows
+    if len(windows_projects) > 0:
+        steps.extend(generic_windows(';'.join(sorted(windows_projects))))
 
     for gen in steps_generators:
         steps.extend(from_shell_output(gen))
