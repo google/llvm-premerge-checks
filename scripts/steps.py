@@ -53,13 +53,9 @@ def generic_linux(projects: str, check_diff: bool) -> List:
         'cd "$BUILDKITE_BUILD_CHECKOUT_PATH"',
         'set +e',
     ]
+
     if check_diff:
         commands.extend([
-            # Add link in review to the build.
-            '${SRC}/scripts/add_phabricator_artifact.py '
-            '--phid="$ph_target_phid" '
-            '--url="$BUILDKITE_BUILD_URL" '
-            '--name="Buildkite build"' if check_diff else '',
             '${SRC}/scripts/premerge_checks.py --check-clang-format --check-clang-tidy '
             f'--projects="{projects}" --log-level={log_level} {filter_output}',
         ])

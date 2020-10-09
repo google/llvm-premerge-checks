@@ -18,6 +18,7 @@ import os
 
 from choose_projects import ChooseProjects
 import git
+from phabtalk.phabtalk import PhabTalk
 from steps import generic_linux, generic_windows, from_shell_output
 import yaml
 
@@ -33,6 +34,11 @@ if __name__ == '__main__':
     projects = os.getenv('ph_projects', 'detect')
     log_level = os.getenv('ph_log_level', 'INFO')
     logging.basicConfig(level=log_level, format='%(levelname)-7s %(message)s')
+
+    phid = os.getenv('ph_target_phid')
+    # Add link in review to the build.
+    if phid is not None:
+        PhabTalk(os.getenv('CONDUIT_TOKEN')).maybe_add_url_artifact(phid, os.getenv('BUILDKITE_BUILD_URL'), 'buildkite')
 
     # List all affected projects.
     repo = git.Repo('.')
@@ -63,7 +69,7 @@ if __name__ == '__main__':
     for gen in steps_generators:
         steps.extend(from_shell_output(gen))
 
-    if os.getenv('ph_target_phid') is None:
+    if phid is None:
         logging.warning('ph_target_phid is not specified. Skipping "Report" step')
     else:
         steps.append({
@@ -92,5 +98,5 @@ if __name__ == '__main__':
             'timeout_in_minutes': 10,
         }
         steps.append(report_step)
-        
+
     print(yaml.dump({'steps': steps}))
