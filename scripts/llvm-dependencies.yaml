@@ -70,19 +70,21 @@ allprojects:
 
 # projects excluded from automatic configuration as they could not be built
 excludedProjects:
-  # These projects are not working with Visual Studio Compiler on Windows
   windows:
     - lldb
     - llgo
     - libunwind
-    - libcxxabi
-    - openmp # blacklisting as kuhnel has trouble with the Perl installation
+    - libcxx  # no windows support
+    - libcxxabi  # no windows support
+    - openmp # TODO: check: kuhnel has trouble with the Perl installation
     - debuginfo-tests # test failing
     - polly # test failing
     - flang # compilation failing with invalid compile arguments
     # test stuck, needs to be killed manually: instrprof-multiprocess.test
     - compiler-rt
   linux:
+    - libcxx  # has custom checks
+    - libcxxabi  # has custom checks
     # tests keep failing:
     # debuginfo-tests :: llgdb-tests/asan-deque.cpp
     # debuginfo-tests :: llgdb-tests/asan.c

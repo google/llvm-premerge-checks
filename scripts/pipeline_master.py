@@ -15,8 +15,12 @@
 
 import os
 
-from steps import generic_linux, generic_windows
+from steps import generic_linux, generic_windows, from_shell_output
 import yaml
+
+steps_generators = [
+    '${BUILDKITE_BUILD_CHECKOUT_PATH}/libcxx/utils/ci/buildkite-pipeline-snapshot.sh',
+]
 
 if __name__ == '__main__':
     scripts_refspec = os.getenv("ph_scripts_refspec", "master")
@@ -30,9 +34,15 @@ if __name__ == '__main__':
         os.getenv('ph_projects', 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;openmp;polly'),
         False))
     # FIXME: openmp is removed as it constantly fails.
-    # TODO: Make this project list be evaluated through "choose_projects".
+
+    # TODO: Make this project list be evaluated through "choose_projects"(? as now we define "all" and exclusions in
+    #  two placess).
     steps.extend(generic_windows(
         os.getenv('ph_projects', 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;polly')))
+
+    for gen in steps_generators:
+        steps.extend(from_shell_output(gen))
+
     notify = []
     for e in notify_emails:
         notify.append({'email': e})

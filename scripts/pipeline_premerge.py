@@ -18,8 +18,12 @@ import os
 
 from choose_projects import ChooseProjects
 import git
-from steps import libcxx, generic_linux, generic_windows
+from steps import generic_linux, generic_windows, from_shell_output
 import yaml
+
+steps_generators = [
+    '${BUILDKITE_BUILD_CHECKOUT_PATH}/libcxx/utils/ci/buildkite-pipeline-premerge.sh',
+]
 
 if __name__ == '__main__':
     scripts_refspec = os.getenv("ph_scripts_refspec", "master")
@@ -42,33 +46,18 @@ if __name__ == '__main__':
     logging.info(f'modified projects: {modified_projects}')
     # Add projects that depend on modified.
     affected_projects = cp.get_affected_projects(modified_projects)
-
-    # Handle special checks.
-    checked = set()
-    generic_projects = set()
-    logging.info(f'all affected projects: {affected_projects}')
     steps = []
-    for p in affected_projects:
-        if p == 'libcxx' or p == 'libcxxabi':
-            if 'libcxx' not in checked:
-                logging.info('Adding custom steps for "libc++"')
-                checked.add('libcxx')
-                steps.extend(libcxx())
-        else:
-            generic_projects.add(p)
+    projects = cp.add_dependencies(affected_projects)
+    logging.info(f'projects with dependencies: {projects}')
+    excluded_linux = cp.get_excluded('linux')
+    logging.info(f'excluded for linux: {excluded_linux}')
+    steps.extend(generic_linux(';'.join(sorted(projects - excluded_linux)), True))
+    excluded_windows = cp.get_excluded('windows')
+    logging.info(f'excluded for windows: {excluded_windows}')
+    steps.extend(generic_windows(';'.join(sorted(projects - excluded_windows))))
 
-    if len(generic_projects) > 0:
-        # Add dependencies
-        projects = cp.add_dependencies(generic_projects)
-        logging.info(f'all projects {projects}')
-        excluded_linux = cp.get_excluded('linux')
-        logging.info(f'excluded for linux: {excluded_linux}')
-        steps.extend(generic_linux(';'.join(sorted(projects - excluded_linux)), True))
-        excluded_windows = cp.get_excluded('windows')
-        logging.info(f'excluded for windows: {excluded_windows}')
-        steps.extend(generic_windows(';'.join(sorted(projects - excluded_windows))))
-    else:
-        logging.info('No projects for default checks')
+    for gen in steps_generators:
+        steps.extend(from_shell_output(gen))
 
     if os.getenv('ph_target_phid') is None:
         logging.warning('ph_target_phid is not specified. Skipping "Report" step')
@@ -99,4 +88,5 @@ if __name__ == '__main__':
             'timeout_in_minutes': 10,
         }
         steps.append(report_step)
+        
     print(yaml.dump({'steps': steps}))

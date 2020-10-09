@@ -13,14 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import io
 import json
+import logging
 import os
 from typing import List
 
-
-def libcxx():
-    # TODO: read steps from the YAML file from the repo.
-    return []
+from exec_utils import watch_shell
+import yaml
 
 
 def generic_linux(projects: str, check_diff: bool) -> List:
@@ -143,3 +143,34 @@ def generic_windows(projects: str) -> List:
         ]},
     }
     return [windows_buld_step]
+
+
+def from_shell_output(command) -> []:
+    """
+    Executes shell command and parses stdout as multidoc yaml file, see
+    https://buildkite.com/docs/agent/v3/cli-pipeline#pipeline-format.
+    :param command: command, may include env variables
+    :return: all 'steps' that defined in the result ("env" section is ignored).
+             Non-zero exit code and malformed YAML produces empty result.
+    """
+    path = os.path.expandvars(command)
+    logging.debug(f'invoking "{path}"')
+    out = io.BytesIO()
+    err = io.BytesIO()
+    rc = watch_shell(out.write, err.write, path)
+    logging.debug(f'exit code: {rc}, stdout: "{out.getvalue().decode()}", stderr: "{err.getvalue().decode()}"')
+    steps = []
+    if rc != 0:
+        logging.error(
+            f'{path} returned non-zero code {rc}, stdout: "{out.getvalue().decode()}", stderr: "{err.getvalue().decode()}"')
+        return steps
+    try:
+        for part in yaml.safe_load_all(out.getvalue()):
+            part.setdefault('steps', [])
+            steps.extend(part['steps'])
+    except yaml.YAMLError as e:
+        logging.error(f'''"{path}" produced malformed YAML, exception:
+{e}
+
+stdout: >>>{out.getvalue().decode()}>>>''')
+    return steps
