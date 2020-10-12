@@ -18,6 +18,8 @@ import os
 import subprocess
 import sys
 from typing import List, Optional
+
+import backoff
 from phabricator import Phabricator
 
 
@@ -27,11 +29,11 @@ class ApplyPatch:
         # TODO: turn os.environ parameter into command line arguments
         # this would be much clearer and easier for testing
         self.comment_file_path = comment_file_path
-        self.conduit_token = os.environ.get('CONDUIT_TOKEN')   # type: Optional[str]
+        self.conduit_token = os.environ.get('CONDUIT_TOKEN')  # type: Optional[str]
         self.host = os.environ.get('PHABRICATOR_HOST')  # type: Optional[str]
         self._load_arcrc()
         self.diff_id = os.environ['DIFF_ID']  # type: str
-        self.diff_json_path = os.environ['DIFF_JSON']   # type: str
+        self.diff_json_path = os.environ['DIFF_JSON']  # type: str
         if not self.host.endswith('/api/'):
             self.host += '/api/'
         self.phab = Phabricator(token=self.conduit_token, host=self.host)
@@ -49,12 +51,14 @@ class ApplyPatch:
         self.host = next(iter(arcrc['hosts']))
         self.conduit_token = arcrc['hosts'][self.host]['token']
 
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
+    def update_interfaces(self):
+        self.phab.update_interfaces()
+
     def run(self):
         """try to apply the patch from phabricator
-        
-        Write to `self.comment_file` for showing error messages on Phabricator.
         """
-        self.phab.update_interfaces()
+        self.update_interfaces()
 
         try:
             if self.git_hash is None:
@@ -77,11 +81,12 @@ class ApplyPatch:
             print('WARNING: could not write build/diff.json log file')
         self.git_hash = diff['sourceControlBaseRevision']
 
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
     def _git_checkout(self):
         try:
             print('Checking out git hash {}'.format(self.git_hash))
-            subprocess.check_call('git reset --hard {}'.format(self.git_hash), 
-                stdout=sys.stdout, stderr=sys.stderr, shell=True)
+            subprocess.check_call('git reset --hard {}'.format(self.git_hash),
+                                  stdout=sys.stdout, stderr=sys.stderr, shell=True)
         except subprocess.CalledProcessError:
             print('WARNING: checkout of hash failed, using master branch instead.')
             self.msg += [
@@ -89,20 +94,21 @@ class ApplyPatch:
                 'the repository. Did you configure the "Parent Revision" in '
                 'Phabricator properly? Trying to apply the patch to the '
                 'master branch instead...'.format(self.git_hash)]
-            subprocess.check_call('git checkout master', stdout=sys.stdout, 
-                stderr=sys.stderr, shell=True)
+            subprocess.check_call('git checkout master', stdout=sys.stdout,
+                                  stderr=sys.stderr, shell=True)
         subprocess.check_call('git show -s', stdout=sys.stdout,
                               stderr=sys.stderr, shell=True)
         print('git checkout completed.')
 
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
     def _apply_patch(self):
         print('running arc patch...')
-        cmd = 'arc patch --force --nobranch --no-ansi --diff "{}" --nocommit '\
-                '--conduit-token "{}" --conduit-uri "{}"'.format(
-            self.diff_id, self.conduit_token, self.host )
+        cmd = 'arc patch --force --nobranch --no-ansi --diff "{}" --nocommit ' \
+              '--conduit-token "{}" --conduit-uri "{}"'.format(
+            self.diff_id, self.conduit_token, self.host)
         result = subprocess.run(cmd, capture_output=True, shell=True, text=True)
         print(result.stdout + result.stderr)
-        if result.returncode != 0:      
+        if result.returncode != 0:
             msg = (
                 'ERROR: arc patch failed with error code {}. '
                 'Check build log for details.'.format(result.returncode))
@@ -130,4 +136,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
     patcher = ApplyPatch(args.comment_file_path, args.commit)
     patcher.run()
-

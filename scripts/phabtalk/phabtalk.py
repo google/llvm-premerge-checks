@@ -16,12 +16,14 @@
 Interactions with Phabricator.
 """
 
+import logging
 import socket
 import time
-import uuid
 from typing import Optional, List, Dict
+import uuid
+
+import backoff
 from phabricator import Phabricator
-import logging
 
 
 class PhabTalk:
@@ -29,16 +31,22 @@ class PhabTalk:
        See https://secure.phabricator.com/conduit/method/harbormaster.sendmessage/
     """
 
-    def __init__(self, token: Optional[str], host: Optional[str] = 'https://reviews.llvm.org/api/', dryrun: bool = False):
+    def __init__(self, token: Optional[str], host: Optional[str] = 'https://reviews.llvm.org/api/',
+                 dryrun: bool = False):
         self._phab = None  # type: Optional[Phabricator]
         if not dryrun:
             self._phab = Phabricator(token=token, host=host)
-            _try_call(self._phab.update_interfaces)
+            self.update_interfaces()
+
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
+    def update_interfaces(self):
+        self._phab.update_interfaces()
 
     @property
     def dryrun(self):
         return self._phab is None
 
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
     def get_revision_id(self, diff: str) -> Optional[str]:
         """Get the revision ID for a diff from Phabricator."""
         if self.dryrun:
@@ -55,6 +63,7 @@ class PhabTalk:
         if revision_id is not None:
             self._comment_on_revision(revision_id, text)
 
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
     def _comment_on_revision(self, revision: str, text: str):
         """Add comment on a differential based on the revision id."""
 
@@ -74,6 +83,7 @@ class PhabTalk:
                                               transactions=transactions)
         print('Uploaded comment to Revision D{}:{}'.format(revision, text))
 
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
     def update_build_status(self, phid: str, working: bool, success: bool, lint: {}, unit: []):
         """Submit collected report to Phabricator.
         """
@@ -111,14 +121,15 @@ class PhabTalk:
             print('lint: {}'.format(lint_messages))
             return
 
-        _try_call(lambda: self._phab.harbormaster.sendmessage(
+        self._phab.harbormaster.sendmessage(
             buildTargetPHID=phid,
             type=result_type,
             unit=unit,
-            lint=lint_messages))
+            lint=lint_messages)
         print('Uploaded build status {}, {} test results and {} lint results'.format(
             result_type, len(unit), len(lint_messages)))
 
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
     def create_artifact(self, phid, artifact_key, artifact_type, artifact_data):
         if self.dryrun:
             print('harbormaster.createartifact =================')
@@ -126,11 +137,11 @@ class PhabTalk:
             print('artifactType: {}'.format(artifact_type))
             print('artifactData: {}'.format(artifact_data))
             return
-        _try_call(lambda: self._phab.harbormaster.createartifact(
+        self._phab.harbormaster.createartifact(
             buildTargetPHID=phid,
             artifactKey=artifact_key,
             artifactType=artifact_type,
-            artifactData=artifact_data))
+            artifactData=artifact_data)
 
     def maybe_add_url_artifact(self, phid: str, url: str, name: str):
         if phid is None:
@@ -180,19 +191,3 @@ class Report:
 
     def add_artifact(self, dir: str, file: str, name: str):
         self.artifacts.append({'dir': dir, 'file': file, 'name': name})
-
-
-def _try_call(call):
-    """Tries to call function several times retrying on socked.timeout."""
-    c = 0
-    while True:
-        try:
-            call()
-        except socket.timeout as e:
-            c += 1
-            if c > 5:
-                print('Connection to Pharicator failed, giving up: {}'.format(e))
-                raise
-            print('Connection to Pharicator failed, retrying: {}'.format(e))
-            time.sleep(c * 10)
-        break

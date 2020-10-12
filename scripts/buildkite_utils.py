@@ -3,6 +3,8 @@ import os
 import re
 import subprocess
 from typing import Optional
+
+import backoff
 import requests
 
 
@@ -28,6 +30,7 @@ class BuildkiteApi:
         self.token = token
         self.organization = organization
 
+    @backoff.on_exception(backoff.expo, Exception, max_tries=3, logger='', factor=3)
     def get_build(self, pipeline: str, build_number: str):
         authorization = f'Bearer {self.token}'
         # https://buildkite.com/docs/apis/rest-api/builds#get-a-build

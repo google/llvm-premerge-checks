@@ -25,9 +25,9 @@ import sys
 import time
 from typing import List, Optional, Tuple
 
-from phabricator import Phabricator
+import backoff
 from git import Repo, BadName, GitCommandError
-
+from phabricator import Phabricator
 
 # FIXME: maybe move to config file
 """URL of upstream LLVM repository."""
@@ -62,7 +62,7 @@ class ApplyPatch:
         self.host = url  # type: Optional[str]
         self._load_arcrc()
         self.diff_id = diff_id  # type: int
-        self.phid = phid # type: str
+        self.phid = phid  # type: str
         if not self.host.endswith('/api/'):
             self.host += '/api/'
         self.phab = self._create_phab()
@@ -137,14 +137,12 @@ class ApplyPatch:
             logging.error(f'exception: {e}')
             return 1
 
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
     def _refresh_master(self):
         """Update local git repo and origin.
 
         As origin is disjoint from upstream, it needs to be updated by this script.
         """
-        if not self.push_branch:
-            return
-
         logging.info('Syncing local, origin and upstream...')
         self.repo.git.clean('-ffxdq')
         self.repo.git.reset('--hard')
@@ -155,12 +153,10 @@ class ApplyPatch:
             self.repo.remotes.upstream.fetch()
         self.repo.git.pull('origin', 'master')
         self.repo.git.pull('upstream', 'master')
-        try:
+        if self.push_branch:
             self.repo.git.push('origin', 'master')
-            logging.info('refresh of master branch completed')
-        except GitCommandError as e:
-            logging.info('Info: Could not push to origin master.')
 
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
     def _create_branch(self, base_revision: Optional[str]):
         self.repo.git.fetch('--all')
         try:
@@ -179,6 +175,7 @@ class ApplyPatch:
         self.repo.head.reset(index=True, working_tree=True)
         logging.info('Base branch revision is {}'.format(self.repo.head.commit.hexsha))
 
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
     def _commit_and_push(self, revision_id):
         """Commit the patch and push it to origin."""
         if not self.push_branch:
@@ -196,19 +193,23 @@ Review-ID: {}
         logging.info('Branch {} pushed to origin'.format(self.branch_name))
         pass
 
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
     def _create_phab(self):
         phab = Phabricator(token=self.conduit_token, host=self.host)
-        try_call(lambda: phab.update_interfaces())
+        phab.update_interfaces()
         return phab
 
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
     def _get_diff(self, diff_id: int):
         """Get a diff from Phabricator based on it's diff id."""
-        return try_call(lambda: self.phab.differential.getdiff(diff_id=diff_id))
+        return self.phab.differential.getdiff(diff_id=diff_id)
 
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
     def _get_revision(self, revision_id: int):
         """Get a revision from Phabricator based on its revision id."""
-        return try_call(lambda: self.phab.differential.query(ids=[revision_id])[0])
+        return self.phab.differential.query(ids=[revision_id])[0]
 
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
     def _get_revisions(self, *, phids: List[str] = None):
         """Get a list of revisions from Phabricator based on their PH-IDs."""
         if phids is None:
@@ -217,7 +218,7 @@ Review-ID: {}
             # Handle an empty query locally. Otherwise the connection
             # will time out.
             return []
-        return try_call(lambda: self.phab.differential.query(phids=phids))
+        return self.phab.differential.query(phids=phids)
 
     def _get_dependencies(self, diff_id) -> Tuple[int, List[int], str]:
         """Get all dependencies for the diff.
@@ -243,10 +244,11 @@ Review-ID: {}
 
         return revision_id, result, base_revision
 
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
     def _apply_diff(self, diff_id: int, revision_id: int):
         """Download and apply a diff to the local working copy."""
         logging.info('Applying diff {} for revision {}...'.format(diff_id, diff_to_str(revision_id)))
-        diff = try_call(lambda: self.phab.differential.getrawdiff(diffID=str(diff_id)).response)
+        diff = self.phab.differential.getrawdiff(diffID=str(diff_id)).response
         logging.debug(f'diff {diff_id}:\n{diff}')
         proc = subprocess.run('git apply -', input=diff, shell=True, text=True,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -301,21 +303,6 @@ def diff_to_str(diff: int) -> str:
 def diff_list_to_str(diffs: List[int]) -> str:
     """Convert list of diff ids to a comma separated list, prefixed with "D"."""
     return ', '.join([diff_to_str(d) for d in diffs])
-
-
-def try_call(call):
-    """Tries to call function several times retrying on socked.timeout."""
-    c = 0
-    while True:
-        try:
-            return call()
-        except socket.timeout as e:
-            c += 1
-            if c > 5:
-                logging.error('Connection to Pharicator failed, giving up: {}'.format(e))
-                raise
-            logging.error('Connection to Pharicator failed, retrying: {}'.format(e))
-            time.sleep(c * 10)
 
 
 if __name__ == "__main__":
