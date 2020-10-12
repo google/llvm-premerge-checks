@@ -41,16 +41,7 @@ def generic_linux(projects: str, check_diff: bool) -> List:
         'ccache --show-config',
         'mkdir -p artifacts',
         'dpkg -l >> artifacts/packages.txt',
-        # Clone scripts.
-        'export SRC=${BUILDKITE_BUILD_PATH}/llvm-premerge-checks',
-        'rm -rf ${SRC}',
-        'git clone --depth 1 https://github.com/google/llvm-premerge-checks.git "${SRC}"',
-        'cd ${SRC}',
-        f'git fetch origin "{scripts_refspec}":x',
-        'git checkout x',
-        'echo "llvm-premerge-checks commit"',
-        'git rev-parse HEAD',
-        'cd "$BUILDKITE_BUILD_CHECKOUT_PATH"',
+        *checkout_scripts('linux', scripts_refspec),
         'set +e',
     ]
 
@@ -106,17 +97,7 @@ def generic_windows(projects: str) -> List:
         'commands': [
             clear_sccache if no_cache else '',
             'sccache --zero-stats',
-
-            # Clone scripts.
-            'set SRC=%BUILDKITE_BUILD_PATH%/llvm-premerge-checks',
-            'rm -rf %SRC%',
-            'git clone --depth 1 https://github.com/google/llvm-premerge-checks.git %SRC%',
-            'cd %SRC%',
-            f'git fetch origin "{scripts_refspec}":x',
-            'git checkout x',
-            'echo llvm-premerge-checks commit:',
-            'git rev-parse HEAD',
-            'cd %BUILDKITE_BUILD_CHECKOUT_PATH%',
+            *checkout_scripts('windows', scripts_refspec),
 
             'powershell -command "'
             f'%SRC%/scripts/premerge_checks.py --projects=\'{projects}\' --log-level={log_level} {filter_output}; '
@@ -170,3 +151,31 @@ def from_shell_output(command) -> []:
 
 stdout: >>>{out.getvalue().decode()}>>>''')
     return steps
+
+
+def checkout_scripts(target_os: str, scripts_refspec: str) -> []:
+    if target_os == 'windows':
+        return [
+            'set SRC=%BUILDKITE_BUILD_PATH%/llvm-premerge-checks',
+            'rm -rf %SRC%',
+            'git clone --depth 1 https://github.com/google/llvm-premerge-checks.git %SRC%',
+            'cd %SRC%',
+            f'git fetch origin "{scripts_refspec}":x',
+            'git checkout x',
+            'echo llvm-premerge-checks commit:',
+            'git rev-parse HEAD',
+            'pip install -r %SRC%/scripts/requirements.txt',
+            'cd %BUILDKITE_BUILD_CHECKOUT_PATH%',
+        ]
+    return [
+        'export SRC=${BUILDKITE_BUILD_PATH}/llvm-premerge-checks',
+        'rm -rf ${SRC}',
+        'git clone --depth 1 https://github.com/google/llvm-premerge-checks.git "${SRC}"',
+        'cd ${SRC}',
+        f'git fetch origin "{scripts_refspec}":x',
+        'git checkout x',
+        'echo "llvm-premerge-checks commit"',
+        'git rev-parse HEAD',
+        'pip install -r ${SRC}/scripts/requirements.txt',
+        'cd "$BUILDKITE_BUILD_CHECKOUT_PATH"',
+    ]

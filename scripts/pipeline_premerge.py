@@ -19,7 +19,7 @@ import os
 from choose_projects import ChooseProjects
 import git
 from phabtalk.phabtalk import PhabTalk
-from steps import generic_linux, generic_windows, from_shell_output
+from steps import generic_linux, generic_windows, from_shell_output, checkout_scripts
 import yaml
 
 steps_generators = [
@@ -80,17 +80,7 @@ if __name__ == '__main__':
         report_step = {
             'label': ':spiral_note_pad: report',
             'commands': [
-                # Clone scripts.
-                'export SRC=${BUILDKITE_BUILD_PATH}/llvm-premerge-checks',
-                'rm -rf ${SRC}',
-                'git clone --depth 1 https://github.com/google/llvm-premerge-checks.git "${SRC}"',
-                'cd ${SRC}',
-                f'git fetch origin "{scripts_refspec}":x',
-                'git checkout x',
-                'echo "llvm-premerge-checks commit"',
-                'git rev-parse HEAD',
-                'cd "$BUILDKITE_BUILD_CHECKOUT_PATH"',
-
+                *checkout_scripts('linux', scripts_refspec),
                 '${SRC}/scripts/summary.py',
             ],
             'artifact_paths': ['artifacts/**/*'],

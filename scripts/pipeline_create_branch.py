@@ -29,7 +29,10 @@ if __name__ == '__main__':
     steps.append({
         'label': 'create branch',
         'key': 'create-branch',
-        'commands': ['scripts/apply_patch.sh'],
+        'commands': [
+            'pip install -r scripts/requirements.txt',
+            'scripts/apply_patch.sh'
+        ],
         'agents': {'queue': 'linux'},
         'timeout_in_minutes': 20,
         'env': {
