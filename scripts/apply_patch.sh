@@ -18,7 +18,7 @@
 
 set -uo pipefail
 
-scripts/phabtalk/apply_patch2.py $ph_buildable_diff \
+scripts/patch_diff.py $ph_buildable_diff \
   --path "${BUILDKITE_BUILD_PATH}"/llvm-project-fork \
   --token $CONDUIT_TOKEN \
   --url $PHABRICATOR_HOST \
@@ -30,7 +30,7 @@ scripts/phabtalk/apply_patch2.py $ph_buildable_diff \
 EXIT_STATUS=$?
 
 if [ $EXIT_STATUS -ne 0 ]; then
-  scripts/add_phabricator_artifact.py --phid="$ph_target_phid" --url="$BUILDKITE_BUILD_URL" --name="Buildkite apply patch"
+  scripts/add_phabricator_artifact.py --phid="$ph_target_phid" --url="$BUILDKITE_BUILD_URL" --name="patch application failed"
   scripts/set_build_status.py
   echo failed
 fi
