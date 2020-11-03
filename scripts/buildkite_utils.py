@@ -2,10 +2,15 @@ import logging
 import os
 import re
 import subprocess
+import urllib.parse
+import shlex
 from typing import Optional
 
 import backoff
 import requests
+
+context_style = {}
+styles = ['default', 'info', 'success', 'warning', 'error']
 
 
 def upload_file(base_dir: str, file: str):
@@ -25,6 +30,34 @@ def upload_file(base_dir: str, file: str):
         return None
 
 
+def annotate(message: str, style: str = 'default', context: str = 'default', append: bool = True):
+    """
+    Adds an annotation for that currently running build.
+    Note that last `style` applied to the same `context` takes precedence.
+    """
+    if style not in styles:
+        style = 'default'
+    # Pick most severe style so far.
+    context_style.setdefault(context, 0)
+    context_style[context] = max(styles.index(style), context_style[context])
+    style = styles[context_style[context]]
+    if append:
+        message += '\n\n'
+    r = subprocess.run(f"buildkite-agent annotate {shlex.quote(message)}"
+                       f' --style={shlex.quote(style)}'
+                       f" {'--append' if append else ''}"
+                       f" --context={shlex.quote(context)}", shell=True, capture_output=True)
+    logging.debug(f'annotate call {r}')
+    if r.returncode != 0:
+        logging.warning(message)
+
+
+def feedback_url():
+    title = f"buildkite build {os.getenv('BUILDKITE_PIPELINE_SLUG')} {os.getenv('BUILDKITE_BUILD_NUMBER')}"
+    return f'https://github.com/google/llvm-premerge-checks/issues/new?assignees=&labels=bug' \
+           f'&template=bug_report.md&title={urllib.parse.quote(title)}'
+
+
 class BuildkiteApi:
     def __init__(self, token: str, organization: str):
         self.token = token
@@ -37,7 +70,7 @@ class BuildkiteApi:
         url = f'https://api.buildkite.com/v2/organizations/{self.organization}/pipelines/{pipeline}/builds/{build_number}'
         response = requests.get(url, headers={'Authorization': authorization})
         if response.status_code != 200:
-            raise Exception(f'Builkite responded with non-OK status: {re.status_code}')
+            raise Exception(f'Builkite responded with non-OK status: {response.status_code}')
         return response.json()
 
 
