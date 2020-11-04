@@ -260,6 +260,8 @@ class ApplyPatch:
         proc = subprocess.run('git apply -', input=patch, shell=True, text=True,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if proc.returncode != 0:
+            logging.info(proc.stdout)
+            logging.error(proc.stderr)
             message = f":bk-status-failed: Failed to apply [{patch_file}](artifact://{patch_file}).\n\n"
             if self.revision_id != revision['id']:
                 message += f"**Attention! D{revision['id']} is one of the dependencies of the target " \
