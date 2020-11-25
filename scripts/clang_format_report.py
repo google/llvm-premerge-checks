@@ -22,6 +22,7 @@ import pathspec
 import unidiff
 
 from phabtalk.phabtalk import Report, Step
+from buildkite_utils import annotate
 
 
 def get_diff(base_commit) -> Tuple[bool, str]:
@@ -93,8 +94,8 @@ def run(base_commit, ignore_config, step: Optional[Step], report: Optional[Repor
         report.add_artifact(os.getcwd(), patch_file, 'clang-format')
     if not success:
         step.success = False
-        step.messages.append(
-            'Please format your changes with clang-format by running `git-clang-format HEAD^` or applying patch.')
+        annotate(f'clang-format: Please format your changes with clang-format by running `git-clang-format HEAD^`'
+                 f'or applying the attached patch.', style='error')
     logging.debug(f'report: {report}')
     logging.debug(f'step: {step}')
 

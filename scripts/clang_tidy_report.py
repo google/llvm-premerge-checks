@@ -22,7 +22,7 @@ from typing import Optional
 import pathspec
 
 import ignore_diff
-from buildkite_utils import format_url
+from buildkite_utils import annotate
 from phabtalk.phabtalk import Report, Step
 
 
@@ -100,11 +100,9 @@ def run(base_commit, ignore_config, step: Optional[Step], report: Optional[Repor
         report.add_artifact(os.getcwd(), p, 'clang-tidy')
     if errors_count + warn_count != 0:
         step.success = False
-        url = format_url("https://github.com/google/llvm-premerge-checks/blob/master/docs/clang_tidy.md"
-                         "#review-comments.", "why?")
-        step.messages.append(
-            f'clang-tidy found {errors_count} errors and {warn_count} warnings. {inline_comments} of them are added '
-            f'as review comments {url}')
+        url = "https://github.com/google/llvm-premerge-checks/blob/master/docs/clang_tidy.md#review-comments."
+        annotate(f'clang-tidy found {errors_count} errors and {warn_count} warnings. {inline_comments} of them were '
+                 f'added as review comments [why?]({url})', style='error')
     logging.debug(f'report: {report}')
     logging.debug(f'step: {step}')
 

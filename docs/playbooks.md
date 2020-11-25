@@ -10,6 +10,20 @@
   
 # Playbooks
 
+## Development environment
+
+You need will need recent python 3 installed, e.g. follow this
+[installation guide](https://cloud.google.com/python/docs/setup?hl=en).
+To install required packages run:
+
+```shell script
+pip install -r ./scripts/requirements.txt
+```
+optional:
+```shell script
+pip install jupyterlab pandas seaborn #  for jupyter labs.  
+```  
+
 ## Testing scripts locally
 
 Build and run agent docker image `sudo ./containers/build_run.sh buildkite-premerge-debian /bin/bash`.
@@ -165,11 +179,11 @@ please refer to the source code for the details. These variables have `ph_` pref
 Most commonly used are:
 
 - `ph_scripts_refspec` ("master" by default): refspec branch of llvm-premerge-checks to use. This variable is also used in pipeline "bootstrap" in Buildkite interface.
+- `ph_dry_run_report`: do not report any results back to Phabricator.
 - `ph_no_cache`: (if set to any value) clear compilation cache before the build.
 - `ph_projects`: which projects to use, "detect" will look on diff to infer the projects, "default" selects all projects.
 - `ph_notify_email`: comma-separated list of email addresses to be notified when build is complete.
 - `ph_log_level` ("DEBUG", "INFO", "WARNING" (default) or "ERROR"): log level for build scripts. 
-- `ph_no_filter_output` (if set to any value): do not filter output of `ninja all` and other commands from buildkite log.
 - `ph_linux_agents`, `ph_windows_agents`: custom JSON constraints on agents. For example you might put one machine to a custom queue if it's errornous and send jobs to it with `ph_windows_agents="{{\"queue\": \"custom\"}}"`.
 - `ph_skip_linux`, `ph_skip_windows` (if set to any value): skip build on this OS.
 

@@ -30,7 +30,7 @@ if __name__ == '__main__':
         'label': 'create branch',
         'key': 'create-branch',
         'commands': [
-            'pip install -r scripts/requirements.txt',
+            'pip install -q -r scripts/requirements.txt',
             'scripts/apply_patch.sh'
         ],
         'agents': {'queue': 'linux'},

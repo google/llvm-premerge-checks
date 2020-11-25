@@ -28,5 +28,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     logging.basicConfig(level=args.log_level, format='%(levelname)-7s %(message)s')
-    PhabTalk(os.getenv('CONDUIT_TOKEN')).maybe_add_url_artifact(args.phid, args.url, args.name)
+    dry = os.getenv('ph_dry_run_report') is not None
+    PhabTalk(os.getenv('CONDUIT_TOKEN'), dry_run_updates=dry).maybe_add_url_artifact(args.phid, args.url, args.name)
 

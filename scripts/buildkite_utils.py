@@ -3,13 +3,14 @@ import os
 import re
 import subprocess
 import urllib.parse
-import shlex
 from typing import Optional
+from benedict import benedict
 
 import backoff
 import requests
 
 context_style = {}
+previous_context = 'default'
 styles = ['default', 'info', 'success', 'warning', 'error']
 
 
@@ -30,26 +31,30 @@ def upload_file(base_dir: str, file: str):
         return None
 
 
-def annotate(message: str, style: str = 'default', context: str = 'default', append: bool = True):
+def annotate(message: str, style: str = 'default', context: Optional[str] = None, append: bool = True):
     """
     Adds an annotation for that currently running build.
     Note that last `style` applied to the same `context` takes precedence.
     """
+    global previous_context, styles, context_style
     if style not in styles:
         style = 'default'
+    if context is None:
+        context = previous_context
+    previous_context = context
     # Pick most severe style so far.
     context_style.setdefault(context, 0)
     context_style[context] = max(styles.index(style), context_style[context])
     style = styles[context_style[context]]
     if append:
         message += '\n\n'
-    r = subprocess.run(f"buildkite-agent annotate {shlex.quote(message)}"
-                       f' --style={shlex.quote(style)}'
-                       f" {'--append' if append else ''}"
-                       f" --context={shlex.quote(context)}", shell=True, capture_output=True)
+    cmd = ['buildkite-agent', 'annotate', message, '--style', style, '--context', context]
+    if append:
+        cmd.append('--append')
+    r = subprocess.run(cmd, capture_output=True)
     logging.debug(f'annotate call {r}')
     if r.returncode != 0:
-        logging.warning(message)
+        logging.warning(r)
 
 
 def feedback_url():
@@ -63,18 +68,24 @@ class BuildkiteApi:
         self.token = token
         self.organization = organization
 
-    @backoff.on_exception(backoff.expo, Exception, max_tries=3, logger='', factor=3)
     def get_build(self, pipeline: str, build_number: str):
-        authorization = f'Bearer {self.token}'
         # https://buildkite.com/docs/apis/rest-api/builds#get-a-build
-        url = f'https://api.buildkite.com/v2/organizations/{self.organization}/pipelines/{pipeline}/builds/{build_number}'
-        response = requests.get(url, headers={'Authorization': authorization})
+        return benedict(self.get(f'https://api.buildkite.com/v2/organizations/{self.organization}/pipelines/{pipeline}/builds/{build_number}').json())
+
+    @backoff.on_exception(backoff.expo, Exception, max_tries=3, logger='', factor=3)
+    def get(self, url: str):
+        authorization = f'Bearer {self.token}'
+        response = requests.get(url, allow_redirects=True, headers={'Authorization': authorization})
         if response.status_code != 200:
-            raise Exception(f'Builkite responded with non-OK status: {response.status_code}')
-        return response.json()
+            raise Exception(f'Buildkite responded with non-OK status: {response.status_code}')
+        return response
 
 
 def format_url(url: str, name: Optional[str] = None):
     if name is None:
         name = url
     return f"\033]1339;url='{url}';content='{name}'\a\n"
+
+
+def strip_emojis(s: str) -> str:
+    return re.sub(r':[^:]+:', '', s).strip()

@@ -25,7 +25,6 @@ steps_generators = [
 if __name__ == '__main__':
     scripts_refspec = os.getenv("ph_scripts_refspec", "master")
     no_cache = os.getenv('ph_no_cache') is not None
-    filter_output = '--filter-output' if os.getenv('ph_no_filter_output') is None else ''
     projects = os.getenv('ph_projects', 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;openmp;polly')
     log_level = os.getenv('ph_log_level', 'WARNING')
     notify_emails = list(filter(None, os.getenv('ph_notify_emails', '').split(',')))

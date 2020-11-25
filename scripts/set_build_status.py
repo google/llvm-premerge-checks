@@ -27,7 +27,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     logging.basicConfig(level=args.log_level, format='%(levelname)-7s %(message)s')
 
-    phabtalk = PhabTalk(os.getenv('CONDUIT_TOKEN'))
+    phabtalk = PhabTalk(os.getenv('CONDUIT_TOKEN'), dry_run_updates=(os.getenv('ph_dry_run_report') is not None))
     ph_target_phid = os.getenv('ph_target_phid')
     if ph_target_phid is None:
         logging.warning('ph_target_phid is not specified. Will not update the build status in Phabricator')

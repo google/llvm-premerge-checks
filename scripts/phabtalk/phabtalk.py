@@ -17,8 +17,6 @@ Interactions with Phabricator.
 """
 
 import logging
-import socket
-import time
 from typing import Optional, List, Dict
 import uuid
 
@@ -32,33 +30,26 @@ class PhabTalk:
     """
 
     def __init__(self, token: Optional[str], host: Optional[str] = 'https://reviews.llvm.org/api/',
-                 dryrun: bool = False):
+                 dry_run_updates: bool = False):
         self._phab = None  # type: Optional[Phabricator]
-        if not dryrun:
-            self._phab = Phabricator(token=token, host=host)
-            self.update_interfaces()
+        self.dry_run_updates = dry_run_updates
+        self._phab = Phabricator(token=token, host=host)
+        self.update_interfaces()
 
     @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
     def update_interfaces(self):
         self._phab.update_interfaces()
 
-    @property
-    def dryrun(self):
-        return self._phab is None
-
     @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
     def get_revision_id(self, diff: str) -> Optional[str]:
         """Get the revision ID for a diff from Phabricator."""
-        if self.dryrun:
-            return None
-
         result = self._phab.differential.querydiffs(ids=[diff])
         return 'D' + result[diff]['revisionID']
 
     def comment_on_diff(self, diff_id: str, text: str):
         """Add a comment to a differential based on the diff_id"""
-        print('Sending comment to diff {}:'.format(diff_id))
-        print(text)
+        logging.info('Sending comment to diff {}:'.format(diff_id))
+        logging.info(text)
         revision_id = self.get_revision_id(diff_id)
         if revision_id is not None:
             self._comment_on_revision(revision_id, text)
@@ -72,16 +63,16 @@ class PhabTalk:
             'value': text
         }]
 
-        if self.dryrun:
-            print('differential.revision.edit =================')
-            print('Transactions: {}'.format(transactions))
+        if self.dry_run_updates:
+            logging.info('differential.revision.edit =================')
+            logging.info('Transactions: {}'.format(transactions))
             return
 
         # API details at
         # https://secure.phabricator.com/conduit/method/differential.revision.edit/
         self._phab.differential.revision.edit(objectIdentifier=revision,
                                               transactions=transactions)
-        print('Uploaded comment to Revision D{}:{}'.format(revision, text))
+        logging.info('Uploaded comment to Revision D{}:{}'.format(revision, text))
 
     @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
     def update_build_status(self, phid: str, working: bool, success: bool, lint: {}, unit: []):
@@ -114,11 +105,11 @@ class PhabTalk:
             }
             lint_messages.append(lint_message)
 
-        if self.dryrun:
-            print('harbormaster.sendmessage =================')
-            print('type: {}'.format(result_type))
-            print('unit: {}'.format(unit))
-            print('lint: {}'.format(lint_messages))
+        if self.dry_run_updates:
+            logging.info('harbormaster.sendmessage =================')
+            logging.info('type: {}'.format(result_type))
+            logging.info('unit: {}'.format(unit))
+            logging.info('lint: {}'.format(lint_messages))
             return
 
         self._phab.harbormaster.sendmessage(
@@ -126,16 +117,16 @@ class PhabTalk:
             type=result_type,
             unit=unit,
             lint=lint_messages)
-        print('Uploaded build status {}, {} test results and {} lint results'.format(
+        logging.info('Uploaded build status {}, {} test results and {} lint results'.format(
             result_type, len(unit), len(lint_messages)))
 
     @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
     def create_artifact(self, phid, artifact_key, artifact_type, artifact_data):
-        if self.dryrun:
-            print('harbormaster.createartifact =================')
-            print('artifactKey: {}'.format(artifact_key))
-            print('artifactType: {}'.format(artifact_type))
-            print('artifactData: {}'.format(artifact_data))
+        if self.dry_run_updates:
+            logging.info('harbormaster.createartifact =================')
+            logging.info('artifactKey: {}'.format(artifact_key))
+            logging.info('artifactType: {}'.format(artifact_type))
+            logging.info('artifactData: {}'.format(artifact_data))
             return
         self._phab.harbormaster.createartifact(
             buildTargetPHID=phid,
@@ -144,6 +135,9 @@ class PhabTalk:
             artifactData=artifact_data)
 
     def maybe_add_url_artifact(self, phid: str, url: str, name: str):
+        if self.dry_run_updates:
+            logging.info(f'add ULR artifact "{name}" {url}')
+            return
         if phid is None:
             logging.warning('PHID is not provided, cannot create URL artifact')
             return
@@ -155,7 +149,6 @@ class Step:
         self.name = ''
         self.success = True
         self.duration = 0.0
-        self.messages = []
         self.reproduce_commands = []
 
     def set_status_from_exit_code(self, exit_code: int):

@@ -28,7 +28,6 @@ def generic_linux(projects: str, check_diff: bool) -> List:
         return []
     scripts_refspec = os.getenv("ph_scripts_refspec", "master")
     no_cache = os.getenv('ph_no_cache') is not None
-    filter_output = '--filter-output' if os.getenv('ph_no_filter_output') is None else ''
     log_level = os.getenv('ph_log_level', 'WARNING')
     linux_agents = {'queue': 'linux'}
     t = os.getenv('ph_linux_agents')
@@ -48,7 +47,7 @@ def generic_linux(projects: str, check_diff: bool) -> List:
     if check_diff:
         commands.extend([
             '${SRC}/scripts/premerge_checks.py --check-clang-format --check-clang-tidy '
-            f'--projects="{projects}" --log-level={log_level} {filter_output}',
+            f'--projects="{projects}" --log-level={log_level}',
         ])
     else:
         commands.extend([
@@ -63,10 +62,10 @@ def generic_linux(projects: str, check_diff: bool) -> List:
     ])
 
     linux_buld_step = {
-        'label': ':linux: build and test linux',
+        'label': ':linux: x64 debian',
         'key': 'linux',
         'commands': commands,
-        'artifact_paths': ['artifacts/**/*', '*_result.json'],
+        'artifact_paths': ['artifacts/**/*', '*_result.json', 'build/test-results.xml'],
         'agents': linux_agents,
         'timeout_in_minutes': 120,
         'retry': {'automatic': [
@@ -83,7 +82,6 @@ def generic_windows(projects: str) -> List:
     scripts_refspec = os.getenv("ph_scripts_refspec", "master")
     no_cache = os.getenv('ph_no_cache') is not None
     log_level = os.getenv('ph_log_level', 'WARNING')
-    filter_output = '--filter-output' if os.getenv('ph_no_filter_output') is None else ''
     clear_sccache = 'powershell -command "sccache --stop-server; echo \\$env:SCCACHE_DIR; ' \
                     'Remove-Item -Recurse -Force -ErrorAction Ignore \\$env:SCCACHE_DIR; ' \
                     'sccache --start-server"'
@@ -92,7 +90,7 @@ def generic_windows(projects: str) -> List:
     if t is not None:
         win_agents = json.loads(t)
     windows_buld_step = {
-        'label': ':windows: build and test windows',
+        'label': ':windows: x64 windows',
         'key': 'windows',
         'commands': [
             clear_sccache if no_cache else '',
@@ -100,7 +98,7 @@ def generic_windows(projects: str) -> List:
             *checkout_scripts('windows', scripts_refspec),
 
             'powershell -command "'
-            f'%SRC%/scripts/premerge_checks.py --projects=\'{projects}\' --log-level={log_level} {filter_output}; '
+            f'%SRC%/scripts/premerge_checks.py --projects=\'{projects}\' --log-level={log_level}; '
             '\\$exit=\\$?;'
             'sccache --show-stats;'
             'if (\\$exit) {'
@@ -111,7 +109,7 @@ def generic_windows(projects: str) -> List:
             '  exit 1;'
             '}"',
         ],
-        'artifact_paths': ['artifacts/**/*', '*_result.json'],
+        'artifact_paths': ['artifacts/**/*', '*_result.json', 'build/test-results.xml'],
         'agents': win_agents,
         'timeout_in_minutes': 90,
         'retry': {'automatic': [
@@ -164,7 +162,7 @@ def checkout_scripts(target_os: str, scripts_refspec: str) -> []:
             'git checkout x',
             'echo llvm-premerge-checks commit:',
             'git rev-parse HEAD',
-            'pip install -r %SRC%/scripts/requirements.txt',
+            'pip install -q -r %SRC%/scripts/requirements.txt',
             'cd %BUILDKITE_BUILD_CHECKOUT_PATH%',
         ]
     return [
@@ -176,6 +174,6 @@ def checkout_scripts(target_os: str, scripts_refspec: str) -> []:
         'git checkout x',
         'echo "llvm-premerge-checks commit"',
         'git rev-parse HEAD',
-        'pip install -r ${SRC}/scripts/requirements.txt',
+        'pip install -q -r ${SRC}/scripts/requirements.txt',
         'cd "$BUILDKITE_BUILD_CHECKOUT_PATH"',
     ]

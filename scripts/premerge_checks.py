@@ -29,53 +29,30 @@ from typing import Callable
 import clang_format_report
 import clang_tidy_report
 import run_cmake
-import test_results_report
-from buildkite_utils import upload_file
+from buildkite_utils import upload_file, annotate, strip_emojis
 from exec_utils import watch_shell, if_not_matches, tee
 from phabtalk.phabtalk import Report, PhabTalk, Step
 
 
-def ninja_all_report(step: Step, _: Report, filter_output: bool):
-    print('Full log will be available in Artifacts "ninja-all.log"', flush=True)
+def ninja_all_report(step: Step, _: Report):
     step.reproduce_commands.append('ninja all')
-    with open(f'{artifacts_dir}/ninja-all.log', 'wb') as f:
-        w = sys.stdout.buffer.write
-        if filter_output:
-            r = re.compile(r'^\[.*] (Building|Linking|Linting|Copying|Generating|Creating)')
-            w = partial(if_not_matches, write=sys.stdout.buffer.write, regexp=r)
-        rc = watch_shell(
-            partial(tee, write1=w, write2=f.write),
-            partial(tee, write1=sys.stderr.buffer.write, write2=f.write),
-            'ninja all', cwd=build_dir)
-        logging.debug(f'ninja all: returned {rc}')
-        step.set_status_from_exit_code(rc)
-        if not step.success:
-            report.add_artifact(artifacts_dir, 'ninja-all.log', 'build failed')
+    rc = watch_shell(
+        sys.stdout.buffer.write,
+        sys.stderr.buffer.write,
+        'ninja all', cwd=build_dir)
+    logging.debug(f'ninja all: returned {rc}')
+    step.set_status_from_exit_code(rc)
 
 
-def ninja_check_all_report(step: Step, _: Report, filter_output: bool):
+def ninja_check_all_report(step: Step, _: Report):
     print('Full log will be available in Artifacts "ninja-check-all.log"', flush=True)
     step.reproduce_commands.append('ninja check-all')
-    with open(f'{artifacts_dir}/ninja-check-all.log', 'wb') as f:
-        w = sys.stdout.buffer.write
-        if filter_output:
-            r = re.compile(r'^(\[.*] (Building|Linking|Generating)|(PASS|XFAIL|UNSUPPORTED):)')
-            w = partial(if_not_matches, write=sys.stdout.buffer.write, regexp=r)
-        rc = watch_shell(
-            partial(tee, write1=w, write2=f.write),
-            partial(tee, write1=sys.stderr.buffer.write, write2=f.write),
-            'ninja check-all', cwd=build_dir)
-        logging.debug(f'ninja check-all: returned {rc}')
-        step.set_status_from_exit_code(rc)
-    test_results_report.run(build_dir, 'test-results.xml', step, report)
-    if not step.success:
-        message = 'tests failed'
-        f = report.test_stats['fail']
-        if f == 1:
-            message = '1 test failed'
-        if f > 1:
-            message = f'{f} tests failed'
-        report.add_artifact(artifacts_dir, 'ninja-check-all.log', message)
+    rc = watch_shell(
+        sys.stdout.buffer.write,
+        sys.stderr.buffer.write,
+        'ninja check-all', cwd=build_dir)
+    logging.debug(f'ninja check-all: returned {rc}')
+    step.set_status_from_exit_code(rc)
 
 
 def run_step(name: str, report: Report, thunk: Callable[[Step, Report], None]) -> Step:
@@ -85,9 +62,13 @@ def run_step(name: str, report: Report, thunk: Callable[[Step, Report], None]) -
     step.name = name
     thunk(step, report)
     step.duration = time.time() - start
-    # Expand section if it failed.
+    # Expand section if step has failed.
     if not step.success:
         print('^^^ +++', flush=True)
+    if step.success:
+        annotate(f"{name}: OK")
+    else:
+        annotate(f"{name}: FAILED", style='error')
     report.steps.append(step)
     return step
 
@@ -114,13 +95,15 @@ if __name__ == '__main__':
     parser.add_argument('--log-level', type=str, default='WARNING')
     parser.add_argument('--check-clang-format', action='store_true')
     parser.add_argument('--check-clang-tidy', action='store_true')
-    parser.add_argument('--filter-output', action='store_true')
     parser.add_argument('--projects', type=str, default='detect',
                         help="Projects to select, either a list or projects like 'clang;libc', or "
                              "'detect' to automatically infer proejcts from the diff, or "
                              "'default' to add all enabled projects")
     args = parser.parse_args()
     logging.basicConfig(level=args.log_level, format='%(levelname)-7s %(message)s')
+
+    ctx = strip_emojis(os.getenv('BUILDKITE_LABEL', 'default'))
+    annotate(os.getenv('BUILDKITE_LABEL', 'default'), context=ctx)
     build_dir = ''
     step_key = os.getenv("BUILDKITE_STEP_KEY")
     scripts_dir = pathlib.Path(__file__).parent.absolute()
@@ -130,16 +113,13 @@ if __name__ == '__main__':
     report = Report()
     report.os = f'{os.getenv("BUILDKITE_AGENT_META_DATA_OS")}'
     report.name = step_key
-    report.success = False
-    # Create report with failure in case something below fails.
-    with open(report_path, 'w') as f:
-        json.dump(report.__dict__, f, default=as_dict)
     report.success = True
+
     cmake = run_step('cmake', report, lambda s, r: cmake_report(args.projects, s, r))
     if cmake.success:
-        ninja_all = run_step('ninja all', report, partial(ninja_all_report, filter_output=args.filter_output))
+        ninja_all = run_step('ninja all', report, ninja_all_report)
         if ninja_all.success:
-            run_step('ninja check-all', report, partial(ninja_check_all_report, filter_output=args.filter_output))
+            run_step('ninja check-all', report, ninja_check_all_report)
         if args.check_clang_tidy:
             run_step('clang-tidy', report,
                      lambda s, r: clang_tidy_report.run('HEAD~1', os.path.join(scripts_dir, 'clang-tidy.ignore'), s, r))
@@ -147,34 +127,25 @@ if __name__ == '__main__':
         run_step('clang-format', report,
                  lambda s, r: clang_format_report.run('HEAD~1', os.path.join(scripts_dir, 'clang-format.ignore'), s, r))
     logging.debug(report)
-    print('+++ Summary', flush=True)
-    for s in report.steps:
-        mark = 'OK   '
-        if not s.success:
-            report.success = False
-            mark = 'FAIL '
-        msg = ''
-        if len(s.messages):
-            msg = ': ' + '\n  '.join(s.messages)
-        print(f'{mark} {s.name}{msg}', flush=True)
-    print('--- Reproduce build locally', flush=True)
-    print(f'git clone {os.getenv("BUILDKITE_REPO")} llvm-project')
-    print('cd llvm-project')
-    print(f'git checkout {os.getenv("BUILDKITE_COMMIT")}')
+    summary = []
+    summary.append('''
+<details>
+  <summary>Reproduce build locally</summary>
+
+```''')
+    summary.append(f'git clone {os.getenv("BUILDKITE_REPO")} llvm-project')
+    summary.append('cd llvm-project')
+    summary.append(f'git checkout {os.getenv("BUILDKITE_COMMIT")}')
     for s in report.steps:
         if len(s.reproduce_commands) == 0:
             continue
-        print('\n'.join(s.reproduce_commands), flush=True)
-    print('', flush=True)
-    if not report.success:
-        print('^^^ +++', flush=True)
-
+        summary.append('\n'.join(s.reproduce_commands))
+    summary.append('```\n</details>')
+    annotate('\n'.join(summary), style='success')
     ph_target_phid = os.getenv('ph_target_phid')
     if ph_target_phid is not None:
-        phabtalk = PhabTalk(os.getenv('CONDUIT_TOKEN'))
-        for u in report.unit:
-            u['engine'] = step_key
-        phabtalk.update_build_status(ph_target_phid, True, report.success, report.lint, report.unit)
+        phabtalk = PhabTalk(os.getenv('CONDUIT_TOKEN'), dry_run_updates=(os.getenv('ph_dry_run_report') is not None))
+        phabtalk.update_build_status(ph_target_phid, True, report.success, report.lint, [])
         for a in report.artifacts:
             url = upload_file(a['dir'], a['file'])
             if url is not None:

@@ -28,9 +28,8 @@ def run(working_dir: str, test_results: str, step: Optional[Step], report: Optio
         step = Step()
     path = os.path.join(working_dir, test_results)
     if not os.path.exists(path):
-        logging.warning(f'{path} is not found')
+        logging.error(f'{path} is not found')
         step.success = False
-        step.messages.append(f'test report "{path}" is not found')
         return
     try:
         success = True
@@ -63,11 +62,28 @@ def run(working_dir: str, test_results: str, step: Optional[Step], report: Optio
                     msg += f'{test_case["namespace"]}/{test_case["name"]}\n'
     except Exception as e:
         logging.error(e)
-        step.messages.append('Parsing of test results failed')
         step.success = False
 
     logging.debug(f'report: {report}')
     logging.debug(f'step: {step}')
+
+
+def parse_failures(test_xml: bytes, context: str) -> []:
+    failed_cases = []
+    root_node = etree.fromstring(test_xml)
+    for test_case in root_node.xpath('//testcase'):
+        failure = test_case.find('failure')
+        if failure is None:
+            continue
+        failed_cases.append({
+            'engine': context,
+            'name': test_case.attrib['name'],
+            'namespace': test_case.attrib['classname'],
+            'result': 'fail',
+            'duration': float(test_case.attrib['time']),
+            'details': failure.text
+        })
+    return failed_cases
 
 
 if __name__ == '__main__':

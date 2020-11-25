@@ -16,9 +16,9 @@
 import logging
 import os
 
+from buildkite_utils import annotate, feedback_url
 from choose_projects import ChooseProjects
 import git
-from phabtalk.phabtalk import PhabTalk
 from steps import generic_linux, generic_windows, from_shell_output, checkout_scripts
 import yaml
 
@@ -30,15 +30,15 @@ if __name__ == '__main__':
     scripts_refspec = os.getenv("ph_scripts_refspec", "master")
     diff_id = os.getenv("ph_buildable_diff", "")
     no_cache = os.getenv('ph_no_cache') is not None
-    filter_output = '--filter-output' if os.getenv('ph_no_filter_output') is None else ''
     projects = os.getenv('ph_projects', 'detect')
     log_level = os.getenv('ph_log_level', 'INFO')
     logging.basicConfig(level=log_level, format='%(levelname)-7s %(message)s')
 
     phid = os.getenv('ph_target_phid')
-    # Add link in review to the build.
-    if phid is not None:
-        PhabTalk(os.getenv('CONDUIT_TOKEN')).maybe_add_url_artifact(phid, os.getenv('BUILDKITE_BUILD_URL'), 'buildkite')
+    url = f"https://reviews.llvm.org/D{os.getenv('ph_buildable_revision')}?id={diff_id}"
+    annotate(f"Build for [D{os.getenv('ph_buildable_revision')}#{diff_id}]({url}). "
+             f"[Harbormaster build](https://reviews.llvm.org/harbormaster/build/{os.getenv('ph_build_id')}).\n"
+             f"If there is a build infrastructure issue, please [create a bug]({feedback_url()}).")
 
     # List all affected projects.
     repo = git.Repo('.')
@@ -55,17 +55,19 @@ if __name__ == '__main__':
     steps = []
     projects = cp.add_dependencies(affected_projects)
     logging.info(f'projects with dependencies: {projects}')
+    # Add generic Linux checks.
     excluded_linux = cp.get_excluded('linux')
     logging.info(f'excluded for linux: {excluded_linux}')
     linux_projects = projects - excluded_linux
     if len(linux_projects) > 0:
         steps.extend(generic_linux(';'.join(sorted(linux_projects)), True))
+    # Add generic Windows steps.
     excluded_windows = cp.get_excluded('windows')
     logging.info(f'excluded for windows: {excluded_windows}')
     windows_projects = projects - excluded_windows
     if len(windows_projects) > 0:
         steps.extend(generic_windows(';'.join(sorted(windows_projects))))
-
+    # Add custom checks.
     for gen in steps_generators:
         steps.extend(from_shell_output(gen))
 
@@ -78,7 +80,7 @@ if __name__ == '__main__':
         })
 
         report_step = {
-            'label': ':spiral_note_pad: report',
+            'label': ':phabricator: update build status on Phabricator',
             'commands': [
                 *checkout_scripts('linux', scripts_refspec),
                 '${SRC}/scripts/summary.py',
