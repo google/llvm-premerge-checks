@@ -69,6 +69,7 @@ def run_step(name: str, report: Report, thunk: Callable[[Step, Report], None]) -
         annotate(f"{name}: OK")
     else:
         annotate(f"{name}: FAILED", style='error')
+        report.success = False
     report.steps.append(step)
     return step
 
