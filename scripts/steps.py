@@ -51,7 +51,7 @@ def generic_linux(projects: str, check_diff: bool) -> List:
         ])
     else:
         commands.extend([
-            f'${{SRC}}/scripts/premerge_checks.py --projects="{projects}" --log-level={log_level} {filter_output}'
+            f'${{SRC}}/scripts/premerge_checks.py --projects="{projects}" --log-level={log_level}'
         ])
     commands.extend([
         'EXIT_STATUS=\\$?',
