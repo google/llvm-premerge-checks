@@ -121,7 +121,7 @@ class RepoStats:
         self.commit_by_author_domain = dict()  # type: Dict[str, List[MyCommit]]
 
     def parse_repo(self,  maxage: datetime.datetime):
-        for commit in self.repo.iter_commits('master'):
+        for commit in self.repo.iter_commits('main'):
             if commit.committed_datetime < maxage:
                 break
             mycommit = MyCommit(commit)
@@ -262,7 +262,7 @@ class RepoStats:
             True: {},
             False: {},
         }  # type: Dict[bool, Dict[str, int]]
-        for commit in self.repo.iter_commits('master'):
+        for commit in self.repo.iter_commits('main'):
             if commit.committed_datetime < maxage:
                 break
             mycommit = MyCommit(commit)
@@ -295,7 +295,7 @@ class RepoStats:
             True: {b: 0 for b in buckets},
             False: {b: 0 for b in buckets},
         }  # type: Dict[bool, Dict[int, int]]
-        for commit in self.repo.iter_commits('master'):
+        for commit in self.repo.iter_commits('main'):
             if commit.committed_datetime < maxage:
                 break
             mycommit = self.commit_by_hash[commit.hexsha]

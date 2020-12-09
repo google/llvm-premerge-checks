@@ -88,13 +88,13 @@ class ApplyPatch:
             subprocess.check_call('git reset --hard {}'.format(self.git_hash),
                                   stdout=sys.stdout, stderr=sys.stderr, shell=True)
         except subprocess.CalledProcessError:
-            print('WARNING: checkout of hash failed, using master branch instead.')
+            print('WARNING: checkout of hash failed, using main branch instead.')
             self.msg += [
                 'Could not check out parent git hash "{}". It was not found in '
                 'the repository. Did you configure the "Parent Revision" in '
                 'Phabricator properly? Trying to apply the patch to the '
-                'master branch instead...'.format(self.git_hash)]
-            subprocess.check_call('git checkout master', stdout=sys.stdout,
+                'main branch instead...'.format(self.git_hash)]
+            subprocess.check_call('git checkout main', stdout=sys.stdout,
                                   stderr=sys.stderr, shell=True)
         subprocess.check_call('git show -s', stdout=sys.stdout,
                               stderr=sys.stderr, shell=True)

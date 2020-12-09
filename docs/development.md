@@ -25,7 +25,7 @@ build request. Buildkite job sends build results directly to Phabricator.
 - every review creates a new branch in [fork of
 llvm-project](https://github.com/llvm-premerge-tests/llvm-project).
 
-![deployment diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/google/llvm-premerge-checks/master/docs/deployment.plantuml)
+![deployment diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/google/llvm-premerge-checks/main/docs/deployment.plantuml)
 
 # Phabricator integration
 
@@ -57,7 +57,7 @@ export SCRIPT_DIR="${SRC}"/scripts
 rm -rf "${SRC}"
 git clone --depth 1 https://github.com/google/llvm-premerge-checks.git "${SRC}"
 cd "${SRC}"
-git fetch origin "${ph_scripts_refspec:-master}":x
+git fetch origin "${ph_scripts_refspec:-main}":x
 git checkout x
 cd "$BUILDKITE_BUILD_CHECKOUT_PATH"
 ${SCRIPT_DIR}/buildkite/build_branch_pipeline.py | tee /dev/tty | buildkite-agent pipeline upload
@@ -75,7 +75,7 @@ That in sends an HTTP POST request to [**phab-proxy**](../phabricator-proxy)
 that submits a new buildkite job **diff-checks**. All parameters from the
 original request are put in the build's environment with `ph_` prefix (to avoid
 shadowing any Buildkite environment variable). "ph_scripts_refspec" parameter
-defines refspec of llvm-premerge-checks to use ("master" by default).
+defines refspec of llvm-premerge-checks to use ("main" by default).
 
 **diff-checks** pipeline
 ([create_branch_pipeline.py](../scripts/create_branch_pipeline.py))

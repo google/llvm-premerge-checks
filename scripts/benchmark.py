@@ -140,7 +140,7 @@ if __name__ == '__main__':
     pmt_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     parser = argparse.ArgumentParser(
         description='Benchmark for LLVM pre-merge tests.')
-    parser.add_argument('--commit', type=str, default='master', help="LLVM commit to run this benchmark on.")
+    parser.add_argument('--commit', type=str, default='main', help="LLVM commit to run this benchmark on.")
     parser.add_argument('--result-file', type=str, default='pmt-benchmark.csv',
                         help="path to CSV file where to store the benchmark results")
     parser.add_argument('--workdir', type=str, default=os.path.join(os.getcwd(), 'benchmark'),

@@ -70,7 +70,7 @@ def get_reverts_per_day(repo_path: str, max_age: datetime.datetime) -> RepoStats
     repo.git.fetch()
     diff_regex = re.compile(r'^Differential Revision: https:\/\/reviews\.llvm\.org\/(.*)$', re.MULTILINE)
 
-    for commit in repo.iter_commits('master'):
+    for commit in repo.iter_commits('main'):
         if commit.committed_datetime < max_age:
             break
         stats.commits += 1

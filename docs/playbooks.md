@@ -32,7 +32,7 @@ Set `CONDUIT_TOKEN` with your personal one from `https://reviews.llvm.org/settin
 
 ## Testing changes before merging
 
-It's recommended to test even smallest changes before committing them to the `master` branch.
+It's recommended to test even smallest changes before committing them to the `main` branch.
 
 1. Create a pull request here.
 1. Manually create a buildkite build in the pipeline you are updating and specify
@@ -144,7 +144,7 @@ To spawn a new windows agent:
 1. Login to the new machine via RDP (you will need a RDP client, e.g. Chrome app).
 1. In the RDP session: run these commands in the CMD window under Administrator to bootstrap the Windows machine:
     ```powershell 
-    Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/windows_agent_bootstrap.ps1' -OutFile c:\windows_agent_bootstrap.ps1
+    Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/main/scripts/windows_agent_bootstrap.ps1' -OutFile c:\windows_agent_bootstrap.ps1
     c:/windows_agent_bootstrap.ps1 -ssd
     ```
     Ignore the pop-up to format the new disk and wait for the machine to reboot.
@@ -173,12 +173,12 @@ schtasks.exe /create /tn "Start Buildkite agent" /ru SYSTEM /SC ONSTART /DELAY 0
 ## Custom environment variables
 
 Buildkite pipelines have a number of custom environment variables one can set to change their behavior. That is useful to debug issues
-or test changes. They are mostly used by pipleine generators, e.g. [build_master_pipeline](../scripts/build_master_pipeline.py),
+or test changes. They are mostly used by pipleine generators, e.g. [pipeline_main](../scripts/pipeline_main.py),
 please refer to the source code for the details. These variables have `ph_` prefix and can be set with URL parameters in Harbormaster build.
 
 Most commonly used are:
 
-- `ph_scripts_refspec` ("master" by default): refspec branch of llvm-premerge-checks to use. This variable is also used in pipeline "bootstrap" in Buildkite interface.
+- `ph_scripts_refspec` ("main" by default): refspec branch of llvm-premerge-checks to use. This variable is also used in pipeline "bootstrap" in Buildkite interface.
 - `ph_dry_run_report`: do not report any results back to Phabricator.
 - `ph_no_cache`: (if set to any value) clear compilation cache before the build.
 - `ph_projects`: which projects to use, "detect" will look on diff to infer the projects, "default" selects all projects.

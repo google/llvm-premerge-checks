@@ -27,7 +27,7 @@ def build():
         for k, v in params.items():
             if len(v) == 1:
                 build_env['ph_' + k] = v[0]
-        refspec = 'master'
+        refspec = 'main'
         if 'ph_scripts_refspec' in build_env:
             refspec = build_env['ph_scripts_refspec']
         build_request = {
