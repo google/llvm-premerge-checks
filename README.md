@@ -13,14 +13,14 @@ Phabricator](https://reviews.llvm.org) instance.
 *Phabricator* (https://reviews.llvm.org) is the code review tool in the LLVM
 project.
 
-The workflow checks the patches before a user merges them to the master branch -
+The workflow checks the patches before a user merges them to the main branch -
 thus the term *pre-merge testing**. When a user uploads a patch to the LLVM
 Phabricator, Phabricator triggers the checks and then displays the results.
 
-The CI system checks the patches **before** a user merges them to the master
+The CI system checks the patches **before** a user merges them to the main
 branch. This way bugs in a patch are contained during the code review stage and
-do not pollute the master branch. The more bugs the CI system can catch during
-the code review phase, the more stable and bug-free the master branch will
+do not pollute the main branch. The more bugs the CI system can catch during
+the code review phase, the more stable and bug-free the main branch will
 become. <sup>[citation needed]()</sup>
 
 This repository contains the configurations and script to run pre-merge checks
@@ -58,7 +58,7 @@ please make sure that either:
 
 * You set a git hash as `sourceControlBaseRevision` in Phabricator which is
 * available on the Github repository, **or** you define the dependencies of your
-* patch in Phabricator, **or** your patch can be applied to the master branch.
+* patch in Phabricator, **or** your patch can be applied to the main branch.
 
 Only then can the build server apply the patch locally and run the builds and
 tests.

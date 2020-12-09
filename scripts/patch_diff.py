@@ -127,7 +127,7 @@ class ApplyPatch:
                              f'instead of resolved "{base_commit}"')
                 base_commit = self.find_commit(self.base_revision)
             if base_commit is None:
-                base_commit = self.repo.heads['master'].commit
+                base_commit = self.repo.heads['main'].commit
                 annotate(f"Cannot find a base git revision. Will use current HEAD.",
                          style='warning', context='patch_diff')
             self.create_branch(base_commit)
@@ -161,23 +161,27 @@ class ApplyPatch:
         As origin is disjoint from upstream, it needs to be updated by this script.
         """
         logging.info('Syncing local, origin and upstream...')
-        self.repo.git.clean('-ffxdq')
-        self.repo.git.reset('--hard')
-        self.repo.git.fetch('--all')
-        self.repo.git.checkout('master')
         if 'upstream' not in self.repo.remotes:
             self.repo.create_remote('upstream', url=LLVM_GITHUB_URL)
             self.repo.remotes.upstream.fetch()
-        self.repo.git.pull('origin', 'master')
-        self.repo.git.pull('upstream', 'master')
+        self.repo.git.clean('-ffxdq')
+        self.repo.git.reset('--hard')
+        self.repo.git.fetch('--all')
+        if self.find_commit('main') is None:
+            origin = self.repo.remotes.origin
+            self.repo.create_head('main', origin.refs.main)
+            self.repo.heads.main.set_tracking_branch(origin.refs.main)
+        self.repo.heads.main.checkout()
+        self.repo.git.pull('origin', 'main')
+        self.repo.git.pull('upstream', 'main')
         if self.push_branch:
-            self.repo.git.push('origin', 'master')
+            self.repo.git.push('origin', 'main')
 
     @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
     def find_commit(self, rev):
         try:
             return self.repo.commit(rev)
-        except ValueError as e:
+        except:
             return None
 
     @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
@@ -297,7 +301,7 @@ class ApplyPatch:
         rev = self.base_revision
         age_limit = datetime.datetime.now() - APPLIED_SCAN_LIMIT
         if rev == 'auto':  # FIXME: use revison that created the branch
-            rev = 'master'
+            rev = 'main'
         for commit in self.repo.iter_commits(rev):
             if datetime.datetime.fromtimestamp(commit.committed_date) < age_limit:
                 break

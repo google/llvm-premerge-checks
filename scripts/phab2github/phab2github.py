@@ -50,7 +50,7 @@ class Phab2Github:
     def sync(self):
         """Sync Phabricator to Github."""
         _LOGGER.info('Starting sync...')
-        self._refresh_master()
+        self._refresh_main()
         self._delete_phab_branches()
         revisions = self.phab_wrapper.get_revisions()
         pull_requests = {p.title: p for p in self.github_repo.get_pulls(state='open')}
@@ -70,11 +70,11 @@ class Phab2Github:
                     pr = self.github_repo.create_pull(title=revision.pr_title,
                                                       body=revision.pr_summary,
                                                       head=revision.branch_name,
-                                                      base='master')
+                                                      base='main')
                     _LOGGER.info(pr.html_url)
         _LOGGER.info('Sync completed.')
 
-    def _refresh_master(self):
+    def _refresh_main(self):
         """Clone/update local git repo."""
         if not os.path.exists(self.workdir):
             os.mkdir(self.workdir)
@@ -83,16 +83,16 @@ class Phab2Github:
             _LOGGER.info('pulling origin and upstream...')
             self.repo = git.Repo(self.llvm_dir)
             self.repo.git.fetch('--all')
-            self.repo.git.checkout('master')
-            self.repo.git.pull('upstream', 'master')
-            self.repo.git.push('origin', 'master')
+            self.repo.git.checkout('main')
+            self.repo.git.pull('upstream', 'main')
+            self.repo.git.push('origin', 'main')
         else:
             _LOGGER.info('cloning repository...')
             git.Repo.clone_from(MY_GITHUB_URL, self.llvm_dir)
             self.repo = git.Repo(self.llvm_dir)
             self.repo.create_remote('upstream', url=LLVM_GITHUB_URL)
             self.repo.remotes.upstream.fetch()
-        _LOGGER.info('refresh of master branch completed')
+        _LOGGER.info('refresh of main branch completed')
 
     def create_branches_for_revision(self, revision: Revision):
         """Create branches for a Revision and it's Diffs.
@@ -110,10 +110,10 @@ class Phab2Github:
             try:
                 self.apply_patch(diff, patch)
             except ApplyPatchException as e:
-                # TODO: retry on master if this fails
+                # TODO: retry on main if this fails
                 _LOGGER.error('Could not apply patch for Diff {}. Deleting branch'.format(diff.id))
                 _LOGGER.exception(e)
-                self.repo.heads['master'].checkout()
+                self.repo.heads['main'].checkout()
                 self.repo.delete_head(diff.branch_name)
 
         diffs = [d for d in revision.sorted_diffs if self._has_branch(d)]
@@ -143,15 +143,15 @@ class Phab2Github:
         """Create a branch for diff."""
         base_hash = diff.base_hash
         if base_hash is None:
-            base_hash = 'upstream/master'
+            base_hash = 'upstream/main'
         _LOGGER.info('creating branch {} based on {}...'.format(diff.branch_name, base_hash))
         try:
             new_branch = self.repo.create_head(diff.branch_name, base_hash)
         except ValueError:
-            # commit hash not found, try again with master
+            # commit hash not found, try again with main
             _LOGGER.warning('commit hash {} not found in upstream repository. '
-                            'Trying master instead...'.format(diff.branch_name, base_hash))
-            base_hash = 'upstream/master'
+                            'Trying main instead...'.format(diff.branch_name, base_hash))
+            base_hash = 'upstream/main'
             new_branch = self.repo.create_head(diff.branch_name, base_hash)
         self.repo.head.reference = new_branch
         self.repo.head.reset(index=True, working_tree=True)
@@ -184,7 +184,7 @@ class Phab2Github:
     def _delete_phab_branches(self):
         """Delete all branches sarting with 'phab-'."""
         _LOGGER.info('Deleting local Phabricator-relates branches...')
-        self.repo.git.checkout('master')
+        self.repo.git.checkout('main')
         for branch in [b for b in self.repo.heads if b.name.startswith('phab-')]:
             _LOGGER.info('Deleding branch {}'.format(branch))
             self.repo.git.branch('-D', branch.name)

@@ -46,7 +46,7 @@ RUN choco install -y sccache
 RUN pip install psutil
 
 # install python dependencies for the scripts
-RUN pip install -r https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/requirements.txt
+RUN pip install -r https://raw.githubusercontent.com/google/llvm-premerge-checks/main/scripts/requirements.txt
 
 # configure Python encoding
 ENV PYTHONIOENCODING=UTF-8

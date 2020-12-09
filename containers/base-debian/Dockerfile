@@ -35,7 +35,7 @@ ENV LC_ALL en_US.UTF-8
 
 # Install python dependencies for the scripts. ADD will check contentents of a file for changes changed.
 # TODO: that should be done during the build as it will pull this repo anyway and will have latest version.
-ADD "https://raw.githubusercontent.com/google/llvm-premerge-checks/master/scripts/requirements.txt" requirements.txt
+ADD "https://raw.githubusercontent.com/google/llvm-premerge-checks/main/scripts/requirements.txt" requirements.txt
 RUN pip3 install -r requirements.txt
 
 RUN ln -s /usr/bin/clang-10 /usr/bin/clang;\

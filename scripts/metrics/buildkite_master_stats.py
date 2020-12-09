@@ -14,7 +14,7 @@
 # limitations under the License.
 
 # -----------------------------------------------------------------------------
-# This script will collect all breakages of the master branch builds from
+# This script will collect all breakages of the main branch builds from
 # buildkite and format the results nicely.
 # Arguments:
 #     llvm-path :  folder where the LLVM checkout is kept
@@ -107,7 +107,7 @@ if __name__ == '__main__':
   bk = BuildKiteMasterStats(args.llvm_path, args.token)
   
   if not os.path.exists(CACHE_FILE):
-    results = bk.get_stats('llvm-project','llvm-master-build')
+    results = bk.get_stats('llvm-project','llvm-main-build')
     bk.save_results(CACHE_FILE, results)
   
   builds = bk.get_builds(CACHE_FILE)

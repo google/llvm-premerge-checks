@@ -26,7 +26,7 @@ import yaml
 def generic_linux(projects: str, check_diff: bool) -> List:
     if os.getenv('ph_skip_linux') is not None:
         return []
-    scripts_refspec = os.getenv("ph_scripts_refspec", "master")
+    scripts_refspec = os.getenv("ph_scripts_refspec", "main")
     no_cache = os.getenv('ph_no_cache') is not None
     log_level = os.getenv('ph_log_level', 'WARNING')
     linux_agents = {'queue': 'linux'}
@@ -79,7 +79,7 @@ def generic_linux(projects: str, check_diff: bool) -> List:
 def generic_windows(projects: str) -> List:
     if os.getenv('ph_skip_windows') is not None:
         return []
-    scripts_refspec = os.getenv("ph_scripts_refspec", "master")
+    scripts_refspec = os.getenv("ph_scripts_refspec", "main")
     no_cache = os.getenv('ph_no_cache') is not None
     log_level = os.getenv('ph_log_level', 'WARNING')
     clear_sccache = 'powershell -command "sccache --stop-server; echo \\$env:SCCACHE_DIR; ' \

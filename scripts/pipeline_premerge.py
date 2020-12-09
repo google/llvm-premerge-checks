@@ -27,7 +27,7 @@ steps_generators = [
 ]
 
 if __name__ == '__main__':
-    scripts_refspec = os.getenv("ph_scripts_refspec", "master")
+    scripts_refspec = os.getenv("ph_scripts_refspec", "main")
     diff_id = os.getenv("ph_buildable_diff", "")
     no_cache = os.getenv('ph_no_cache') is not None
     projects = os.getenv('ph_projects', 'detect')

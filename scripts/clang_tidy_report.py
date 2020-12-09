@@ -72,7 +72,7 @@ def run(base_commit, ignore_config, step: Optional[Step], report: Optional[Repor
             severity = match.group(4)
             text = match.group(5)
             text += '\n[[{} | not useful]] '.format(
-                'https://github.com/google/llvm-premerge-checks/blob/master/docs/clang_tidy.md#warning-is-not-useful')
+                'https://github.com/google/llvm-premerge-checks/blob/main/docs/clang_tidy.md#warning-is-not-useful')
             if severity in ['warning', 'error']:
                 if severity == 'warning':
                     warn_count += 1
@@ -100,7 +100,7 @@ def run(base_commit, ignore_config, step: Optional[Step], report: Optional[Repor
         report.add_artifact(os.getcwd(), p, 'clang-tidy')
     if errors_count + warn_count != 0:
         step.success = False
-        url = "https://github.com/google/llvm-premerge-checks/blob/master/docs/clang_tidy.md#review-comments."
+        url = "https://github.com/google/llvm-premerge-checks/blob/main/docs/clang_tidy.md#review-comments."
         annotate(f'clang-tidy found {errors_count} errors and {warn_count} warnings. {inline_comments} of them were '
                  f'added as review comments [why?]({url})', style='error')
     logging.debug(f'report: {report}')
