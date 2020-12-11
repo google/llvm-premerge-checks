@@ -145,8 +145,8 @@ class PhabTalk:
 
 
 class Step:
-    def __init__(self):
-        self.name = ''
+    def __init__(self, name=''):
+        self.name = name
         self.success = True
         self.duration = 0.0
         self.reproduce_commands = []
