@@ -117,14 +117,25 @@ if __name__ == '__main__':
     report.success = True
 
     cmake = run_step('cmake', report, lambda s, r: cmake_report(args.projects, s, r))
+    commands_in_build = True
     if cmake.success:
         ninja_all = run_step('ninja all', report, ninja_all_report)
         if ninja_all.success:
             run_step('ninja check-all', report, ninja_check_all_report)
         if args.check_clang_tidy:
+            if commands_in_build:
+                s = Step('')
+                s.reproduce_commands.append('cd ..')
+                commands_in_build = False
+                report.steps.append(s)
             run_step('clang-tidy', report,
                      lambda s, r: clang_tidy_report.run('HEAD~1', os.path.join(scripts_dir, 'clang-tidy.ignore'), s, r))
     if args.check_clang_format:
+        if commands_in_build:
+            s = Step('')
+            s.reproduce_commands.append('cd ..')
+            commands_in_build = False
+            report.steps.append(s)
         run_step('clang-format', report,
                  lambda s, r: clang_format_report.run('HEAD~1', os.path.join(scripts_dir, 'clang-format.ignore'), s, r))
     logging.debug(report)

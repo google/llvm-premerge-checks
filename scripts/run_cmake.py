@@ -168,7 +168,7 @@ def run(projects: str, repo_path: str, config_file_path: str = None, *, dry_run:
     result = subprocess.call(cmd, env=env, shell=True, cwd=build_dir)
     commands.append('cmake ' + ' '.join(_create_args(config, llvm_enable_projects, False)))
     commands.append('# ^note that compiler cache arguments are omitted')
-    _link_compile_commands(config, repo_path, build_dir)
+    _link_compile_commands(config, repo_path, build_dir, commands)
     return result, build_dir, [os.path.join(build_dir, 'CMakeCache.txt')], commands
 
 
@@ -187,7 +187,7 @@ def secure_delete(path: str):
     shutil.rmtree(path, onerror=del_rw)
 
 
-def _link_compile_commands(config: Configuration, repo_path: str, build_dir: str):
+def _link_compile_commands(config: Configuration, repo_path: str, build_dir: str, commands: List[str]):
     """Link compile_commands.json from build to root dir"""
     if config.operating_system != OperatingSystem.Linux:
         return
@@ -196,6 +196,7 @@ def _link_compile_commands(config: Configuration, repo_path: str, build_dir: str
     if os.path.exists(target_path):
         os.remove(target_path)
     os.symlink(source_path, target_path)
+    commands.append(f'ln -s $PWD/compile_commands.json ../compile_commands.json')
 
 
 if __name__ == '__main__':
