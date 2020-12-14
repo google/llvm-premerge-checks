@@ -19,8 +19,7 @@ from steps import generic_linux, generic_windows, from_shell_output
 import yaml
 
 steps_generators = [
-    # TODO: enable when we have enough mac agents
-    # '${BUILDKITE_BUILD_CHECKOUT_PATH}/libcxx/utils/ci/buildkite-pipeline-snapshot.sh',
+    '${BUILDKITE_BUILD_CHECKOUT_PATH}/libcxx/utils/ci/buildkite-pipeline-snapshot.sh',
 ]
 
 if __name__ == '__main__':
