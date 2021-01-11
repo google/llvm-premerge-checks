@@ -16,8 +16,9 @@ dependencies:
   compiler-rt:
   - clang
   flang:
-  - llvm
-  - mlir
+    - llvm
+    - mlir
+    - clang
   libc:
   - clang
   - clang-tools-extra
