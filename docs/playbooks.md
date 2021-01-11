@@ -178,7 +178,7 @@ please refer to the source code for the details. These variables have `ph_` pref
 
 Most commonly used are:
 
-- `ph_scripts_refspec` ("main" by default): refspec branch of llvm-premerge-checks to use. This variable is also used in pipeline "bootstrap" in Buildkite interface.
+- `ph_scripts_refspec`: ("main" by default): refspec branch of llvm-premerge-checks to use. This variable is also used in pipeline "bootstrap" in Buildkite interface.
 - `ph_dry_run_report`: do not report any results back to Phabricator.
 - `ph_no_cache`: (if set to any value) clear compilation cache before the build.
 - `ph_projects`: which projects to use, "detect" will look on diff to infer the projects, "default" selects all projects.
