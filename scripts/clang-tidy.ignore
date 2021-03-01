@@ -1,4 +1,5 @@
 # Files to be ignored by clang-tidy. Will not appear in short report and inline comments.
+debuginfo-tests/
 libcxxabi/test
 libcxxabi/test/libcxxabi/test
 libcxx/test
