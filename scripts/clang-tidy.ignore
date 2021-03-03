@@ -41,6 +41,9 @@ debuginfo-tests/dexter/feature_tests/subtools/test
 clang/test
 libclc
 mlir/examples/standalone
+mlir/include/mlir-c/Bindings
+mlir/include/mlir/Bindings
+mlir/lib/Bindings
 mlir/test
 mlir/tools/mlir-cuda-runner
 mlir/tools/mlir-rocm-runner
