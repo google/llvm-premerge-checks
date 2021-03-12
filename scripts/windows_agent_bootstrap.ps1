@@ -62,10 +62,8 @@ if ($sdd) {
     Add-MpPreference -ExclusionPath "C:\ws"
 }
 
-# Clone scripts repo (this one)
-git clone https://github.com/google/llvm-premerge-checks.git "c:\llvm-premerge-checks"
-Write-Host "TODO: check that source is cloned"
-pause
+# Clone scripts repo. Restarting in a new session to pick up profile updates.
+powershell -command 'git clone https://github.com/google/llvm-premerge-checks.git "c:\llvm-premerge-checks"'
 
 # create folder for credentials
 New-Item -Path "C:\" -Name "credentials" -ItemType "directory"
@@ -75,6 +73,7 @@ $Env:buildkiteAgentToken = ""
 $Env:BUILDKITE_AGENT_NAME= "NAME"
 $Env:BUILDKITE_AGENT_TAGS = "queue=windows,name=NAME"
 $Env:CONDUIT_TOKEN = ""'
+Write-Host "Open editor to set agent options..."
 Start-Process -FilePath "notepad" -Wait -Args  "c:\credentials\buildkite-env.ps1"
 
 # Add task to start agent after restart.
