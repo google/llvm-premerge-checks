@@ -142,11 +142,11 @@ To spawn a new Windows agent:
 1. Add new windows machine wih OS "Windows Server" and version with "desktop experience" (so you can RDP) and boot disk size ~200 Gb. There is a "windows-agent-template" that might not be up to date. 
 1. Go to the [GCP page](https://pantheon.corp.google.com/compute/instances?project=llvm-premerge-checks&instancessize=50) again 
 1. Login to the new machine via RDP (you will need a RDP client, e.g. Chrome app).
-1. Add a powershell shortcut at desktop with "run as admin" flag. Create a folder with machine name (e.g "w16c2-2") somewhere and click "add new toolbar" on windows toolbar: this way it will be easier to identify which machine you are working with later.
+1. (optional, quality of life) Add a powershell shortcut at desktop with "run as admin" flag. Create a folder with machine name (e.g "w16c2-2") somewhere and click "add new toolbar" on windows toolbar: this way it will be easier to identify which machine you are working with later.
 1. Run these commands in the power shell under admin to bootstrap the Windows machine:
     ```powershell 
-    Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/main/scripts/windows_agent_bootstrap.ps1' -OutFile c:\windows_agent_bootstrap.ps1
-    c:/windows_agent_bootstrap.ps1
+Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/main/scripts/windows_agent_bootstrap.ps1' -OutFile c:\windows_agent_bootstrap.ps1
+c:/windows_agent_bootstrap.ps1
     ```
 VM will be restarted after a prompt.
 

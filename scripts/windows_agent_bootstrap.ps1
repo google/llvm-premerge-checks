@@ -63,8 +63,7 @@ if ($sdd) {
 }
 
 # Clone scripts repo. Restarting in a new session to pick up profile updates.
-powershell -command 'git clone https://github.com/google/llvm-premerge-checks.git "c:\llvm-premerge-checks"'
-
+cmd.exe /c start powershell.exe -c {git clone https://github.com/google/llvm-premerge-checks.git c:/llvm-premerge-checks}
 # create folder for credentials
 New-Item -Path "C:\" -Name "credentials" -ItemType "directory"
 set-content c:\credentials\buildkite-env.ps1 '# Insert API tokens and replace NAME to something meaningful.
@@ -74,7 +73,7 @@ $Env:BUILDKITE_AGENT_NAME= "NAME"
 $Env:BUILDKITE_AGENT_TAGS = "queue=windows,name=NAME"
 $Env:CONDUIT_TOKEN = ""'
 Write-Host "Open editor to set agent options..."
-Start-Process -FilePath "notepad" -Wait -Args  "c:\credentials\buildkite-env.ps1"
+Start-Process -FilePath "notepad" -Wait -Args "c:\credentials\buildkite-env.ps1"
 
 # Add task to start agent after restart.
 schtasks.exe /create /tn "Start Buildkite agent" /ru SYSTEM /SC ONSTART /DELAY 0005:00 /tr "powershell -command 'C:\llvm-premerge-checks\scripts\windows_agent_start_buildkite.ps1 -workdir c:\ws'"
