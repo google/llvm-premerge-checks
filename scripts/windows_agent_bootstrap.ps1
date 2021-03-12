@@ -62,8 +62,9 @@ if ($sdd) {
     Add-MpPreference -ExclusionPath "C:\ws"
 }
 
-# Clone scripts repo. Restarting in a new session to pick up profile updates.
-cmd.exe /c start powershell.exe -c {git clone https://github.com/google/llvm-premerge-checks.git c:/llvm-premerge-checks}
+# Clone scripts repo. Restarting in a new session to pick up profile updates. TODO: automate this.
+Write-Host "please run 'git clone https://github.com/google/llvm-premerge-checks.git c:/llvm-premerge-checks' in a new shell"
+pause
 # create folder for credentials
 New-Item -Path "C:\" -Name "credentials" -ItemType "directory"
 set-content c:\credentials\buildkite-env.ps1 '# Insert API tokens and replace NAME to something meaningful.
