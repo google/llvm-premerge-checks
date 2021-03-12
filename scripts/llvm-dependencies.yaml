@@ -14,7 +14,7 @@ dependencies:
   #        Same for libcxx, libc and other projects that don't have 'llvm'
   #        as a dependency.
   compiler-rt:
-  - clang
+    - clang
   flang:
     - llvm
     - mlir

@@ -136,39 +136,24 @@ Here are the instructions to set up such a machine on GCP.
 
 ## Spawning a new windows agent
 
-To spawn a new windows agent:
+To spawn a new Windows agent:
 
-1. Go to the [GCP page](https://pantheon.corp.google.com/compute/instances?project=llvm-premerge-checks&instancessize=50) and pick a new number for the agent.
-1. Run `kubernetes/windows_agent_create.sh agent-windows-<number>`
+1. Go to the [GCP page](https://pantheon.corp.google.com/compute/instances?project=llvm-premerge-checks&instancessize=50).
+1. Add new windows machine wih OS "Windows Server" and version with "desktop experience" (so you can RDP) and boot disk size ~200 Gb. There is a "windows-agent-template" that might not be up to date. 
 1. Go to the [GCP page](https://pantheon.corp.google.com/compute/instances?project=llvm-premerge-checks&instancessize=50) again 
 1. Login to the new machine via RDP (you will need a RDP client, e.g. Chrome app).
-1. In the RDP session: run these commands in the CMD window under Administrator to bootstrap the Windows machine:
+1. Add a powershell shortcut at desktop with "run as admin" flag. Create a folder with machine name (e.g "w16c2-2") somewhere and click "add new toolbar" on windows toolbar: this way it will be easier to identify which machine you are working with later.
+1. Run these commands in the power shell under admin to bootstrap the Windows machine:
     ```powershell 
     Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/main/scripts/windows_agent_bootstrap.ps1' -OutFile c:\windows_agent_bootstrap.ps1
-    c:/windows_agent_bootstrap.ps1 -ssd
+    c:/windows_agent_bootstrap.ps1
     ```
-    Ignore the pop-up to format the new disk and wait for the machine to reboot.
-    
-### Buildkite
- 
-1. Create `c:\credentials` folder with file `buildkite-env.ps1`:
-    ```powershell
-    $Env:buildkiteAgentToken = "secret-token"
-    $Env:BUILDKITE_AGENT_NAME = "w#"
-    $Env:BUILDKITE_AGENT_TAGS = "queue=windows"
-    $Env:CONDUIT_TOKEN = "conduit-api-token"
-    ```
-   Pleas mind the length of the agent name as it will be in path and might cause some tests to fail due to 260 character limit.
-1. Clone scripts directory and start agent:
+VM will be restarted after a prompt.
+
+To start agent manually:
    ```powershell
-   git clone https://github.com/google/llvm-premerge-checks.git C:\llvm-premerge-checks
    C:\llvm-premerge-checks\scripts\windows_agent_start_buildkite.ps1 [-workdir D:\] [-testing] [-version latest]
    ```
-1. Add a task to start agent when machine restarts (make sure to pass correct parameters).
-```
-git clone https://github.com/google/llvm-premerge-checks.git C:\llvm-premerge-checks
-schtasks.exe /create /tn "Start Buildkite agent" /ru SYSTEM /SC ONSTART /DELAY 0005:00 /tr "powershell -command 'C:\llvm-premerge-checks\scripts\windows_agent_start_buildkite.ps1 -workdir c:\ws'"
-```
 
 ## Custom environment variables
 
