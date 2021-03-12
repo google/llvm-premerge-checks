@@ -42,8 +42,7 @@ if ($ssd) {
     cmd /C "mklink /j C:\ProgramData\Docker D:\docker"
 }
 
-# create folder for credentials
-New-Item -Path "C:\" -Name "credentials" -ItemType "directory"
+
 
 # install Docker
 Install-PackageProvider -Name NuGet -Force
@@ -59,11 +58,29 @@ choco install -y gcloudsdk --ignore-checksums
 if ($sdd) {
     Add-MpPreference -ExclusionPath "D:\"
 } else {
+    New-Item -Path "C:\" -Name "ws" -ItemType "directory"
     Add-MpPreference -ExclusionPath "C:\ws"
 }
 
-# clone scripts repo (this one)
+# Clone scripts repo (this one)
 git clone https://github.com/google/llvm-premerge-checks.git "c:\llvm-premerge-checks"
+Write-Host "TODO: check that source is cloned"
+pause
+
+# create folder for credentials
+New-Item -Path "C:\" -Name "credentials" -ItemType "directory"
+set-content c:\credentials\buildkite-env.ps1 '# Insert API tokens and replace NAME to something meaningful.
+# Mind the length of the agent name as it will be in path and might cause some tests to fail due to 260 character limit of paths.
+$Env:buildkiteAgentToken = ""
+$Env:BUILDKITE_AGENT_NAME= "NAME"
+$Env:BUILDKITE_AGENT_TAGS = "queue=windows,name=NAME"
+$Env:CONDUIT_TOKEN = ""'
+Start-Process -FilePath "notepad" -Wait -Args  "c:\credentials\buildkite-env.ps1"
+
+# Add task to start agent after restart.
+schtasks.exe /create /tn "Start Buildkite agent" /ru SYSTEM /SC ONSTART /DELAY 0005:00 /tr "powershell -command 'C:\llvm-premerge-checks\scripts\windows_agent_start_buildkite.ps1 -workdir c:\ws'"
 
 # Reboot
+Write-Host "Need to restart"
+pause
 Restart-Computer -Force
