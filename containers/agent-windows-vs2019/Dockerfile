@@ -42,7 +42,8 @@ RUN powershell -NoProfile -InputFormat None -Command `
 # and a few more that were not documented...
 RUN choco install -y ninja git python3 gnuwin activeperl
 RUN choco install -y cmake --version 3.15.4
-RUN choco install -y sccache
+# libcxx requires clang(-cl) to be available
+RUN choco install -y sccache llvm
 RUN pip install psutil
 
 # install python dependencies for the scripts
