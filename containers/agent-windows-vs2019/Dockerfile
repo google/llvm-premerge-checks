@@ -53,8 +53,9 @@ RUN pip install -r https://raw.githubusercontent.com/google/llvm-premerge-checks
 ENV PYTHONIOENCODING=UTF-8
 
 # update the path variable    
+# C:\Program Files\Git\usr\bin contains a usable bash and other unix tools.
 RUN powershell -NoProfile -InputFormat None  -Command `
-    $path = $env:path + ';C:\Program Files\CMake\bin'; `
+    $path = $env:path + ';C:\Program Files\CMake\bin;C:\Program Files\Git\usr\bin'; `
     Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\' -Name Path -Value $path
 
 # use this folder to store the worksapce'
