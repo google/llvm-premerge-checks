@@ -40,7 +40,7 @@ RUN powershell -NoProfile -InputFormat None -Command `
 
 # install tools as described in https://llvm.org/docs/GettingStartedVS.html
 # and a few more that were not documented...
-RUN choco install -y ninja git python3 gnuwin
+RUN choco install -y ninja git python3
 RUN choco install -y activeperl --version 5.28.0.20210106
 RUN choco install -y cmake --version 3.15.4
 # libcxx requires clang(-cl) to be available
