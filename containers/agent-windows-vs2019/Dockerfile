@@ -54,7 +54,7 @@ ENV PYTHONIOENCODING=UTF-8
 
 # update the path variable    
 RUN powershell -NoProfile -InputFormat None  -Command `
-    $path = $env:path + ';c:\Program Files (x86)\GnuWin32\bin;C:\Program Files\CMake\bin'; `
+    $path = $env:path + ';C:\Program Files\CMake\bin'; `
     Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\' -Name Path -Value $path
 
 # use this folder to store the worksapce'
