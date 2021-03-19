@@ -161,7 +161,8 @@ def run(projects: str, repo_path: str, config_file_path: str = None, *, dry_run:
     env = _create_env(config)
     llvm_enable_projects = _select_projects(config, projects, repo_path)
     print('Enabled projects: {}'.format(llvm_enable_projects), flush=True)
-    arguments = _create_args(config, llvm_enable_projects, True)
+    # TODO: document, rename "no_cache" to clear cache.
+    arguments = _create_args(config, llvm_enable_projects, os.getenv('ph_no_ccache') is None)
     cmd = 'cmake ' + ' '.join(arguments)
 
     print('Running cmake with these arguments:\n{}'.format(cmd), flush=True)
