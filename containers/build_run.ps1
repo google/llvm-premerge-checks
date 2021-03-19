@@ -36,8 +36,8 @@ If ($LastExitCode -ne 0) {
 
 # mount a persistent workspace for experiments
 docker run -it `
-    -v D:\:C:\ws `
-    -v C:\credentials:C:\credentials `
+    -v C:/ws:C:/ws `
+    -v C:/credentials:C:/credentials `
     -e PARENT_HOSTNAME=$env:computername `
     $IMAGE_NAME $CMD
 If ($LastExitCode -ne 0) {
