@@ -154,7 +154,10 @@ def run(projects: str, repo_path: str, config_file_path: str = None, *, dry_run:
         commands.append("mkdir build")
         commands.append("cd build")
     for k, v in config.environment.items():
-        commands.append(f'export {k}="{v}"')
+        if config.operating_system == OperatingSystem.Linux:
+            commands.append(f'export {k}="{v}"')
+        else:
+            commands.append(f'set {k}={v}')
     env = _create_env(config)
     llvm_enable_projects = _select_projects(config, projects, repo_path)
     print('Enabled projects: {}'.format(llvm_enable_projects), flush=True)
