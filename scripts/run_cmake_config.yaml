@@ -8,9 +8,9 @@ environment:
     CXX: 'clang++'
     LD: 'LLD'
   windows:
-    'CC': 'cl'
-    'CXX': 'cl'
-    'LD': 'link'
+    'CC': 'clang-cl'
+    'CXX': 'clang-cl'
+    'LD': 'lld-link'
 
 # command line arguments for cmake
 arguments:
