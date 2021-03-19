@@ -68,8 +68,9 @@ if __name__ == '__main__':
     if len(windows_projects) > 0:
         steps.extend(generic_windows(';'.join(sorted(windows_projects))))
     # Add custom checks.
-    for gen in steps_generators:
-        steps.extend(from_shell_output(gen))
+    if os.getenv('ph_skip_generated') is None:
+        for gen in steps_generators:
+            steps.extend(from_shell_output(gen))
 
     if phid is None:
         logging.warning('ph_target_phid is not specified. Skipping "Report" step')

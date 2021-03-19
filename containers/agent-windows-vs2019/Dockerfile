@@ -40,9 +40,11 @@ RUN powershell -NoProfile -InputFormat None -Command `
 
 # install tools as described in https://llvm.org/docs/GettingStartedVS.html
 # and a few more that were not documented...
-RUN choco install -y ninja git python3 gnuwin activeperl
+RUN choco install -y ninja git python3 gnuwin
+RUN choco install -y activeperl --version 5.28.0.20210106
 RUN choco install -y cmake --version 3.15.4
-RUN choco install -y sccache
+# libcxx requires clang(-cl) to be available
+RUN choco install -y sccache llvm
 RUN pip install psutil
 
 # install python dependencies for the scripts
@@ -52,8 +54,9 @@ RUN pip install -r https://raw.githubusercontent.com/google/llvm-premerge-checks
 ENV PYTHONIOENCODING=UTF-8
 
 # update the path variable    
+# C:\Program Files\Git\usr\bin contains a usable bash and other unix tools.
 RUN powershell -NoProfile -InputFormat None  -Command `
-    $path = $env:path + ';C:\Program Files\CMake\bin'; `
+    $path = $env:path + ';C:\Program Files\CMake\bin;C:\Program Files\Git\usr\bin'; `
     Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\' -Name Path -Value $path
 
 # use this folder to store the worksapce'
