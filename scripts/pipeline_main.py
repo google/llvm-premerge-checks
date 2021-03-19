@@ -39,8 +39,9 @@ if __name__ == '__main__':
     steps.extend(generic_windows(
         os.getenv('ph_projects', 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;polly')))
 
-    for gen in steps_generators:
-        steps.extend(from_shell_output(gen))
+    if os.getenv('ph_skip_generated') is None:
+        for gen in steps_generators:
+            steps.extend(from_shell_output(gen))
 
     notify = []
     for e in notify_emails:

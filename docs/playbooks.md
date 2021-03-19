@@ -94,11 +94,10 @@ If you want to build/update/test docker container for Windows, you need to do th
 
 **Note**: There is an existing *windows-development* machine that you can resume and use for development. Please stop it after use.
 
-Here are the instructions to set up such a machine on GCP.
+To setup new machine in GCP:
 
 1. Pick a GCP Windows image with Desktop Support.
-    * pick a "persistent SSD" as boot Disk. This is much faster
-    * (optionally) add a "local scratch SSD" and use it as you workspace. This will make builds faster, but you **will not be able to stop** this instance and will have to kill and re-create it again.
+    * pick a "persistent SSD" as boot Disk. This is much faster.
     * make sure that you give enough permissions in "Identity and API access" to be able to e.g. push new docker images to GCR. 
     
 1. Format the local SSD partition and use it as workspace.
@@ -113,6 +112,11 @@ Here are the instructions to set up such a machine on GCP.
     git config --global user.name <your name>
     git config --global user.email <your email>
     ```
+1. Clone premerge checks sources:
+    ```powershell
+       cd c:\
+       git clone https://github.com/google/llvm-premerge-checks
+    ```
 1. Install [Docker Enterprise](https://docs.docker.com/ee/docker-ee/windows/docker-ee/) and reboot:
     ```powershell
     Install-Module DockerMsftProvider -Force
@@ -125,12 +129,19 @@ Here are the instructions to set up such a machine on GCP.
     gcloud components install docker-credential-gcr
     docker-credential-gcr configure-docker
     ```
-1. To build and run the current agent run:
+1. To build and run a dockerfile:
+   ```powershell
+   cd llvm-premerge-checks\containers
+   .\build_deploy.ps1 agent-windows-buildkite
+1. To deploy container:
     ```powershell
-    cd c:\
-    git clone https://github.com/google/llvm-premerge-checks
     cd llvm-premerge-checks\containers
-    .\build_deploy.ps1 agent-windows-buildkite
+    .\build_deploy.ps1 agent-windows-buildkite    
+    ```
+   
+   Test this newly uploaded image:
+    
+      ```powershell
     c:\llvm-premerge-check\scripts\windows_agent_start_buildkite.ps1
     ```
 
@@ -171,6 +182,7 @@ Most commonly used are:
 - `ph_log_level` ("DEBUG", "INFO", "WARNING" (default) or "ERROR"): log level for build scripts. 
 - `ph_linux_agents`, `ph_windows_agents`: custom JSON constraints on agents. For example you might put one machine to a custom queue if it's errornous and send jobs to it with `ph_windows_agents="{{\"queue\": \"custom\"}}"`.
 - `ph_skip_linux`, `ph_skip_windows` (if set to any value): skip build on this OS.
+- `ph_skip_generated`: don't run custom steps generated from within llvm-project. 
 
 ## Update HTTP auth credentials
 
