@@ -67,11 +67,11 @@ Write-Host "please run 'git clone https://github.com/google/llvm-premerge-checks
 pause
 # create folder for credentials
 New-Item -Path "C:\" -Name "credentials" -ItemType "directory"
-set-content c:\credentials\buildkite-env.ps1 '# Insert API tokens and replace NAME to something meaningful.
+set-content c:\credentials\buildkite-env.ps1 '# Insert API tokens and replace NAME with something meaningful.
 # Mind the length of the agent name as it will be in path and might cause some tests to fail due to 260 character limit of paths.
 $Env:buildkiteAgentToken = ""
 $Env:BUILDKITE_AGENT_NAME= "NAME"
-$Env:BUILDKITE_AGENT_TAGS = "queue=windows,name=NAME"
+$Env:BUILDKITE_AGENT_TAGS = "queue=windows,image=${Env:IMAGE_DIGEST},name=NAME"
 $Env:CONDUIT_TOKEN = ""'
 Write-Host "Open editor to set agent options..."
 Start-Process -FilePath "notepad" -Wait -Args "c:\credentials\buildkite-env.ps1"
