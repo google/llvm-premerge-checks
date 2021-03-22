@@ -18,7 +18,7 @@
 param(
     [string]$version = "latest",
     [switch]$testing = $false,
-    [string]$workdir = "D:\"
+    [string]$workdir = "c:\ws"
 )
 
 $NAME="agent-windows-buildkite"
@@ -29,6 +29,8 @@ Write-Output "y`n" | gcloud auth configure-docker
 
 Write-Output "Pulling new image '${IMAGE}'..."
 docker pull ${IMAGE}
+$DIGEST=$(docker image inspect --format "{{range .RepoDigests}}{{.}}{{end}}" $IMAGE) -replace ".*@sha256:(.{6})(.*)$","`$1"
+Write-Output "Image digest ${DIGEST}"
 Write-Output "Stopping old container..."
 docker stop ${NAME}
 docker rm ${NAME}
@@ -38,12 +40,14 @@ if (${testing}) {
     -v ${workdir}:C:\ws `
     -v C:\credentials:C:\credentials `
     -e BUILDKITE_BUILD_PATH=C:\ws `
+    -e IMAGE_DIGEST=${DIGEST} `
     ${IMAGE} powershell
 } else {
     docker run -d `
     -v ${workdir}:C:\ws `
     -v C:\credentials:C:\credentials `
     -e BUILDKITE_BUILD_PATH=C:\ws `
+    -e IMAGE_DIGEST=${DIGEST} `
     --name ${NAME} `
     ${IMAGE}
 }
