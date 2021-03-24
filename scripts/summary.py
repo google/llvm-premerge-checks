@@ -27,7 +27,7 @@ def get_failed_jobs(build: benedict) -> []:
     failed_jobs = []
     for j in build.get('jobs', []):
         j = benedict(j)
-        if j.get('state') == 'failed' and j.get('name'):
+        if j.get('state') == 'failed' and j.get('name') and not job.get('soft_failed', False):
             failed_jobs.append(j.get('name'))
     return failed_jobs
 
@@ -84,6 +84,9 @@ if __name__ == '__main__':
                 continue
             if job_state == 'passed' and i == 0:
                 # Skip successful first step as we assume it to be a pipeline setup
+                continue
+            if job_state == 'failed' and job.get('soft_failed', False):
+                # Ignore "soft failures".
                 continue
             name = job.get('name')
             if job.get('type') == 'trigger':
