@@ -42,7 +42,7 @@ RUN powershell -NoProfile -InputFormat None -Command `
 # and a few more that were not documented...
 RUN choco install -y gnuwin
 RUN choco install -y ninja git python3
-RUN choco install -y activeperl --version 5.28.0.20210106
+RUN choco install -y activeperl --version 5.24.3.2404001
 RUN choco install -y cmake --version 3.15.4
 # libcxx requires clang(-cl) to be available
 RUN choco install -y sccache llvm
