@@ -129,6 +129,9 @@ To setup new machine in GCP:
     gcloud components install docker-credential-gcr
     docker-credential-gcr configure-docker
     ```
+
+## Build / test docker for Windows.
+
 1. To build and run a dockerfile:
    ```powershell
    cd llvm-premerge-checks\containers
@@ -138,6 +141,13 @@ To setup new machine in GCP:
     cd llvm-premerge-checks\containers
     .\build_deploy.ps1 agent-windows-buildkite    
     ```
+
+   or 
+
+   ```powershell
+   cd llvm-premerge-checks\containers
+   .\build_run.ps1 agent-windows-buildkite cmd
+   ```
    
    Test this newly uploaded image:
     
@@ -180,7 +190,7 @@ Most commonly used are:
 - `ph_projects`: which projects to use, "detect" will look on diff to infer the projects, "default" selects all projects.
 - `ph_notify_email`: comma-separated list of email addresses to be notified when build is complete.
 - `ph_log_level` ("DEBUG", "INFO", "WARNING" (default) or "ERROR"): log level for build scripts. 
-- `ph_linux_agents`, `ph_windows_agents`: custom JSON constraints on agents. For example you might put one machine to a custom queue if it's errornous and send jobs to it with `ph_windows_agents="{{\"queue\": \"custom\"}}"`.
+- `ph_linux_agents`, `ph_windows_agents`: custom JSON constraints on agents. For example, you might put one machine to a custom queue if it's errornous and send jobs to it with `ph_windows_agents="{{\"queue\": \"custom\"}}"`.
 - `ph_skip_linux`, `ph_skip_windows` (if set to any value): skip build on this OS.
 - `ph_skip_generated`: don't run custom steps generated from within llvm-project. 
 
