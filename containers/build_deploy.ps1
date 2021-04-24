@@ -36,8 +36,7 @@ Write-Host "Building ${IMAGE_NAME}..."
 
 Invoke-Call -ScriptBlock {
     docker build . --no-cache `
-        -t ${IMAGE_NAME}:latest `
-        --build-arg agent_windows_version=$agent_windows_version
+        -t ${IMAGE_NAME}:latest
     }
 Invoke-Call -ScriptBlock {
     docker tag ${IMAGE_NAME}:latest ${QUALIFIED_NAME}:latest
