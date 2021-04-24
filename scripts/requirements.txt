@@ -1,6 +1,6 @@
 backoff==1.10.0
 gitpython==3.1.9
-lxml==4.6.2
+lxml>=4.6.3
 pathspec==0.8.0
 phabricator==0.7.0
 pyaml==20.4.0
