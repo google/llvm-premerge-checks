@@ -19,7 +19,6 @@ param(
 
 $ROOT_DIR=(Get-Item $PSScriptRoot).Parent.FullName
 . ${ROOT_DIR}\scripts\common.ps1
-$VERSION_FILE="VERSION"
 
 # get config options
 Get-Content "${ROOT_DIR}\k8s_config" | Foreach-Object{
@@ -32,30 +31,18 @@ Get-Content "${ROOT_DIR}\k8s_config" | Foreach-Object{
 $QUALIFIED_NAME="${GCR_HOSTNAME}/${GCP_PROJECT}/${IMAGE_NAME}"
 
 Push-Location "$PSScriptRoot\$IMAGE_NAME"
-$container_version=[int](Get-Content $VERSION_FILE)
-$container_version+=1
-$agent_windows_version=Get-Content "../agent-windows-vs2019/$VERSION_FILE"
 
-Write-Host "Building ${IMAGE_NAME}:${container_version}..."
-Write-Host "Using windows-agent ${agent_windows_version}"
+Write-Host "Building ${IMAGE_NAME}..."
 
 Invoke-Call -ScriptBlock {
     docker build . --no-cache `
-        -t ${IMAGE_NAME}:${container_version} `
         -t ${IMAGE_NAME}:latest `
         --build-arg agent_windows_version=$agent_windows_version
     }
 Invoke-Call -ScriptBlock {
-    docker tag ${IMAGE_NAME}:${container_version} ${QUALIFIED_NAME}:${container_version}
-}
-Invoke-Call -ScriptBlock {
     docker tag ${IMAGE_NAME}:latest ${QUALIFIED_NAME}:latest
-}
-Invoke-Call -ScriptBlock {
-    docker push ${QUALIFIED_NAME}:$container_version
 }
 Invoke-Call -ScriptBlock {
     docker push ${QUALIFIED_NAME}:latest
 }
-$container_version | Out-File $VERSION_FILE
 Pop-Location
