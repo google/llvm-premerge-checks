@@ -1,0 +1,75 @@
+# Copyright 2019 Google LLC
+#
+# Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://llvm.org/LICENSE.txt
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-agents
+  namespace: buildkite
+spec:
+  replicas: 4
+  strategy:
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 50%
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: agent-premerge-debian
+  template:
+    metadata:
+      labels:
+        app: agent-premerge-debian
+    spec:
+      containers:
+        - name: buildkite-premerge-debian
+          image: gcr.io/llvm-premerge-checks/buildkite-premerge-debian
+          resources:
+            limits:
+              cpu: 2
+              memory: 5Gi
+            requests:
+              cpu: 1.5
+              memory: 5Gi
+          volumeMounts:
+            - name: github-ssh
+              mountPath: /mnt/ssh
+          env:
+            - name: BUILDKITE_AGENT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: buildkite-agent-token
+                  key: token
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                 fieldPath: metadata.name
+            - name: BUILDKITE_AGENT_TAGS
+              value: "queue=service,name=$(POD_NAME)"
+            - name: CONDUIT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: conduit-api-token
+                  key: token
+            - name: BUILDKITE_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: buildkite-api-token-readonly
+                  key: token
+      volumes:
+        - name: github-ssh
+          secret:
+            secretName: github-ssh
+      nodeSelector:
+        cloud.google.com/gke-nodepool: default-pool

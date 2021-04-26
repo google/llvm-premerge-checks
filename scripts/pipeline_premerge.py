@@ -84,10 +84,10 @@ if __name__ == '__main__':
             'label': ':phabricator: update build status on Phabricator',
             'commands': [
                 *checkout_scripts('linux', scripts_refspec),
-                '${SRC}/scripts/summary.py',
+                '$${SRC}/scripts/summary.py',
             ],
             'artifact_paths': ['artifacts/**/*'],
-            'agents': {'queue': 'linux'},
+            'agents': {'queue': 'service'},
             'timeout_in_minutes': 10,
         }
         steps.append(report_step)

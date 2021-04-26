@@ -33,7 +33,7 @@ if __name__ == '__main__':
             'pip install -q -r scripts/requirements.txt',
             'scripts/apply_patch.sh'
         ],
-        'agents': {'queue': 'linux'},
+        'agents': {'queue': 'service'},
         'timeout_in_minutes': 20,
         'env': {
             'LOG_LEVEL': log_level,
