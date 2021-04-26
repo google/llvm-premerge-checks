@@ -46,19 +46,19 @@ def generic_linux(projects: str, check_diff: bool) -> List:
 
     if check_diff:
         commands.extend([
-            '${SRC}/scripts/premerge_checks.py --check-clang-format --check-clang-tidy '
+            '$${SRC}/scripts/premerge_checks.py --check-clang-format --check-clang-tidy '
             f'--projects="{projects}" --log-level={log_level}',
         ])
     else:
         commands.extend([
-            f'${{SRC}}/scripts/premerge_checks.py --projects="{projects}" --log-level={log_level}'
+            f'$${{SRC}}/scripts/premerge_checks.py --projects="{projects}" --log-level={log_level}'
         ])
     commands.extend([
-        'EXIT_STATUS=\\$?',
+        'EXIT_STATUS=$$?',
         'echo "--- ccache stats"',
         'ccache --print-stats',
         'ccache --show-stats',
-        'exit \\$EXIT_STATUS',
+        'exit $$EXIT_STATUS',
     ])
 
     linux_buld_step = {
@@ -82,8 +82,8 @@ def generic_windows(projects: str) -> List:
     scripts_refspec = os.getenv("ph_scripts_refspec", "main")
     no_cache = os.getenv('ph_no_cache') is not None
     log_level = os.getenv('ph_log_level', 'WARNING')
-    clear_sccache = 'powershell -command "sccache --stop-server; echo \\$env:SCCACHE_DIR; ' \
-                    'Remove-Item -Recurse -Force -ErrorAction Ignore \\$env:SCCACHE_DIR; ' \
+    clear_sccache = 'powershell -command "sccache --stop-server; echo $$env:SCCACHE_DIR; ' \
+                    'Remove-Item -Recurse -Force -ErrorAction Ignore $$env:SCCACHE_DIR; ' \
                     'sccache --start-server"'
     win_agents = {'queue': 'windows'}
     t = os.getenv('ph_windows_agents')
@@ -99,9 +99,9 @@ def generic_windows(projects: str) -> List:
 
             'powershell -command "'
             f'%SRC%/scripts/premerge_checks.py --projects=\'{projects}\' --log-level={log_level}; '
-            '\\$exit=\\$?;'
+            '$$exit=$$?;'
             'sccache --show-stats;'
-            'if (\\$exit) {'
+            'if ($$exit) {'
             '  echo success;'
             '  exit 0; } '
             'else {'
@@ -166,14 +166,14 @@ def checkout_scripts(target_os: str, scripts_refspec: str) -> []:
             'cd %BUILDKITE_BUILD_CHECKOUT_PATH%',
         ]
     return [
-        'export SRC=${BUILDKITE_BUILD_PATH}/llvm-premerge-checks',
-        'rm -rf ${SRC}',
-        'git clone --depth 1 https://github.com/google/llvm-premerge-checks.git "${SRC}"',
-        'cd ${SRC}',
+        'export SRC=$${BUILDKITE_BUILD_PATH}/llvm-premerge-checks',
+        'rm -rf $${SRC}',
+        'git clone --depth 1 https://github.com/google/llvm-premerge-checks.git "$${SRC}"',
+        'cd $${SRC}',
         f'git fetch origin "{scripts_refspec}":x',
         'git checkout x',
         'echo "llvm-premerge-checks commit"',
         'git rev-parse HEAD',
-        'pip install -q -r ${SRC}/scripts/requirements.txt',
-        'cd "$BUILDKITE_BUILD_CHECKOUT_PATH"',
+        'pip install -q -r $${SRC}/scripts/requirements.txt',
+        'cd "$$BUILDKITE_BUILD_CHECKOUT_PATH"',
     ]
