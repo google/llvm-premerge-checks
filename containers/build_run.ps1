@@ -21,14 +21,12 @@ param(
 
 # set script to stop on first error
 $ErrorActionPreference = "Stop"
-$agent_windows_version=Get-Content "agent-windows-vs2019/VERSION"
 
 # some docs recommend setting 2GB memory limit
 docker build `
     --memory 2GB `
     -t $IMAGE_NAME `
     --build-arg token=$token  `
-    --build-arg agent_windows_version=$agent_windows_version `
     "$PSScriptRoot\$IMAGE_NAME"
 If ($LastExitCode -ne 0) {
     exit

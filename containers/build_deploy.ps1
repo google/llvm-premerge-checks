@@ -35,8 +35,7 @@ Push-Location "$PSScriptRoot\$IMAGE_NAME"
 Write-Host "Building ${IMAGE_NAME}..."
 
 Invoke-Call -ScriptBlock {
-    docker build . --no-cache `
-        -t ${IMAGE_NAME}:latest
+    docker build . -t ${IMAGE_NAME}:latest
     }
 Invoke-Call -ScriptBlock {
     docker tag ${IMAGE_NAME}:latest ${QUALIFIED_NAME}:latest

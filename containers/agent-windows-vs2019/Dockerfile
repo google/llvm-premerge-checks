@@ -40,10 +40,8 @@ RUN powershell -NoProfile -InputFormat None -Command `
 
 # install tools as described in https://llvm.org/docs/GettingStartedVS.html
 # and a few more that were not documented...
-RUN choco install -y gnuwin
 RUN choco install -y ninja git python3
 RUN choco install -y activeperl --version 5.24.3.2404001
-RUN choco install -y cmake --version 3.15.4
 # libcxx requires clang(-cl) to be available
 RUN choco install -y sccache llvm
 RUN pip install psutil
@@ -56,9 +54,10 @@ ENV PYTHONIOENCODING=UTF-8
 
 # update the path variable    
 # C:\Program Files\Git\usr\bin contains a usable bash and other unix tools.
-RUN powershell -NoProfile -InputFormat None  -Command `
-    $path = $env:path + ';C:\Program Files\CMake\bin;c:\Program Files (x86)\GnuWin32\bin'; `
-    Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\' -Name Path -Value $path
+RUN powershell -Command `
+    [System.Environment]::SetEnvironmentVariable('PATH', `
+    [System.Environment]::GetEnvironmentVariable('PATH', 'machine') + ';C:\Program Files\Git\usr\bin', `
+    'machine')
 
 # use this folder to store the worksapce'
 VOLUME C:\ws
