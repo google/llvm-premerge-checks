@@ -19,6 +19,7 @@ Interactions with Phabricator.
 import logging
 from typing import Optional, List, Dict
 import uuid
+import argparse
 
 import backoff
 from phabricator import Phabricator
@@ -184,3 +185,14 @@ class Report:
 
     def add_artifact(self, dir: str, file: str, name: str):
         self.artifacts.append({'dir': dir, 'file': file, 'name': name})
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Sample interaction with Phabricator')
+    parser.add_argument('--url', type=str, dest='url', default='https://reviews.llvm.org/api/')
+    parser.add_argument('--token', type=str, dest='token', default=None, required=True)
+    parser.add_argument('--diff_id', type=str, dest='diff_id', default=None, required=True)
+    args = parser.parse_args()
+    phabtalk = PhabTalk(args.token, args.url, False)
+    print(phabtalk.get_revision_id(args.diff_id))
+
