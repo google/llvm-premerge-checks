@@ -4,11 +4,14 @@ import sqlite3
 import git
 from repo_hist import MyCommit
 import datetime
+import csv
 
 DB_PATH = "tmp/git_hist.sqlite"
 REPO_DIR = "tmp/llvm-project"
 GIT_URL = "https://github.com/llvm/llvm-project.git"
 GIT_BRANCH = "main"
+OUTPUT_PATH = "tmp"
+
 # this was the start of using git as primary repo
 MAX_AGE = datetime.datetime(year=2019, month=10, day=1, tzinfo=datetime.timezone.utc)
 # Maximum age of the database before we re-create it
@@ -33,8 +36,6 @@ def popolate_db(
     conn = sqlite3.connect(db_path)
     print("Creating tables...")
     create_tables(conn)
-    print("Creating indexes...")
-    create_indexes(conn)
     print("Scanning repository...")
     parse_commits(conn, repo_dir, max_age)
     print("Done populating database.")
@@ -43,36 +44,22 @@ def popolate_db(
 
 def create_tables(conn: sqlite3.Connection):
     # TODO: add more attributes as needed
+    # TODO: add all projects as columns
+    # mod_<project> column: files in the subfolder (=project) <project> were
+    # modified by this commit.
     conn.execute(
         """ CREATE TABLE IF NOT EXISTS commits (
                                         hash string PRIMARY KEY,
                                         commit_time integer,
                                         phab_id string,
-                                        reverts_hash string
+                                        reverts_hash string,
+                                        mod_llvm boolean,
+                                        mod_clang boolean,
+                                        mod_libcxx boolean,
+                                        mod_mlir boolean
                                     ); """
     )
-    # Normalized representation of modified projects per commit.
-    conn.execute(
-        """ CREATE TABLE IF NOT EXISTS commit_project (
-                                      project string,
-                                      hash string,
-                                      FOREIGN KEY (hash) REFERENCES commits(hash)
-                                    );"""
-    )
 
-    conn.commit()
-
-
-def create_indexes(conn: sqlite3.Connection):
-    """Indexes to speed up searches and joins."""
-    conn.execute(
-        """ CREATE INDEX commit_project_hash
-            ON commit_project(hash);"""
-    )
-    conn.execute(
-        """ CREATE INDEX commit_project_project
-            ON commit_project(project);"""
-    )
     conn.commit()
 
 
@@ -90,10 +77,8 @@ def parse_commits(conn: sqlite3.Connection, repo_dir: str, max_age: datetime.dat
           commits (hash, commit_time, phab_id, reverts_hash) 
           values (?,?,?,?);
           """
-    sql_insert_commit_project = """ INSERT INTO 
-          commit_project (hash, project) 
-          values (?,?);
-          """
+    sql_update_commit_project = """ UPDATE commits SET mod_{} = ? where hash = ?;"""
+
     day = None
     for commit in repo.iter_commits(GIT_BRANCH):
         # TODO: This takes a couple of minutes, maybe try using multithreading
@@ -117,21 +102,49 @@ def parse_commits(conn: sqlite3.Connection, repo_dir: str, max_age: datetime.dat
         )
         # Note: prasing the patches is quite slow
         for project in mycommit.modified_projects:
-            conn.execute(sql_insert_commit_project, (mycommit.chash, project))
+            # TODO find a way to make this generic for all projects, maybe user
+            # "ALTER TABLE" to add columns as they appear
+            if project in ["llvm", "libcxx", "mlir", "clang"]:
+                conn.execute(
+                    sql_update_commit_project.format(project), (True, mycommit.chash)
+                )
     conn.commit()
 
 
-def run_queries(conn: sqlite3.Connection):
-    query = """SELECT commits.hash, commits.phab_id, commits.commit_time
-          FROM commits 
-          INNER JOIN commit_project ON commits.hash = commit_project.hash
-          WHERE commit_project.project="libcxx";"""
+def create_csv_report(title: str, query: str, output_path: str):
     cursor = conn.cursor()
     data = cursor.execute(query)
-    for row in data:
-        print(row)
+    with open(os.path.join(output_path, title + ".csv"), "w") as csv_file:
+        writer = csv.writer(csv_file)
+        # write column headers
+        writer.writerow([description[0] for description in cursor.description])
+        for row in data:
+            writer.writerow(row)
+
+
+def run_queries(conn: sqlite3.Connection, output_path: str):
+    print("running queries...")
+    create_csv_report("full_db_dump", "select * from commits;", output_path)
+
+    query = """SELECT strftime('%Y-%m',commit_time) as month, count(hash) as num_commits, count(phab_id) as num_reviewed, 
+            (100.0*count(phab_id)/count(hash)) as percent_reviewed, count(reverts_hash) as num_reverted, 
+            (100.0*count(reverts_hash)/count(hash)) as percent_reverted
+          FROM commits
+          WHERE mod_{}
+          GROUP BY month;
+          """
+    create_csv_report("libcxx_stats", query.format("libcxx"), output_path)
+    create_csv_report("mlir_stats", query.format("mlir"), output_path)
+
+    query = """SELECT strftime('%Y-%m',commit_time) as month, count(hash) as num_commits, count(phab_id) as num_reviewed, 
+            (100.0*count(phab_id)/count(hash)) as percent_reviewed, count(reverts_hash) as num_reverted, 
+            (100.0*count(reverts_hash)/count(hash)) as percent_reverted
+          FROM commits
+          GROUP BY month;
+          """
+    create_csv_report("all_projects_stats", query, output_path)
 
 
 if __name__ == "__main__":
     conn = popolate_db(DB_PATH, REPO_DIR, MAX_AGE)
-    run_queries(conn)
+    run_queries(conn, OUTPUT_PATH)

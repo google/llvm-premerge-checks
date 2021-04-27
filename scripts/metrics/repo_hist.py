@@ -117,11 +117,13 @@ class MyCommit:
         return set(p.split("/")[0] for p in self.modified_paths)
 
     @property
-    def reverts_commit_hash(self):
+    def reverts_commit_hash(self) -> Optional[str]:
         m = REVERT_HASH_REGEX.search(self.commit.message)
         if m is None:
-            # TODO: double check for "Reverts" in summary line for consistency
-            return None
+            if self.reverts_summary() is None:
+                return None
+            # there was a revert, but we do not know the commit hash
+            return "unknown"
         return m.group(1)
 
 
