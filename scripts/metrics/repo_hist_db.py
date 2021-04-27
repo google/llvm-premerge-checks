@@ -125,14 +125,17 @@ def create_csv_report(title: str, query: str, output_path: str):
 def run_queries(conn: sqlite3.Connection, output_path: str):
     print("running queries...")
     create_csv_report("full_db_dump", "select * from commits;", output_path)
+
     query = """SELECT strftime('%Y-%m',commit_time) as month, count(hash) as num_commits, count(phab_id) as num_reviewed, 
             (100.0*count(phab_id)/count(hash)) as percent_reviewed, count(reverts_hash) as num_reverted, 
             (100.0*count(reverts_hash)/count(hash)) as percent_reverted
           FROM commits
-          WHERE mod_libcxx
+          WHERE mod_{}
           GROUP BY month;
           """
-    create_csv_report("libcxx_stats", query, output_path)
+    create_csv_report("libcxx_stats", query.format("libcxx"), output_path)
+    create_csv_report("mlir_stats", query.format("mlir"), output_path)
+
     query = """SELECT strftime('%Y-%m',commit_time) as month, count(hash) as num_commits, count(phab_id) as num_reviewed, 
             (100.0*count(phab_id)/count(hash)) as percent_reviewed, count(reverts_hash) as num_reverted, 
             (100.0*count(reverts_hash)/count(hash)) as percent_reverted
