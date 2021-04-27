@@ -122,18 +122,26 @@ def create_csv_report(title: str, query: str, output_path: str):
             writer.writerow(row)
 
 
-def run_queries(conn: sqlite3.Connection):
+def run_queries(conn: sqlite3.Connection, output_path: str):
     print("running queries...")
     create_csv_report("full_db_dump", "select * from commits;", output_path)
     query = """SELECT strftime('%Y-%m',commit_time) as month, count(hash) as num_commits, count(phab_id) as num_reviewed, 
-            (100.0*count(phab_id)/count(hash)) as percent_reviewed, count(reverts_hash) as num_reverted, (100.0*count(reverts_hash)/count(hash)) as percent_reverted
+            (100.0*count(phab_id)/count(hash)) as percent_reviewed, count(reverts_hash) as num_reverted, 
+            (100.0*count(reverts_hash)/count(hash)) as percent_reverted
           FROM commits
           WHERE mod_libcxx
           GROUP BY month;
           """
-    create_csv_report("libcxx_stats", query, OUTPUT_PATH)
+    create_csv_report("libcxx_stats", query, output_path)
+    query = """SELECT strftime('%Y-%m',commit_time) as month, count(hash) as num_commits, count(phab_id) as num_reviewed, 
+            (100.0*count(phab_id)/count(hash)) as percent_reviewed, count(reverts_hash) as num_reverted, 
+            (100.0*count(reverts_hash)/count(hash)) as percent_reverted
+          FROM commits
+          GROUP BY month;
+          """
+    create_csv_report("all_projects_stats", query, output_path)
 
 
 if __name__ == "__main__":
     conn = popolate_db(DB_PATH, REPO_DIR, MAX_AGE)
-    run_queries(conn)
+    run_queries(conn, OUTPUT_PATH)
