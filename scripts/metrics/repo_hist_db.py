@@ -33,8 +33,6 @@ def popolate_db(
     conn = sqlite3.connect(db_path)
     print("Creating tables...")
     create_tables(conn)
-    print("Creating indexes...")
-    create_indexes(conn)
     print("Scanning repository...")
     parse_commits(conn, repo_dir, max_age)
     print("Done populating database.")
@@ -48,31 +46,14 @@ def create_tables(conn: sqlite3.Connection):
                                         hash string PRIMARY KEY,
                                         commit_time integer,
                                         phab_id string,
-                                        reverts_hash string
+                                        reverts_hash string,
+                                        mod_llvm boolean,
+                                        mod_clang boolean,
+                                        mod_libcxx boolean,
+                                        mod_mlir boolean
                                     ); """
     )
-    # Normalized representation of modified projects per commit.
-    conn.execute(
-        """ CREATE TABLE IF NOT EXISTS commit_project (
-                                      project string,
-                                      hash string,
-                                      FOREIGN KEY (hash) REFERENCES commits(hash)
-                                    );"""
-    )
 
-    conn.commit()
-
-
-def create_indexes(conn: sqlite3.Connection):
-    """Indexes to speed up searches and joins."""
-    conn.execute(
-        """ CREATE INDEX commit_project_hash
-            ON commit_project(hash);"""
-    )
-    conn.execute(
-        """ CREATE INDEX commit_project_project
-            ON commit_project(project);"""
-    )
     conn.commit()
 
 
@@ -90,10 +71,8 @@ def parse_commits(conn: sqlite3.Connection, repo_dir: str, max_age: datetime.dat
           commits (hash, commit_time, phab_id, reverts_hash) 
           values (?,?,?,?);
           """
-    sql_insert_commit_project = """ INSERT INTO 
-          commit_project (hash, project) 
-          values (?,?);
-          """
+    sql_update_commit_project = """ UPDATE commits SET mod_{} = ? where hash = ?;"""
+
     day = None
     for commit in repo.iter_commits(GIT_BRANCH):
         # TODO: This takes a couple of minutes, maybe try using multithreading
@@ -117,15 +96,19 @@ def parse_commits(conn: sqlite3.Connection, repo_dir: str, max_age: datetime.dat
         )
         # Note: prasing the patches is quite slow
         for project in mycommit.modified_projects:
-            conn.execute(sql_insert_commit_project, (mycommit.chash, project))
+            # TODO find a way to make this generic for all projects
+            if project in ["llvm", "libcxx", "mlir", "clang"]:
+                conn.execute(
+                    sql_update_commit_project.format(project), ("true", mycommit.chash)
+                )
     conn.commit()
 
 
 def run_queries(conn: sqlite3.Connection):
     query = """SELECT commits.hash, commits.phab_id, commits.commit_time
           FROM commits 
-          INNER JOIN commit_project ON commits.hash = commit_project.hash
-          WHERE commit_project.project="libcxx";"""
+          WHERE mod_libcxx = true;
+          """
     cursor = conn.cursor()
     data = cursor.execute(query)
     for row in data:
