@@ -111,7 +111,7 @@ def parse_commits(conn: sqlite3.Connection, repo_dir: str, max_age: datetime.dat
     conn.commit()
 
 
-def create_scv_report(title: str, query: str, output_path: str):
+def create_csv_report(title: str, query: str, output_path: str):
     cursor = conn.cursor()
     data = cursor.execute(query)
     with open(os.path.join(output_path, title + ".csv"), "w") as csv_file:
@@ -124,12 +124,14 @@ def create_scv_report(title: str, query: str, output_path: str):
 
 def run_queries(conn: sqlite3.Connection):
     print("running queries...")
-    query = """SELECT date(commits.commit_time) as date, count(commits.hash) as num_commits
+    create_csv_report("full_db_dump", "select * from commits;", output_path)
+    query = """SELECT strftime('%Y-%m',commit_time) as month, count(hash) as num_commits, count(phab_id) as num_reviewed, 
+            (100.0*count(phab_id)/count(hash)) as percent_reviewed, count(reverts_hash) as num_reverted, (100.0*count(reverts_hash)/count(hash)) as percent_reverted
           FROM commits
           WHERE mod_libcxx
-          GROUP BY date;
+          GROUP BY month;
           """
-    create_scv_report("libcxx_stats", query, OUTPUT_PATH)
+    create_csv_report("libcxx_stats", query, OUTPUT_PATH)
 
 
 if __name__ == "__main__":
