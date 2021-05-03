@@ -31,6 +31,12 @@ def upload_file(base_dir: str, file: str):
         return None
 
 
+def set_metadata(key: str, value: str):
+    r = subprocess.run(f'buildkite-agent meta-data set "{key}" "{value}"', shell=True, capture_output=True)
+    if r.returncode != 0:
+        logging.warning(r)
+
+
 def annotate(message: str, style: str = 'default', context: Optional[str] = None, append: bool = True):
     """
     Adds an annotation for that currently running build.
