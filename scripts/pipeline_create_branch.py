@@ -15,6 +15,7 @@
 
 import os
 import yaml
+from buildkite_utils import annotate, feedback_url, set_metadata
 
 if __name__ == '__main__':
     diff_id = os.getenv("ph_buildable_diff")
@@ -22,6 +23,10 @@ if __name__ == '__main__':
     base_commit = os.getenv('ph_base_commit', 'auto')
     run_build = os.getenv('ph_skip_build') is None
     trigger = os.getenv('ph_trigger_pipeline')
+
+    set_metadata('ph_buildable_diff', os.getenv("ph_buildable_diff"))
+    set_metadata('ph_buildable_revision', os.getenv('ph_buildable_revision'))
+    set_metadata('ph_build_id', os.getenv("ph_build_id"))
     if trigger is None:
         trigger = 'premerge-checks'
 

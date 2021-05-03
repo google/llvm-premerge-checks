@@ -16,7 +16,7 @@
 import logging
 import os
 
-from buildkite_utils import annotate, feedback_url
+from buildkite_utils import annotate, feedback_url, set_metadata
 from choose_projects import ChooseProjects
 import git
 from steps import generic_linux, generic_windows, from_shell_output, checkout_scripts
@@ -39,7 +39,9 @@ if __name__ == '__main__':
     annotate(f"Build for [D{os.getenv('ph_buildable_revision')}#{diff_id}]({url}). "
              f"[Harbormaster build](https://reviews.llvm.org/harbormaster/build/{os.getenv('ph_build_id')}).\n"
              f"If there is a build infrastructure issue, please [create a bug]({feedback_url()}).")
-
+    set_metadata('ph_buildable_diff', os.getenv("ph_buildable_diff"))
+    set_metadata('ph_buildable_revision', os.getenv('ph_buildable_revision'))
+    set_metadata('ph_build_id', os.getenv("ph_build_id"))
     # List all affected projects.
     repo = git.Repo('.')
     patch = repo.git.diff("HEAD~1")
