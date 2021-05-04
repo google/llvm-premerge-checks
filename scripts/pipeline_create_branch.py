@@ -15,7 +15,9 @@
 
 import os
 import yaml
-from buildkite_utils import annotate, feedback_url, set_metadata
+import logging
+from buildkite_utils import set_metadata, BuildkiteApi
+
 
 if __name__ == '__main__':
     diff_id = os.getenv("ph_buildable_diff")
@@ -23,6 +25,17 @@ if __name__ == '__main__':
     base_commit = os.getenv('ph_base_commit', 'auto')
     run_build = os.getenv('ph_skip_build') is None
     trigger = os.getenv('ph_trigger_pipeline')
+    logging.basicConfig(level=log_level, format='%(levelname)-7s %(message)s')
+
+    # Cancel any existing builds.
+    # Do this before setting own 'ph_buildable_revision'.
+    try:
+        bk = BuildkiteApi(os.getenv("BUILDKITE_API_TOKEN"), os.getenv("BUILDKITE_ORGANIZATION_SLUG"))
+        for b in bk.list_running_revision_builds(os.getenv("BUILDKITE_PIPELINE_SLUG"), os.getenv('ph_buildable_revision')):
+            logging.info(f'cancelling build {b.get("web_url")}')
+            bk.cancel_build(b)
+    except Exception as e:
+        logging.error(e)
 
     set_metadata('ph_buildable_diff', os.getenv("ph_buildable_diff"))
     set_metadata('ph_buildable_revision', os.getenv('ph_buildable_revision'))

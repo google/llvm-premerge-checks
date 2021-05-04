@@ -78,6 +78,9 @@ class BuildkiteApi:
         # https://buildkite.com/docs/apis/rest-api/builds#get-a-build
         return benedict(self.get(f'https://api.buildkite.com/v2/organizations/{self.organization}/pipelines/{pipeline}/builds/{build_number}').json())
 
+    def list_running_revision_builds(self, pipeline: str, rev: str):
+        return self.get(f'https://api.buildkite.com/v2/organizations/{self.organization}/pipelines/{pipeline}/builds?state[]=scheduled&state[]=running&meta_data[ph_buildable_revision]={rev}').json()
+
     @backoff.on_exception(backoff.expo, Exception, max_tries=3, logger='', factor=3)
     def get(self, url: str):
         authorization = f'Bearer {self.token}'
@@ -85,6 +88,15 @@ class BuildkiteApi:
         if response.status_code != 200:
             raise Exception(f'Buildkite responded with non-OK status: {response.status_code}')
         return response
+
+    # cancel a build. 'build' is a json object returned by API.
+    def cancel_build(self, build):
+        build = benedict(build)
+        url = f'https://api.buildkite.com/v2/organizations/{self.organization}/pipelines/{build.get("pipeline.slug")}/builds/{build.get("number")}/cancel'
+        authorization = f'Bearer {self.token}'
+        response = requests.put(url, headers={'Authorization': authorization})
+        if response.status_code != 200:
+            raise Exception(f'Buildkite responded with non-OK status: {response.status_code}')
 
 
 def format_url(url: str, name: Optional[str] = None):
