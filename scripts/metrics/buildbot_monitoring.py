@@ -4,7 +4,7 @@ import psycopg2
 import os
 import datetime
 import requests
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 import json
 
 PHABRICATOR_URL = "https://reviews.llvm.org/api/"
@@ -39,6 +39,14 @@ def create_tables(conn: psycopg2.extensions.connection):
         """CREATE INDEX IF NOT EXISTS buildbot_worker_timestamp 
         ON buildbot_workers 
         (timestamp);"""
+    )
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS buildbot_builds (
+            builder_id integer NOT NULL, 
+            build_number integer NOT NULL, 
+            build_data jsonb NOT NULL,
+            step_data jsonb NOT NULL
+            );"""
     )
     conn.commit()
 
@@ -86,11 +94,74 @@ def update_worker_status(conn: psycopg2.extensions.connection):
     conn.commit()
 
 
+def get_builders() -> List[int]:
+    """get list of all builder ids."""
+    # TODO(kuhnel): do we also want to store the builder information?
+    #               Does it contain useful information?
+    response = requests.get(BUILDBOT_URL + "builders")
+    return [builder["builderid"] for builder in response.json()["builders"]]
+
+
+def get_last_build(builder_id: int, conn) -> int:
+    """Get the latest build number for a builder.
+
+    This is used to only get new builds."""
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT MAX(build_number) FROM buildbot_builds WHERE builder_id = %s;",
+        [builder_id],
+    )
+    row = cur.fetchone()
+    if row is None or row[0] is None:
+        return 0
+    return row[0]
+
+
+def add_build(builder: int, number: int, build: str, steps: str, conn):
+    cur = conn.cursor()
+    cur.execute(
+        """INSERT INTO buildbot_builds 
+           (builder_id, build_number, build_data,step_data) 
+           values (%s,%s,%s,%s);""",
+        (
+            builder,
+            number,
+            json.dumps(build, sort_keys=True),
+            json.dumps(steps, sort_keys=True),
+        ),
+    )
+
+
+def update_build_status(conn):
+    print("Updating build results...")
+    # import only builds we have not yet stores in the database
+    for builder in get_builders():
+        url = BUILDBOT_URL + "builders/{}/builds?number__gt={}".format(
+            builder, get_last_build(builder, conn)
+        )
+        response = requests.get(url)
+        print("   builder {}".format(builder))
+        # process builds in increasing order so we can resume the import process
+        # if anything goes wrong
+        for build in sorted(response.json()["builds"], key=lambda b: b["number"]):
+            number = build["number"]
+            # only store completed builds. Otherwise we would have to update them
+            # after they are completed.
+            if not build["complete"]:
+                continue
+            steps = requests.get(
+                BUILDBOT_URL + "builders/{}/builds/{}/steps".format(builder, number)
+            ).json()
+            add_build(builder, number, build, steps, conn)
+            conn.commit()
+
+
 def buildbot_monitoring():
     """Main function of monitoring the phabricator server."""
     conn = connect_to_db()
     create_tables(conn)
-    update_worker_status(conn)
+    # update_worker_status(conn)
+    update_build_status(conn)
     print("Completed, exiting...")
 
 
