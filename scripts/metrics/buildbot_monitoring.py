@@ -10,6 +10,10 @@ import json
 PHABRICATOR_URL = "https://reviews.llvm.org/api/"
 BUILDBOT_URL = "https://lab.llvm.org/buildbot/api/v2/"
 
+# TODO(kuhnel): retry on connection issues
+# TODO(kuhnel): get "buildsets" and "buildrequests" so that we can get the
+#               commit hash for each build
+
 
 def connect_to_db() -> psycopg2.extensions.connection:
     """Connect to the database, create tables as needed."""
