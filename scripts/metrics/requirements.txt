@@ -1,0 +1,2 @@
+# these files are needed in addition to /scripts/requirments.txt
+psycopg2
