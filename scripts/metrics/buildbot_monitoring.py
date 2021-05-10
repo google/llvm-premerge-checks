@@ -10,7 +10,9 @@ import json
 PHABRICATOR_URL = "https://reviews.llvm.org/api/"
 BUILDBOT_URL = "https://lab.llvm.org/buildbot/api/v2/"
 
-# TODO(kuhnel): retry on connection issues
+# TODO(kuhnel): retry on connection issues, maybe resuse
+# https://github.com/google/llvm-premerge-checks/blob/main/scripts/phabtalk/phabtalk.py#L44
+
 # TODO(kuhnel): get "buildsets" and "buildrequests" so that we can get the
 #               commit hash for each build
 
@@ -50,6 +52,19 @@ def create_tables(conn: psycopg2.extensions.connection):
             build_number integer NOT NULL, 
             build_data jsonb NOT NULL,
             step_data jsonb NOT NULL
+            );"""
+    )
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS buildbot_buildsets (
+            buildset_id integer PRIMARY KEY, 
+            data jsonb NOT NULL
+            );"""
+    )
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS buildbot_buildrequests (
+            buildrequest_id integer PRIMARY KEY, 
+            buildset_id integer NOT NULL, 
+            data jsonb NOT NULL
             );"""
     )
     conn.commit()
@@ -160,14 +175,86 @@ def update_build_status(conn):
             conn.commit()
 
 
+def rest_request_iterator(url: str, field_name: str, limit: int = 1000):
+    """Request paginated data from the buildbot master.
+
+    This returns a generator. Each call to it gives you shards of
+    <=limit results. This can be used to do a mass-SQL insert of data.
+    """
+    offset = 0
+    while True:
+        count = 0
+        response = requests.get(url + "?offset={}&limit={}".format(offset, limit))
+        if response.status_code != 200:
+            raise Exception(
+                "Got status code {} on request to {}".format(response.status_code, url)
+            )
+        results = response.json()[field_name]
+        yield results
+        if len(results) < limit:
+            return
+        offset += limit
+
+
+def get_buildsets(conn):
+    print("Getting buildsets...")
+    url = BUILDBOT_URL + "buildsets"
+    cur = conn.cursor()
+    count = 0
+    for buildset in rest_request_iterator(url, "buildsets"):
+        # TODO(kuhnel): implement incremental update
+        cur.execute(
+            "INSERT INTO buildbot_buildsets (buildset_id, data) values (%s,%s);",
+            (buildset["bsid"], json.dumps(buildset, sort_keys=True)),
+        )
+        count += 1
+        if count % 100 == 0:
+            print("  {}".format(count))
+            conn.commit()
+    conn.commit()
+
+
+def get_buildrequests(conn):
+    print("Getting buildrequests...")
+    url = BUILDBOT_URL + "buildrequests"
+    cur = conn.cursor()
+    # TODO(kuhnel): implement incremental update
+    for result_set in rest_request_iterator(url, "buildrequests"):
+        # cur.mogrify returns byte string, so we need to join on a byte string
+        args_str = b",".join(
+            cur.mogrify(
+                " (%s,%s,%s) ",
+                (
+                    buildrequest["buildrequestid"],
+                    buildrequest["buildsetid"],
+                    json.dumps(buildrequest),
+                ),
+            )
+            for buildrequest in result_set
+        )
+        cur.execute(
+            b"INSERT INTO buildbot_buildrequests (buildrequest_id, buildset_id, data) values "
+            + args_str
+        )
+        conn.commit()
+        # TODO: remove after profiling
+        break
+    print("!")
+
+
 def buildbot_monitoring():
     """Main function of monitoring the phabricator server."""
     conn = connect_to_db()
     create_tables(conn)
     # update_worker_status(conn)
-    update_build_status(conn)
+    # update_build_status(conn)
+    # get_buildsets(conn)
+    get_buildrequests(conn)
     print("Completed, exiting...")
 
 
 if __name__ == "__main__":
+    import cProfile
+
+    # cProfile.run("buildbot_monitoring()")
     buildbot_monitoring()
