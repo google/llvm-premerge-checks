@@ -32,7 +32,7 @@ def buildbot_up() -> bool:
     """Check if buildbot server is up"""
     print("Checking Buildbot status...")
     try:
-        response = requests.get(BUILDBOT_URL + "/masters")
+        response = requests.get(BUILDBOT_URL + "buildrequests?limit=100")
         if "masters" in response.json():
             print("  Buildbot is up.")
             return True
