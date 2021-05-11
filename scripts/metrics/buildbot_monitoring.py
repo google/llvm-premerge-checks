@@ -13,6 +13,9 @@ BUILDBOT_URL = "https://lab.llvm.org/buildbot/api/v2/"
 # TODO(kuhnel): retry on connection issues, maybe resuse
 # https://github.com/google/llvm-premerge-checks/blob/main/scripts/phabtalk/phabtalk.py#L44
 
+# TODO(kuhnel): Import the step data so we can figure out in which step a build fails
+# (e.g. compile vs. test)
+
 
 def connect_to_db() -> psycopg2.extensions.connection:
     """Connect to the database, create tables as needed."""
@@ -43,12 +46,14 @@ def create_tables(conn: psycopg2.extensions.connection):
         ON buildbot_workers 
         (timestamp);"""
     )
+    # Note: step_data is not yet populated with data!
     cur.execute(
         """CREATE TABLE IF NOT EXISTS buildbot_builds (
+            build_id integer PRIMARY KEY,
             builder_id integer NOT NULL, 
             build_number integer NOT NULL, 
             build_data jsonb NOT NULL,
-            step_data jsonb NOT NULL
+            step_data jsonb
             );"""
     )
     cur.execute(
@@ -117,58 +122,47 @@ def get_builders() -> List[int]:
     return [builder["builderid"] for builder in response.json()["builders"]]
 
 
-def get_last_build(builder_id: int, conn) -> int:
+def get_last_build(conn) -> int:
     """Get the latest build number for a builder.
 
     This is used to only get new builds."""
     cur = conn.cursor()
-    cur.execute(
-        "SELECT MAX(build_number) FROM buildbot_builds WHERE builder_id = %s;",
-        [builder_id],
-    )
+    cur.execute("SELECT MAX(build_id) FROM buildbot_builds")
     row = cur.fetchone()
     if row is None or row[0] is None:
         return 0
     return row[0]
 
 
-def add_build(builder: int, number: int, build: str, steps: str, conn):
+def get_build_status(conn: psycopg2.extensions.connection):
+    start_id = get_last_build(conn)
+    print("Updating build results, starting with {}...".format(start_id))
+    url = BUILDBOT_URL + "builds"
     cur = conn.cursor()
-    cur.execute(
-        """INSERT INTO buildbot_builds 
-           (builder_id, build_number, build_data,step_data) 
-           values (%s,%s,%s,%s);""",
-        (
-            builder,
-            number,
-            json.dumps(build, sort_keys=True),
-            json.dumps(steps, sort_keys=True),
-        ),
-    )
 
-
-def update_build_status(conn: psycopg2.extensions.connection):
-    print("Updating build results...")
-    # import only builds we have not yet stores in the database
-    for builder in get_builders():
-        url = BUILDBOT_URL + "builders/{}/builds?number__gt={}".format(
-            builder, get_last_build(builder, conn)
+    for result_set in rest_request_iterator(
+        url, "builds", "buildid", start_id=start_id
+    ):
+        args_str = b",".join(
+            cur.mogrify(
+                b" (%s,%s,%s,%s) ",
+                (
+                    build["buildid"],
+                    build["builderid"],
+                    build["number"],
+                    json.dumps(build, sort_keys=True),
+                ),
+            )
+            for build in result_set
+            if build["complete"]
         )
-        response = requests.get(url)
-        print("   builder {}".format(builder))
-        # process builds in increasing order so we can resume the import process
-        # if anything goes wrong
-        for build in sorted(response.json()["builds"], key=lambda b: b["number"]):
-            number = build["number"]
-            # only store completed builds. Otherwise we would have to update them
-            # after they are completed.
-            if not build["complete"]:
-                continue
-            steps = requests.get(
-                BUILDBOT_URL + "builders/{}/builds/{}/steps".format(builder, number)
-            ).json()
-            add_build(builder, number, build, steps, conn)
-            conn.commit()
+
+        cur.execute(
+            b"INSERT INTO buildbot_builds (build_id, builder_id, build_number, build_data) values "
+            + args_str
+        )
+        print("  {}".format(result_set[-1]["buildid"]))
+        conn.commit()
 
 
 def rest_request_iterator(
@@ -285,9 +279,9 @@ def buildbot_monitoring():
     """Main function of monitoring the phabricator server."""
     conn = connect_to_db()
     create_tables(conn)
-    # update_worker_status(conn)
-    # update_build_status(conn)
-    # get_buildsets(conn)
+    update_worker_status(conn)
+    get_build_status(conn)
+    get_buildsets(conn)
     get_buildrequests(conn)
     print("Completed, exiting...")
 
