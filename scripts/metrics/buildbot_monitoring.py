@@ -13,9 +13,6 @@ BUILDBOT_URL = "https://lab.llvm.org/buildbot/api/v2/"
 # TODO(kuhnel): retry on connection issues, maybe resuse
 # https://github.com/google/llvm-premerge-checks/blob/main/scripts/phabtalk/phabtalk.py#L44
 
-# TODO(kuhnel): get "buildsets" and "buildrequests" so that we can get the
-#               commit hash for each build
-
 
 def connect_to_db() -> psycopg2.extensions.connection:
     """Connect to the database, create tables as needed."""
@@ -115,8 +112,7 @@ def update_worker_status(conn: psycopg2.extensions.connection):
 
 def get_builders() -> List[int]:
     """get list of all builder ids."""
-    # TODO(kuhnel): do we also want to store the builder information?
-    #               Does it contain useful information?
+    # TODO(kuhnel): store this data as we want to get the builder names
     response = requests.get(BUILDBOT_URL + "builders")
     return [builder["builderid"] for builder in response.json()["builders"]]
 
@@ -151,7 +147,7 @@ def add_build(builder: int, number: int, build: str, steps: str, conn):
     )
 
 
-def update_build_status(conn):
+def update_build_status(conn: psycopg2.extensions.connection):
     print("Updating build results...")
     # import only builds we have not yet stores in the database
     for builder in get_builders():
@@ -175,51 +171,95 @@ def update_build_status(conn):
             conn.commit()
 
 
-def rest_request_iterator(url: str, field_name: str, limit: int = 1000):
+def rest_request_iterator(
+    url: str,
+    array_field_name: str,
+    id_field_name: str,
+    start_id: int = 0,
+    step: int = 1000,
+):
     """Request paginated data from the buildbot master.
 
     This returns a generator. Each call to it gives you shards of
     <=limit results. This can be used to do a mass-SQL insert of data.
+
+    Limiting the range of the returned IDs causes Buildbot to sort the data.
+    This makes incremental imports much easier.
     """
-    offset = 0
     while True:
         count = 0
-        response = requests.get(url + "?offset={}&limit={}".format(offset, limit))
+        stop_id = start_id + step
+        response = requests.get(
+            url
+            + "?{id_field_name}__gt={start_id}&{id_field_name}__le={stop_id}&".format(
+                **locals()
+            )
+        )
         if response.status_code != 200:
             raise Exception(
                 "Got status code {} on request to {}".format(response.status_code, url)
             )
-        results = response.json()[field_name]
+        results = response.json()[array_field_name]
         yield results
-        if len(results) < limit:
+        if len(results) < step:
             return
-        offset += limit
+        start_id = stop_id
 
 
-def get_buildsets(conn):
-    print("Getting buildsets...")
+def get_latest_buildset(conn: psycopg2.extensions.connection) -> int:
+    """Get the maximumg buildset id.
+
+    This is useful for incremental updates."""
+    cur = conn.cursor()
+    cur.execute("SELECT MAX(buildset_id) from buildbot_buildsets;")
+    row = cur.fetchone()
+    if row[0] is None:
+        return 0
+    return row[0]
+
+
+def get_buildsets(conn: psycopg2.extensions.connection):
+    start_id = get_latest_buildset(conn)
+    print("Getting buildsets, starting with {}...".format(start_id))
     url = BUILDBOT_URL + "buildsets"
     cur = conn.cursor()
-    count = 0
-    for buildset in rest_request_iterator(url, "buildsets"):
-        # TODO(kuhnel): implement incremental update
-        cur.execute(
-            "INSERT INTO buildbot_buildsets (buildset_id, data) values (%s,%s);",
-            (buildset["bsid"], json.dumps(buildset, sort_keys=True)),
+
+    for result_set in rest_request_iterator(
+        url, "buildsets", "bsid", start_id=start_id
+    ):
+        args_str = b",".join(
+            cur.mogrify(
+                b" (%s,%s) ",
+                (buildset["bsid"], json.dumps(buildset, sort_keys=True)),
+            )
+            for buildset in result_set
+            if buildset["complete"]
         )
-        count += 1
-        if count % 100 == 0:
-            print("  {}".format(count))
-            conn.commit()
-    conn.commit()
+
+        cur.execute(
+            b"INSERT INTO buildbot_buildsets (buildset_id, data) values " + args_str
+        )
+        print("  {}".format(result_set[-1]["bsid"]))
+        conn.commit()
 
 
-def get_buildrequests(conn):
-    print("Getting buildrequests...")
+def get_latest_buildrequest(conn: psycopg2.extensions.connection) -> int:
+    cur = conn.cursor()
+    cur.execute("SELECT MAX(buildrequest_id) from buildbot_buildrequests;")
+    row = cur.fetchone()
+    if row[0] is None:
+        return 0
+    return row[0]
+
+
+def get_buildrequests(conn: psycopg2.extensions.connection):
+    start_id = get_latest_buildrequest(conn)
+    print("Getting buildrequests, starting with {}...".format(start_id))
     url = BUILDBOT_URL + "buildrequests"
     cur = conn.cursor()
-    # TODO(kuhnel): implement incremental update
-    for result_set in rest_request_iterator(url, "buildrequests"):
+    for result_set in rest_request_iterator(
+        url, "buildrequests", "buildrequestid", start_id=start_id
+    ):
         # cur.mogrify returns byte string, so we need to join on a byte string
         args_str = b",".join(
             cur.mogrify(
@@ -231,15 +271,14 @@ def get_buildrequests(conn):
                 ),
             )
             for buildrequest in result_set
+            if buildrequest["complete"]
         )
         cur.execute(
             b"INSERT INTO buildbot_buildrequests (buildrequest_id, buildset_id, data) values "
             + args_str
         )
+        print("  {}".format(result_set[-1]["buildrequestid"]))
         conn.commit()
-        # TODO: remove after profiling
-        break
-    print("!")
 
 
 def buildbot_monitoring():
@@ -254,7 +293,4 @@ def buildbot_monitoring():
 
 
 if __name__ == "__main__":
-    import cProfile
-
-    # cProfile.run("buildbot_monitoring()")
     buildbot_monitoring()
