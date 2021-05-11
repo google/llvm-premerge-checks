@@ -232,9 +232,9 @@ def rest_request_iterator(
                 "Got status code {} on request to {}".format(response.status_code, url)
             )
         results = response.json()[array_field_name]
-        yield results
-        if len(results) < step:
+        if len(results) == 0:
             return
+        yield results
         start_id = stop_id
 
 
@@ -259,8 +259,6 @@ def update_buildsets(conn: psycopg2.extensions.connection):
     for result_set in rest_request_iterator(
         url, "buildsets", "bsid", start_id=start_id
     ):
-        if len(result_set) == 0:
-            break
         args_str = b",".join(
             cur.mogrify(
                 b" (%s,%s) ",
@@ -270,6 +268,8 @@ def update_buildsets(conn: psycopg2.extensions.connection):
             if buildset["complete"]
         )
 
+        if len(args_str) == 0:
+            break
         cur.execute(
             b"INSERT INTO buildbot_buildsets (buildset_id, data) values " + args_str
         )
@@ -294,7 +294,7 @@ def update_buildrequests(conn: psycopg2.extensions.connection):
     for result_set in rest_request_iterator(
         url, "buildrequests", "buildrequestid", start_id=start_id
     ):
-        # cur.mogrify returns byte string, so we need to join on a byte string
+        # cur.mogrify returns a byte string, so we need to join on a byte string
         args_str = b",".join(
             cur.mogrify(
                 " (%s,%s,%s) ",
@@ -307,6 +307,8 @@ def update_buildrequests(conn: psycopg2.extensions.connection):
             for buildrequest in result_set
             if buildrequest["complete"]
         )
+        if len(args_str) == 0:
+            break
         cur.execute(
             b"INSERT INTO buildbot_buildrequests (buildrequest_id, buildset_id, data) values "
             + args_str
