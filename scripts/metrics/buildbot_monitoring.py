@@ -69,6 +69,14 @@ def create_tables(conn: psycopg2.extensions.connection):
             data jsonb NOT NULL
             );"""
     )
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS buildbot_builders (
+            builder_id integer PRIMARY KEY, 
+            timestamp timestamp NOT NULL, 
+            name text NOT NULL, 
+            data jsonb NOT NULL
+            );"""
+    )
     conn.commit()
 
 
@@ -87,6 +95,22 @@ def get_worker_status(
     return row[0]
 
 
+def get_builder_status(
+    builder_id: int, conn: psycopg2.extensions.connection
+) -> Optional[Dict]:
+    """Note: postgres returns a dict for a stored json object."""
+    cur = conn.cursor()
+    cur.execute(
+        """SELECT data FROM buildbot_builders WHERE builder_id = %s 
+        ORDER BY timestamp DESC;""",
+        [builder_id],
+    )
+    row = cur.fetchone()
+    if row is None:
+        return None
+    return row[0]
+
+
 def set_worker_status(
     timestamp: datetime.datetime,
     worker_id: int,
@@ -95,18 +119,21 @@ def set_worker_status(
 ):
     cur = conn.cursor()
     cur.execute(
-        "INSERT INTO buildbot_workers (timestamp, worker_id, data) values (%s,%s,%s);",
+        """INSERT INTO buildbot_workers (timestamp, worker_id, data) 
+        values (%s,%s,%s);""",
         (timestamp, worker_id, data),
     )
 
 
-def update_worker_status(conn: psycopg2.extensions.connection):
+def update_workers(conn: psycopg2.extensions.connection):
     print("Updating worker status...")
     response = requests.get(BUILDBOT_URL + "workers")
     timestamp = datetime.datetime.now()
     for worker in response.json()["workers"]:
         worker_id = worker["workerid"]
         data = json.dumps(worker)
+        # TODO: It would be faster if request all worker info and cache it
+        # locally
         old_data = get_worker_status(worker_id, conn)
         # only update worker information if it has changed as this data is quite
         # static
@@ -115,14 +142,25 @@ def update_worker_status(conn: psycopg2.extensions.connection):
     conn.commit()
 
 
-def get_builders() -> List[int]:
+def update_builders(conn: psycopg2.extensions.connection):
     """get list of all builder ids."""
-    # TODO(kuhnel): store this data as we want to get the builder names
+    print("Updating builder status...")
     response = requests.get(BUILDBOT_URL + "builders")
-    return [builder["builderid"] for builder in response.json()["builders"]]
+    timestamp = datetime.datetime.now()
+    for builder in response.json()["builders"]:
+        builder_id = builder["builderid"]
+        data = json.dumps(builder)
+        # TODO: It would be faster if request all builder info and cache it
+        # locally
+        old_data = get_builder_status(builder_id, conn)
+        # only update worker information if it has changed as this data is quite
+        # static
+        if old_data is None or builder != old_data:
+            set_worker_status(timestamp, builder_id, data, conn)
+    conn.commit()
 
 
-def get_last_build(conn) -> int:
+def get_last_build(conn: psycopg2.extensions.connection) -> int:
     """Get the latest build number for a builder.
 
     This is used to only get new builds."""
@@ -134,7 +172,7 @@ def get_last_build(conn) -> int:
     return row[0]
 
 
-def get_build_status(conn: psycopg2.extensions.connection):
+def update_build_status(conn: psycopg2.extensions.connection):
     start_id = get_last_build(conn)
     print("Updating build results, starting with {}...".format(start_id))
     url = BUILDBOT_URL + "builds"
@@ -212,7 +250,7 @@ def get_latest_buildset(conn: psycopg2.extensions.connection) -> int:
     return row[0]
 
 
-def get_buildsets(conn: psycopg2.extensions.connection):
+def update_buildsets(conn: psycopg2.extensions.connection):
     start_id = get_latest_buildset(conn)
     print("Getting buildsets, starting with {}...".format(start_id))
     url = BUILDBOT_URL + "buildsets"
@@ -221,6 +259,8 @@ def get_buildsets(conn: psycopg2.extensions.connection):
     for result_set in rest_request_iterator(
         url, "buildsets", "bsid", start_id=start_id
     ):
+        if len(result_set) == 0:
+            break
         args_str = b",".join(
             cur.mogrify(
                 b" (%s,%s) ",
@@ -246,7 +286,7 @@ def get_latest_buildrequest(conn: psycopg2.extensions.connection) -> int:
     return row[0]
 
 
-def get_buildrequests(conn: psycopg2.extensions.connection):
+def update_buildrequests(conn: psycopg2.extensions.connection):
     start_id = get_latest_buildrequest(conn)
     print("Getting buildrequests, starting with {}...".format(start_id))
     url = BUILDBOT_URL + "buildrequests"
@@ -279,10 +319,11 @@ def buildbot_monitoring():
     """Main function of monitoring the phabricator server."""
     conn = connect_to_db()
     create_tables(conn)
-    update_worker_status(conn)
-    get_build_status(conn)
-    get_buildsets(conn)
-    get_buildrequests(conn)
+    update_workers(conn)
+    update_builders(conn)
+    update_build_status(conn)
+    update_buildsets(conn)
+    update_buildrequests(conn)
     print("Completed, exiting...")
 
 
