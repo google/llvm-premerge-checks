@@ -22,7 +22,7 @@ spec:
   strategy:
     rollingUpdate:
       maxSurge: 25%
-      maxUnavailable: 25%
+      maxUnavailable: 50%
     type: RollingUpdate
   selector:
     matchLabels:
@@ -34,7 +34,7 @@ spec:
     spec:
       containers:
         - name: buildkite-premerge-debian
-          image: gcr.io/llvm-premerge-checks/buildkite-premerge-debian
+          image: gcr.io/llvm-premerge-checks/buildkite-premerge-debian:stable
           resources:
             limits:
               cpu: 30
@@ -82,3 +82,4 @@ spec:
             secretName: github-ssh
       nodeSelector:
         cloud.google.com/gke-nodepool: linux-agents
+      terminationGracePeriodSeconds: 3600
