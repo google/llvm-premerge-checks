@@ -1,4 +1,4 @@
-# Copyright 2019 Google LLC
+# Copyright 2021 Google LLC
 #
 # Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,15 +15,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: service-agents
+  name: linux-agents-test
   namespace: buildkite
 spec:
-  replicas: 4
-  strategy:
-    rollingUpdate:
-      maxSurge: 50%
-      maxUnavailable: 50%
-    type: RollingUpdate
+  replicas: 1
   selector:
     matchLabels:
       app: agent-premerge-debian
@@ -34,15 +29,17 @@ spec:
     spec:
       containers:
         - name: buildkite-premerge-debian
-          image: gcr.io/llvm-premerge-checks/buildkite-premerge-debian:stable
+          image: gcr.io/llvm-premerge-checks/buildkite-premerge-debian:latest
           resources:
             limits:
-              cpu: 2
-              memory: 5Gi
+              cpu: 15
+              memory: 50Gi
             requests:
-              cpu: 1.5
-              memory: 5Gi
+              cpu: 15
+              memory: 50Gi
           volumeMounts:
+            - name: ssd
+              mountPath: /mnt/disks/ssd0
             - name: github-ssh
               mountPath: /mnt/ssh
           env:
@@ -56,7 +53,9 @@ spec:
                 fieldRef:
                  fieldPath: metadata.name
             - name: BUILDKITE_AGENT_TAGS
-              value: "queue=service,name=$(POD_NAME)"
+              value: "queue=linux-test,name=$(POD_NAME)"
+            - name: BUILDKITE_BUILD_PATH
+              value: "/mnt/disks/ssd0/agent"
             - name: CONDUIT_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -68,9 +67,14 @@ spec:
                   name: buildkite-api-token-readonly
                   key: token
       volumes:
+        - name: ssd
+          hostPath:
+            # directory location on host
+            path: /mnt/disks/ssd0
+            type: Directory
         - name: github-ssh
           secret:
             secretName: github-ssh
       nodeSelector:
-        cloud.google.com/gke-nodepool: default-pool
-      terminationGracePeriodSeconds: 1200
+        cloud.google.com/gke-nodepool: linux-agents
+      terminationGracePeriodSeconds: 3600
