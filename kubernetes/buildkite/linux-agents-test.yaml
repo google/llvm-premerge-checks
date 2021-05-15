@@ -32,14 +32,12 @@ spec:
           image: gcr.io/llvm-premerge-checks/buildkite-premerge-debian:latest
           resources:
             limits:
-              cpu: 15
+              cpu: 30
               memory: 50Gi
             requests:
-              cpu: 15
+              cpu: 30
               memory: 50Gi
           volumeMounts:
-            - name: ssd
-              mountPath: /mnt/disks/ssd0
             - name: github-ssh
               mountPath: /mnt/ssh
           env:
@@ -55,7 +53,7 @@ spec:
             - name: BUILDKITE_AGENT_TAGS
               value: "queue=linux-test,name=$(POD_NAME)"
             - name: BUILDKITE_BUILD_PATH
-              value: "/mnt/disks/ssd0/agent"
+              value: "/var/lib/buildkite-agent/builds"
             - name: CONDUIT_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -67,14 +65,9 @@ spec:
                   name: buildkite-api-token-readonly
                   key: token
       volumes:
-        - name: ssd
-          hostPath:
-            # directory location on host
-            path: /mnt/disks/ssd0
-            type: Directory
         - name: github-ssh
           secret:
             secretName: github-ssh
       nodeSelector:
-        cloud.google.com/gke-nodepool: linux-agents
+        cloud.google.com/gke-nodepool: linux-agents-2
       terminationGracePeriodSeconds: 3600

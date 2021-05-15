@@ -25,8 +25,9 @@ mkdir -p "${CCACHE_DIR}"
 chown -R ${USER}:${USER} "${CCACHE_DIR}"
 
 # /mnt/ssh should contain known_hosts, id_rsa and id_rsa.pub .
-mkdir -p ~/.ssh
-chmod 700 ~/.ssh
-cp /mnt/ssh/* ~/.ssh
-chmod 600 ~/.ssh/*
+mkdir -p /var/lib/buildkite-agent/.ssh
+cp /mnt/ssh/* /var/lib/buildkite-agent/.ssh
+chmod 700 /var/lib/buildkite-agent/.ssh
+chmod 600 /var/lib/buildkite-agent/.ssh/*
+chown -R buildkite-agent:buildkite-agent /var/lib/buildkite-agent/.ssh/
 exec /usr/bin/tini -g -- $@

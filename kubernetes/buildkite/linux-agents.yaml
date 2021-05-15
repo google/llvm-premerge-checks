@@ -1,4 +1,4 @@
-# Copyright 2019 Google LLC
+# Copyright 2021 Google LLC
 #
 # Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
 # you may not use this file except in compliance with the License.
@@ -43,8 +43,6 @@ spec:
               cpu: 30
               memory: 80Gi
           volumeMounts:
-            - name: ssd
-              mountPath: /mnt/disks/ssd0
             - name: github-ssh
               mountPath: /mnt/ssh
           env:
@@ -60,7 +58,7 @@ spec:
             - name: BUILDKITE_AGENT_TAGS
               value: "queue=linux,name=$(POD_NAME)"
             - name: BUILDKITE_BUILD_PATH
-              value: "/mnt/disks/ssd0/agent"
+              value: "/var/lib/buildkite-agent/builds"
             - name: CONDUIT_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -72,14 +70,9 @@ spec:
                   name: buildkite-api-token-readonly
                   key: token
       volumes:
-        - name: ssd
-          hostPath:
-            # directory location on host
-            path: /mnt/disks/ssd0
-            type: Directory
         - name: github-ssh
           secret:
             secretName: github-ssh
       nodeSelector:
-        cloud.google.com/gke-nodepool: linux-agents
+        cloud.google.com/gke-nodepool: linux-agents-2
       terminationGracePeriodSeconds: 3600
