@@ -57,7 +57,6 @@ def generic_linux(projects: str, check_diff: bool) -> List:
         'EXIT_STATUS=$$?',
         'echo "--- ccache stats"',
         'ccache --print-stats',
-        'ccache --show-stats',
         'exit $$EXIT_STATUS',
     ])
 
