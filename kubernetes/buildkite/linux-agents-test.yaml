@@ -19,6 +19,10 @@ metadata:
   namespace: buildkite
 spec:
   replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 50%
   selector:
     matchLabels:
       app: agent-premerge-debian
@@ -33,10 +37,10 @@ spec:
           resources:
             limits:
               cpu: 30
-              memory: 50Gi
+              memory: 80Gi
             requests:
               cpu: 30
-              memory: 50Gi
+              memory: 80Gi
           volumeMounts:
             - name: github-ssh
               mountPath: /mnt/ssh

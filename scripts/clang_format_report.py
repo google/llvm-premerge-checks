@@ -26,7 +26,7 @@ from buildkite_utils import annotate
 
 
 def get_diff(base_commit) -> Tuple[bool, str]:
-    r = subprocess.run(f'git-clang-format {base_commit}', shell=True)
+    r = subprocess.run(f'python3 clang/tools/clang-format/git-clang-format {base_commit}', shell=True)
     logging.debug(f'git-clang-format {r}')
     if r.returncode != 0:
         logging.error(f'git-clang-format returned an non-zero exit code {r.returncode}')
