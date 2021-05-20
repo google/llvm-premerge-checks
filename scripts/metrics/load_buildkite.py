@@ -1,5 +1,4 @@
 import sys
-
 import psycopg2
 import psycopg2.extras
 import logging
@@ -13,6 +12,7 @@ import traceback
 psycopg2.extensions.register_adapter(dict, psycopg2.extras.Json)
 
 token = f'Bearer {os.getenv("BUILDKITE_API_TOKEN")}'
+
 
 def connect():
     return psycopg2.connect(
@@ -57,7 +57,8 @@ where a.id IS NULL and j.raw->>'raw_log_url' IS NOT NULL
                 content, en = download_text(url)
                 meta['encoding'] = en
                 with conn.cursor() as i:
-                    i.execute('INSERT INTO artifacts (id, job_id, content, meta) VALUES (%s, %s, %s, %s)', [job_id, job_id, content, meta])
+                    i.execute('INSERT INTO artifacts (id, job_id, content, meta) VALUES (%s, %s, %s, %s)',
+                              [job_id, job_id, content, meta])
             except:
                 meta['failure'] = traceback.format_exc()
                 logging.error(f'download artifact failed {meta["failure"]} {url}')
@@ -247,7 +248,6 @@ where j.id IS NULL""")
 
 if __name__ == '__main__':
     logging.basicConfig(level='INFO', format='%(levelname)-7s %(message)s')
-    print(os.environ)
     cn = connect()
     logging.info('downloading buildkite data')
     insert_new_builds(cn)
