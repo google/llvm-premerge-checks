@@ -1,0 +1,27 @@
+FROM debian:unstable
+
+RUN apt-get update ;\
+    apt-get upgrade -y;\
+    apt-get install -y --no-install-recommends \
+        locales openssh-client gnupg ca-certificates  \
+        build-essential \
+        zip wget git less vim \
+        python3 python3-psutil python3-pip python3-setuptools pipenv \
+        python3 python3-psutil python3-pip python3-setuptools pipenv \
+        rsync jq tini gosu;
+
+
+RUN echo 'configure locale'; \
+    sed --in-place '/en_US.UTF-8/s/^#//' /etc/locale.gen ;\
+    locale-gen ;
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
+
+COPY *.sh /usr/local/bin/
+RUN chmod og+rx /usr/local/bin/*.sh
+RUN wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O /usr/local/bin/cloud_sql_proxy;\
+    chmod +x /usr/local/bin/cloud_sql_proxy
+
+ENTRYPOINT ["entrypoint.sh"]
+CMD ["/bin/bash"]
