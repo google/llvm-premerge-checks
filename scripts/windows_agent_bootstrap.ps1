@@ -45,7 +45,7 @@ if ($ssd) {
 
 
 # install Docker
-Install-PackageProvider -Name NuGet -Force
+# Install-PackageProvider -Name NuGet -Force
 Install-Module -Name DockerMsftProvider -Repository PSGallery -Force
 Install-Package -Name docker -ProviderName DockerMsftProvider -Force
 sc.exe config docker start=delayed-auto
