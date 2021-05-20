@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-
+import traceback
 import psycopg2
 from phabricator import Phabricator
 import os
 from typing import Optional
 import datetime
 import requests
+import logging
 
 PHABRICATOR_URL = "https://reviews.llvm.org/api/"
-BUILDBOT_URL = "https://lab.llvm.org/buildbot/api/v2/"
+BUILDBOT_URL = "https://lab.llvm.org/buildbot/api/v2"
 
 
 def phab_up() -> Optional[Phabricator]:
@@ -16,36 +17,37 @@ def phab_up() -> Optional[Phabricator]:
 
     Returns None if server is down.
     """
-    print("Checking Phabricator status...")
+    logging.info("Checking Phabricator status...")
     try:
-        phab = Phabricator(host=PHABRICATOR_URL)
+        phab = Phabricator(token=os.getenv('CONDUIT_TOKEN'), host=PHABRICATOR_URL)
         phab.update_interfaces()
-        print("  Phabricator is up.")
+        logging.info("Phabricator is up.")
         return phab
-    except Exception:
-        pass
-        print("  Phabricator is down.")
+    except Exception as ex:
+        logging.error(ex)
+        logging.error(traceback.format_exc())
+        logging.warning("Phabricator is down.")
     return None
 
 
 def buildbot_up() -> bool:
     """Check if buildbot server is up"""
-    print("Checking Buildbot status...")
+    logging.info("Checking Buildbot status...")
     try:
-        response = requests.get(BUILDBOT_URL + "buildrequests?limit=100")
-        if "masters" in response.json():
-            print("  Buildbot is up.")
-            return True
-    except Exception:
-        pass
-    print("  Buildbot is down.")
+        response = requests.get(BUILDBOT_URL)
+        logging.info(f'{response.status_code} {BUILDBOT_URL}')
+        logging.info(response.content)
+        return response.status_code == 200
+    except Exception as ex:
+        logging.error(ex)
+        logging.error(traceback.format_exc())
+    logging.warning("Buildbot is down.")
     return False
 
 
 def log_server_status(phab: bool, buildbot: bool, conn: psycopg2.extensions.connection):
     """log the phabricator status to the database."""
-    print("Writing Phabricator status to database...")
-
+    logging.info("Writing Phabricator status to database...")
     cur = conn.cursor()
     cur.execute(
         "INSERT INTO server_status (timestamp, phabricator, buildbot) VALUES (%s,%s,%s);",
@@ -57,10 +59,7 @@ def log_server_status(phab: bool, buildbot: bool, conn: psycopg2.extensions.conn
 def connect_to_db() -> psycopg2.extensions.connection:
     """Connect to the database, create tables as needed."""
     conn = psycopg2.connect(
-        "host=127.0.0.1 sslmode=disable dbname=stats user={} password={}".format(
-            os.environ["PGUSER"], os.environ["PGPASSWORD"]
-        )
-    )
+        f"host=127.0.0.1 sslmode=disable dbname=phabricator user=stats password={os.getenv('DB_PASSWORD')}")
     cur = conn.cursor()
     cur.execute(
         "CREATE TABLE IF NOT EXISTS server_status (timestamp timestamp, phabricator boolean, buildbot boolean);"
@@ -69,14 +68,9 @@ def connect_to_db() -> psycopg2.extensions.connection:
     return conn
 
 
-def server_monitoring():
-    """Main function of monitoring the servers."""
+if __name__ == "__main__":
+    logging.basicConfig(level='INFO', format='%(levelname)-7s %(message)s')
     conn = connect_to_db()
     phab = phab_up()
     buildbot = buildbot_up()
     log_server_status(phab is not None, buildbot, conn)
-    print("Completed, exiting...")
-
-
-if __name__ == "__main__":
-    server_monitoring()

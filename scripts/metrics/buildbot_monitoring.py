@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import logging
 import psycopg2
 import os
 import datetime
@@ -10,6 +10,7 @@ import json
 PHABRICATOR_URL = "https://reviews.llvm.org/api/"
 BUILDBOT_URL = "https://lab.llvm.org/buildbot/api/v2/"
 
+
 # TODO(kuhnel): retry on connection issues, maybe resuse
 # https://github.com/google/llvm-premerge-checks/blob/main/scripts/phabtalk/phabtalk.py#L44
 
@@ -18,12 +19,9 @@ BUILDBOT_URL = "https://lab.llvm.org/buildbot/api/v2/"
 
 
 def connect_to_db() -> psycopg2.extensions.connection:
-    """Connect to the database, create tables as needed."""
+    """Connect to the database."""
     conn = psycopg2.connect(
-        "host=127.0.0.1 sslmode=disable dbname=stats user={} password={}".format(
-            os.environ["PGUSER"], os.environ["PGPASSWORD"]
-        )
-    )
+        f"host=127.0.0.1 sslmode=disable dbname=buildbots user=stats password={os.getenv('DB_PASSWORD')}")
     return conn
 
 
@@ -81,7 +79,7 @@ def create_tables(conn: psycopg2.extensions.connection):
 
 
 def get_worker_status(
-    worker_id: int, conn: psycopg2.extensions.connection
+        worker_id: int, conn: psycopg2.extensions.connection
 ) -> Optional[Dict]:
     """Note: postgres returns a dict for a stored json object."""
     cur = conn.cursor()
@@ -96,7 +94,7 @@ def get_worker_status(
 
 
 def get_builder_status(
-    builder_id: int, conn: psycopg2.extensions.connection
+        builder_id: int, conn: psycopg2.extensions.connection
 ) -> Optional[Dict]:
     """Note: postgres returns a dict for a stored json object."""
     cur = conn.cursor()
@@ -112,10 +110,10 @@ def get_builder_status(
 
 
 def set_worker_status(
-    timestamp: datetime.datetime,
-    worker_id: int,
-    data: str,
-    conn: psycopg2.extensions.connection,
+        timestamp: datetime.datetime,
+        worker_id: int,
+        data: str,
+        conn: psycopg2.extensions.connection,
 ):
     cur = conn.cursor()
     cur.execute(
@@ -126,7 +124,7 @@ def set_worker_status(
 
 
 def update_workers(conn: psycopg2.extensions.connection):
-    print("Updating worker status...")
+    logging.info("Updating worker status...")
     response = requests.get(BUILDBOT_URL + "workers")
     timestamp = datetime.datetime.now()
     for worker in response.json()["workers"]:
@@ -144,7 +142,7 @@ def update_workers(conn: psycopg2.extensions.connection):
 
 def update_builders(conn: psycopg2.extensions.connection):
     """get list of all builder ids."""
-    print("Updating builder status...")
+    logging.info("Updating builder status...")
     response = requests.get(BUILDBOT_URL + "builders")
     timestamp = datetime.datetime.now()
     for builder in response.json()["builders"]:
@@ -174,13 +172,10 @@ def get_last_build(conn: psycopg2.extensions.connection) -> int:
 
 def update_build_status(conn: psycopg2.extensions.connection):
     start_id = get_last_build(conn)
-    print("Updating build results, starting with {}...".format(start_id))
+    logging.info("Updating build results, starting with {}...".format(start_id))
     url = BUILDBOT_URL + "builds"
     cur = conn.cursor()
-
-    for result_set in rest_request_iterator(
-        url, "builds", "buildid", start_id=start_id
-    ):
+    for result_set in rest_request_iterator(url, "builds", "buildid", start_id=start_id):
         args_str = b",".join(
             cur.mogrify(
                 b" (%s,%s,%s,%s) ",
@@ -194,21 +189,20 @@ def update_build_status(conn: psycopg2.extensions.connection):
             for build in result_set
             if build["complete"]
         )
-
         cur.execute(
             b"INSERT INTO buildbot_builds (build_id, builder_id, build_number, build_data) values "
             + args_str
         )
-        print("  {}".format(result_set[-1]["buildid"]))
+        logging.info("last build id: {}".format(result_set[-1]["buildid"]))
         conn.commit()
 
 
 def rest_request_iterator(
-    url: str,
-    array_field_name: str,
-    id_field_name: str,
-    start_id: int = 0,
-    step: int = 1000,
+        url: str,
+        array_field_name: str,
+        id_field_name: str,
+        start_id: int = 0,
+        step: int = 1000,
 ):
     """Request paginated data from the buildbot master.
 
@@ -252,12 +246,12 @@ def get_latest_buildset(conn: psycopg2.extensions.connection) -> int:
 
 def update_buildsets(conn: psycopg2.extensions.connection):
     start_id = get_latest_buildset(conn)
-    print("Getting buildsets, starting with {}...".format(start_id))
+    logging.info("Getting buildsets, starting with {}...".format(start_id))
     url = BUILDBOT_URL + "buildsets"
     cur = conn.cursor()
 
     for result_set in rest_request_iterator(
-        url, "buildsets", "bsid", start_id=start_id
+            url, "buildsets", "bsid", start_id=start_id
     ):
         args_str = b",".join(
             cur.mogrify(
@@ -273,7 +267,7 @@ def update_buildsets(conn: psycopg2.extensions.connection):
         cur.execute(
             b"INSERT INTO buildbot_buildsets (buildset_id, data) values " + args_str
         )
-        print("  {}".format(result_set[-1]["bsid"]))
+        logging.info("last id {}".format(result_set[-1]["bsid"]))
         conn.commit()
 
 
@@ -288,11 +282,11 @@ def get_latest_buildrequest(conn: psycopg2.extensions.connection) -> int:
 
 def update_buildrequests(conn: psycopg2.extensions.connection):
     start_id = get_latest_buildrequest(conn)
-    print("Getting buildrequests, starting with {}...".format(start_id))
+    logging.info("Getting buildrequests, starting with {}...".format(start_id))
     url = BUILDBOT_URL + "buildrequests"
     cur = conn.cursor()
     for result_set in rest_request_iterator(
-        url, "buildrequests", "buildrequestid", start_id=start_id
+            url, "buildrequests", "buildrequestid", start_id=start_id
     ):
         # cur.mogrify returns a byte string, so we need to join on a byte string
         args_str = b",".join(
@@ -313,12 +307,12 @@ def update_buildrequests(conn: psycopg2.extensions.connection):
             b"INSERT INTO buildbot_buildrequests (buildrequest_id, buildset_id, data) values "
             + args_str
         )
-        print("  {}".format(result_set[-1]["buildrequestid"]))
+        logging.info("{}".format(result_set[-1]["buildrequestid"]))
         conn.commit()
 
 
-def buildbot_monitoring():
-    """Main function of monitoring the phabricator server."""
+if __name__ == "__main__":
+    logging.basicConfig(level='INFO', format='%(levelname)-7s %(message)s')
     conn = connect_to_db()
     create_tables(conn)
     update_workers(conn)
@@ -326,8 +320,3 @@ def buildbot_monitoring():
     update_build_status(conn)
     update_buildsets(conn)
     update_buildrequests(conn)
-    print("Completed, exiting...")
-
-
-if __name__ == "__main__":
-    buildbot_monitoring()

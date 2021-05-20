@@ -16,7 +16,7 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: collect-stats
+  name: buildkite-stats
   namespace: buildkite
 spec:
   schedule: "0 * * * *"
@@ -30,7 +30,7 @@ spec:
           containers:
           - name: collect-buildkite-stats
             image: gcr.io/llvm-premerge-checks/stats:latest
-            args: ["/root/llvm-premerge-checks/scripts/metrics/load_buildkite.sh"]
+            args: ["/root/llvm-premerge-checks/scripts/metrics/connect_db.sh python3 load_buildkite.py"]
             env:
             - name: BUILDKITE_AGENT_TOKEN
               valueFrom:
@@ -56,6 +56,8 @@ spec:
                 secretKeyRef:
                   name: db-stats
                   key: password
+            - name: SCRIPTS_REFSPEC
+              value: "cron-2"
           restartPolicy: Never
           nodeSelector:
             cloud.google.com/gke-nodepool: service
