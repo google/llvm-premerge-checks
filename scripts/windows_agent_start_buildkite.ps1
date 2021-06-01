@@ -18,10 +18,9 @@
 
 param(
     [string]$version = "stable",
-    [switch]$testing = $false,
     [string]$workdir = "c:\ws"
 )
 
 cd c:\llvm-premerge-checks
 git pull
-c:\llvm-premerge-checks\scripts\windows\start_container.ps1 -version $version -testing $testing -workdir $workdir
+c:\llvm-premerge-checks\scripts\windows\start_container.ps1 -version $version -workdir $workdir
