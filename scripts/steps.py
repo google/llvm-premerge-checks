@@ -110,7 +110,7 @@ def generic_windows(projects: str) -> List:
         ],
         'artifact_paths': ['artifacts/**/*', '*_result.json', 'build/test-results.xml'],
         'agents': win_agents,
-        'timeout_in_minutes': 120,
+        'timeout_in_minutes': 150,
         'retry': {'automatic': [
             {'exit_status': -1, 'limit': 2},  # Agent lost
             {'exit_status': 255, 'limit': 2},  # Forced agent shutdown
