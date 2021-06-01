@@ -12,42 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Pull and start the Docker container for a Windows agent.
-# To setup a Windows agent see docs/playbooks.md
+# Invoked at startup of windows machine. This indirection allows to simply
+# restart a machine and it will pick up all script changes and will use the
+# latest stable image.
 
 param(
-    [string]$version = "latest",
+    [string]$version = "stable",
     [switch]$testing = $false,
     [string]$workdir = "c:\ws"
 )
 
-$NAME="agent-windows-buildkite"
-$IMAGE="gcr.io/llvm-premerge-checks/${NAME}:${version}"
-
-Write-Output "Authenticating docker..."
-Write-Output "y`n" | gcloud auth configure-docker
-
-Write-Output "Pulling new image '${IMAGE}'..."
-docker pull ${IMAGE}
-$DIGEST=$(docker image inspect --format "{{range .RepoDigests}}{{.}}{{end}}" $IMAGE) -replace ".*@sha256:(.{6})(.*)$","`$1"
-Write-Output "Image digest ${DIGEST}"
-Write-Output "Stopping old container..."
-docker stop ${NAME}
-docker rm ${NAME}
-Write-Output "Starting container..."
-if (${testing}) {
-    docker run -it `
-    -v ${workdir}:C:\ws `
-    -v C:\credentials:C:\credentials `
-    -e BUILDKITE_BUILD_PATH=C:\ws `
-    -e IMAGE_DIGEST=${DIGEST} `
-    ${IMAGE} powershell
-} else {
-    docker run -d `
-    -v ${workdir}:C:\ws `
-    -v C:\credentials:C:\credentials `
-    -e BUILDKITE_BUILD_PATH=C:\ws `
-    -e IMAGE_DIGEST=${DIGEST} `
-    --name ${NAME} `
-    ${IMAGE}
-}
+cd c:\llvm-premerge-checks
+git pull
+c:\llvm-premerge-checks\scripts\windows\start_container.ps1 -version $version -testing $testing -workdir $workdir

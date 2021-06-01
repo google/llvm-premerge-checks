@@ -32,10 +32,13 @@ If ($LastExitCode -ne 0) {
     exit
 }
 
+$DIGEST=$(docker image inspect --format "{{range .RepoDigests}}{{.}}{{end}}" $IMAGE_NAME) -replace ".*@sha256:(.{6})(.*)$","`$1"
 # mount a persistent workspace for experiments
 docker run -it `
     -v C:/ws:C:/ws `
     -v C:/credentials:C:/credentials `
+    -e BUILDKITE_BUILD_PATH=C:\ws `
+    -e IMAGE_DIGEST=${DIGEST} `
     -e PARENT_HOSTNAME=$env:computername `
     $IMAGE_NAME $CMD
 If ($LastExitCode -ne 0) {
