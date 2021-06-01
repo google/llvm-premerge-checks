@@ -34,8 +34,8 @@ Write-Output "Image digest ${DIGEST}"
 Write-Output "Stopping old container..."
 docker stop ${NAME}
 docker rm ${NAME}
-Write-Output "Starting container..."
 if (${testing}) {
+    Write-Output "Starting container with powershell to test..."
     docker run -it `
     -v ${workdir}:C:\ws `
     -v C:\credentials:C:\credentials `
@@ -43,6 +43,7 @@ if (${testing}) {
     -e IMAGE_DIGEST=${DIGEST} `
     ${IMAGE} powershell
 } else {
+    Write-Output "Starting container with workdir ${workdir}..."
     docker run -d `
     -v ${workdir}:C:\ws `
     -v C:\credentials:C:\credentials `
