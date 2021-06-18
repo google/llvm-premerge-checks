@@ -21,7 +21,7 @@ BUILDBOT_URL = "https://lab.llvm.org/buildbot/api/v2/"
 def connect_to_db() -> psycopg2.extensions.connection:
     """Connect to the database."""
     conn = psycopg2.connect(
-        f"host=127.0.0.1 sslmode=disable dbname=buildbots user=stats password={os.getenv('DB_PASSWORD')}")
+        f"host=127.0.0.1 sslmode=disable dbname=stats user=stats password={os.getenv('DB_PASSWORD')}")
     return conn
 
 

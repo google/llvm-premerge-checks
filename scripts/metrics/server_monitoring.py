@@ -59,7 +59,7 @@ def log_server_status(phab: bool, buildbot: bool, conn: psycopg2.extensions.conn
 def connect_to_db() -> psycopg2.extensions.connection:
     """Connect to the database, create tables as needed."""
     conn = psycopg2.connect(
-        f"host=127.0.0.1 sslmode=disable dbname=phabricator user=stats password={os.getenv('DB_PASSWORD')}")
+        f"host=127.0.0.1 sslmode=disable dbname=stats user=stats password={os.getenv('DB_PASSWORD')}")
     cur = conn.cursor()
     cur.execute(
         "CREATE TABLE IF NOT EXISTS server_status (timestamp timestamp, phabricator boolean, buildbot boolean);"

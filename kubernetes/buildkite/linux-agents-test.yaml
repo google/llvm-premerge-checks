@@ -18,7 +18,7 @@ metadata:
   name: linux-agents-test
   namespace: buildkite
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     rollingUpdate:
       maxSurge: 25%
