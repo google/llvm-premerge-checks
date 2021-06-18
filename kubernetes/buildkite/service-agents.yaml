@@ -67,6 +67,8 @@ spec:
                 secretKeyRef:
                   name: buildkite-api-token-readonly
                   key: token
+            - name: BUILDKITE_BUILD_PATH
+              value: "/var/lib/buildkite-agent/builds"
       volumes:
         - name: github-ssh
           secret:
