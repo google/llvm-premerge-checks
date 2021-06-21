@@ -34,7 +34,7 @@ def run(base_commit, ignore_config, step: Optional[Step], report: Optional[Repor
         step = Step()  # For debugging.
     r = subprocess.run(f'git diff -U0 --no-prefix {base_commit}', shell=True, capture_output=True)
     logging.debug(f'git diff {r}')
-    diff = r.stdout.decode()
+    diff = r.stdout.decode("utf-8", "replace")
     if ignore_config is not None and os.path.exists(ignore_config):
         ignore = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern,
                                               open(ignore_config, 'r').readlines())
