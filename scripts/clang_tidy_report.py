@@ -27,7 +27,7 @@ from phabtalk.phabtalk import Report, Step
 
 
 def run(base_commit, ignore_config, step: Optional[Step], report: Optional[Report]):
-    """Apply clang-format and return if no issues were found."""
+    """Apply clang-tidy and return if no issues were found."""
     if report is None:
         report = Report()  # For debugging.
     if step is None:
