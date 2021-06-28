@@ -106,10 +106,10 @@ def _create_env(config: Configuration) -> Dict[str, str]:
     return env
 
 
-def _create_args(config: Configuration, llvm_enable_projects: str, use_cache: bool) -> List[str]:
+def _create_args(config: Configuration, llvm_enable_projects: str, use_cache: bool, repo_path: str) -> List[str]:
     """Generate the command line arguments for cmake."""
     arguments = [
-        os.path.join('..', 'llvm'),
+        os.path.join(repo_path, 'llvm'),
         '-D LLVM_ENABLE_PROJECTS="{}"'.format(llvm_enable_projects),
     ]
     arguments.extend(config.general_cmake_arguments)
@@ -165,7 +165,7 @@ def run(projects: str, repo_path: str, config_file_path: str = None, *, dry_run:
     env = _create_env(config)
     llvm_enable_projects = _select_projects(config, projects, repo_path)
     print('Enabled projects: {}'.format(llvm_enable_projects), flush=True)
-    arguments = _create_args(config, llvm_enable_projects, True)
+    arguments = _create_args(config, llvm_enable_projects, True, repo_path)
     cmd = 'cmake ' + ' '.join(arguments)
 
     print('Running cmake with these arguments:\n{}'.format(cmd), flush=True)
@@ -173,7 +173,7 @@ def run(projects: str, repo_path: str, config_file_path: str = None, *, dry_run:
         print('Dry run, not invoking CMake!')
         return 0, build_dir, [], []
     result = subprocess.call(cmd, env=env, shell=True, cwd=build_dir)
-    commands.append('cmake ' + ' '.join(_create_args(config, llvm_enable_projects, False)))
+    commands.append('cmake ' + ' '.join(_create_args(config, llvm_enable_projects, False, repo_path)))
     commands.append('# ^note that compiler cache arguments are omitted')
     _link_compile_commands(config, repo_path, build_dir, commands)
     return result, build_dir, [os.path.join(build_dir, 'CMakeCache.txt')], commands
