@@ -145,8 +145,12 @@ def run(projects: str, repo_path: str, config_file_path: str = None, *, dry_run:
         script_dir = os.path.dirname(__file__)
         config_file_path = os.path.join(script_dir, 'run_cmake_config.yaml')
     config = Configuration(config_file_path)
-
-    build_dir = os.path.abspath(os.path.join(repo_path, 'build'))
+    build_dir = os.path.abspath(os.path.join(os.getenv("BUILDKITE_BUILD_PATH"), 'llvm_build'))
+    logging.info(f"build directory '{build_dir}'")
+    if os.path.isdir(build_dir):
+        logging.info("directory exist")
+        if os.getenv("ph_no_cache") is None:
+            return 0, build_dir, [], commands
     if not dry_run:
         secure_delete(build_dir)
         os.makedirs(build_dir)

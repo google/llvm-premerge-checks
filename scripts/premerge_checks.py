@@ -40,7 +40,7 @@ def ninja_all_report(step: Step, _: Report):
         sys.stdout.buffer.write,
         sys.stderr.buffer.write,
         'ninja all', cwd=build_dir)
-    logging.debug(f'ninja all: returned {rc}')
+    logging.debug(f'{build_dir}, ninja all: returned {rc}')
     step.set_status_from_exit_code(rc)
 
 
@@ -51,7 +51,7 @@ def ninja_check_all_report(step: Step, _: Report):
         sys.stdout.buffer.write,
         sys.stderr.buffer.write,
         'ninja check-all', cwd=build_dir)
-    logging.debug(f'ninja check-all: returned {rc}')
+    logging.debug(f'{build_dir}, ninja check-all: returned {rc}')
     step.set_status_from_exit_code(rc)
 
 
