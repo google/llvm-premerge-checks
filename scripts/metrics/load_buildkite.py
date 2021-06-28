@@ -133,14 +133,12 @@ def insert_new_builds(conn):
     cnt = 0
     for b in all_builds:
         with conn.cursor() as c:
-            c.execute('SELECT count(1) FROM builds WHERE id = %s', (b.get('id'),))
-            if c.fetchone()[0] == 0:
-                c.execute('INSERT INTO builds (id, raw) VALUES (%s, %s) ON CONFLICT (id) DO UPDATE SET raw = %s',
-                          [b.get('id'), psycopg2.extras.Json(b), psycopg2.extras.Json(b)])
-                cnt += 1
-                if cnt % 100 == 0:
-                    logging.info(f'{cnt} builds inserted')
-                    conn.commit()
+            c.execute('INSERT INTO builds (id, raw) VALUES (%s, %s) ON CONFLICT (id) DO UPDATE SET raw = %s',
+                      [b.get('id'), b, b])
+            cnt += 1
+            if cnt % 100 == 0:
+                logging.info(f'{cnt} builds inserted / updated')
+                conn.commit()
     conn.commit()
     logging.info(f'{cnt} builds inserted')
     return cnt
@@ -165,12 +163,13 @@ def insert_all_builds(conn):
         page += 1
         for b in x:
             with conn.cursor() as c:
-                c.execute('INSERT INTO builds (id, raw) VALUES (%s, %s) ON CONFLICT (id) DO NOTHING',
-                          [b.get('id'), b])
-                cnt += 1
-                if cnt % 100 == 0:
-                    logging.info(f'{cnt} builds inserted')
-                    conn.commit()
+                c.execute('SELECT count(1) FROM builds WHERE id = %s', (b.get('id'),))
+                if c.fetchone()[0] == 0:
+                    c.execute('INSERT INTO builds (id, raw) VALUES (%s, %s)', [b.get('id'), b])
+                    cnt += 1
+                    if cnt % 100 == 0:
+                        logging.info(f'{cnt} builds inserted')
+                        conn.commit()
     conn.commit()
     logging.info(f'{cnt} builds inserted')
     return cnt
@@ -284,9 +283,9 @@ if __name__ == '__main__':
     logging.basicConfig(level='INFO', format='%(levelname)-7s %(message)s')
     cn = connect()
     logging.info('downloading buildkite data')
-    # insert_all_builds(cn)
+    #insert_all_builds(cn)
     insert_new_builds(cn)
-    # update_running_builds(cn)
+    update_running_builds(cn)
     insert_new_jobs(cn)
     download_job_artifacts_list(cn)
     download_job_artifacts(cn)
