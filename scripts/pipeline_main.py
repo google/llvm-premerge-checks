@@ -25,19 +25,18 @@ steps_generators = [
 if __name__ == '__main__':
     scripts_refspec = os.getenv("ph_scripts_refspec", "main")
     no_cache = os.getenv('ph_no_cache') is not None
-    projects = os.getenv('ph_projects', 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;openmp;polly')
     log_level = os.getenv('ph_log_level', 'WARNING')
     notify_emails = list(filter(None, os.getenv('ph_notify_emails', '').split(',')))
     steps = []
     steps.extend(generic_linux(
-        os.getenv('ph_projects', 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;openmp;polly'),
+        os.getenv('ph_projects', 'llvm;clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;openmp;polly;flang'),
         False))
     # FIXME: openmp is removed as it constantly fails.
 
     # TODO: Make this project list be evaluated through "choose_projects"(? as now we define "all" and exclusions in
     #  two placess).
     steps.extend(generic_windows(
-        os.getenv('ph_projects', 'clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;polly')))
+        os.getenv('ph_projects', 'llvm;clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;polly;flang')))
 
     if os.getenv('ph_skip_generated') is None:
         for gen in steps_generators:
