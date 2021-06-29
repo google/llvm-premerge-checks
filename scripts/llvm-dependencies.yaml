@@ -80,7 +80,6 @@ excludedProjects:
     - openmp # TODO: check: kuhnel has trouble with the Perl installation
     - debuginfo-tests # test failing
     - polly # test failing
-    - flang # compilation failing with invalid compile arguments
     # test stuck, needs to be killed manually: instrprof-multiprocess.test
     - compiler-rt
   linux:
