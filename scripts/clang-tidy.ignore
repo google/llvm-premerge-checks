@@ -39,6 +39,7 @@ compiler-rt/lib/sanitizer_common/sanitizer_common_syscalls.inc
 debuginfo-tests/dexter/dex/tools/test
 debuginfo-tests/dexter/feature_tests/subtools/test
 clang/lib/Headers/__clang_hip_*.h
+clang/lib/Headers/wasm_simd128.h
 clang/test
 libclc
 mlir/examples/standalone
