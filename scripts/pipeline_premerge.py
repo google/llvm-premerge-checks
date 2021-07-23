@@ -50,7 +50,7 @@ if __name__ == '__main__':
     modified_projects, unmapped_changes = cp.get_changed_projects(modified_files)
     if unmapped_changes:
         logging.warning('There were changes that could not be mapped to a project. Checking everything')
-        modified_projects = cp.all_projects
+        modified_projects = set(cp.all_projects)
     logging.info(f'modified projects: {modified_projects}')
     # Add projects that depend on modified.
     affected_projects = cp.get_affected_projects(modified_projects)
