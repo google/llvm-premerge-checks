@@ -29,7 +29,7 @@ if __name__ == '__main__':
     notify_emails = list(filter(None, os.getenv('ph_notify_emails', '').split(',')))
     steps = []
     steps.extend(generic_linux(
-        os.getenv('ph_projects', 'llvm;clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;openmp;polly;flang'),
+        os.getenv('ph_projects', 'llvm;clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;polly;flang'),
         False))
     # FIXME: openmp is removed as it constantly fails.
 
