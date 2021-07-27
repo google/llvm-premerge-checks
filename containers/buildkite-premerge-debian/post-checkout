@@ -1,5 +1,4 @@
-#!/bin/bash
-# Copyright 2020 Google LLC
+# Copyright 2021 Google LLC
 #
 # Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# The `pre-checkout` hook will run just before your pipelines source code is
-# checked out from your SCM provider
+# The `post-checkout` hook runs after checkout.
 
-set -e
+set -eu
 
-# Convert https://github.com/llvm-premerge-tests/llvm-project.git -> llvm-project
-# to use the same directory for fork and origin.
-BUILDKITE_BUILD_CHECKOUT_PATH="${BUILDKITE_BUILD_PATH}/$(echo $BUILDKITE_REPO | sed -E "s#.*/([^/]*)#\1#" | sed "s/.git$//")"
+# Run prune as git will start to complain about
+git prune
+if [ -f ".git/gc.log" ]; then
+  echo ".git/gc.log exist"
+  cat ./.git/gc.log
+  rm -f ./.git/gc.log
+fi
