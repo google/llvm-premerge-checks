@@ -192,7 +192,18 @@ Most commonly used are:
 - `ph_log_level` ("DEBUG", "INFO", "WARNING" (default) or "ERROR"): log level for build scripts. 
 - `ph_linux_agents`, `ph_windows_agents`: custom JSON constraints on agents. For example, you might put one machine to a custom queue if it's errornous and send jobs to it with `ph_windows_agents={"queue": "custom"}`.
 - `ph_skip_linux`, `ph_skip_windows` (if set to any value): skip build on this OS.
-- `ph_skip_generated`: don't run custom steps generated from within llvm-project. 
+- `ph_skip_generated`: don't run custom steps generated from within llvm-project.
+
+While trying a new patch for premerge scripts it's typical to start a new build by copying "ph_"
+env variables from one of the recent builds and appending
+
+```shell
+ph_dry_run_report=yes
+ph_skip_windows=yes
+ph_skip_generated=yes
+ph_scripts_refspec="<branch name>"
+ph_log_level=DEBUG
+```
 
 ## Update HTTP auth credentials
 

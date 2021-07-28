@@ -75,7 +75,7 @@ if __name__ == '__main__':
         for i, job in enumerate(build.get('jobs', [])):
             job = benedict(job)
             job_web_url = job.get('web_url', os.getenv('BUILDKITE_BUILD_URL', ''))
-            logging.info(f'{job.get("id")} state {job.get("state")}')
+            logging.info(f'{job.get("id")} {job.get("name")} state {job.get("state")}')
             job_state = job.get('state')
             if job.get('type') == 'waiter':
                 continue

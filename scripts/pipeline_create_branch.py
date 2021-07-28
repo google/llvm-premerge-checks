@@ -14,19 +14,31 @@
 # limitations under the License.
 
 import os
+import sys
+
 import yaml
 import logging
 from buildkite_utils import set_metadata, BuildkiteApi
-
+from phabtalk.phabtalk import PhabTalk
 
 if __name__ == '__main__':
     diff_id = os.getenv("ph_buildable_diff")
+    revision_id = os.getenv("ph_buildable_revision")
     log_level = os.getenv('ph_log_level', 'INFO')
     base_commit = os.getenv('ph_base_commit', 'auto')
     run_build = os.getenv('ph_skip_build') is None
     trigger = os.getenv('ph_trigger_pipeline')
     logging.basicConfig(level=log_level, format='%(levelname)-7s %(message)s')
 
+    phabtalk = PhabTalk(os.getenv('CONDUIT_TOKEN'), dry_run_updates=(os.getenv('ph_dry_run_report') is not None))
+    rev = phabtalk.get_revision(int(revision_id))
+    user_id = rev.get('authorPHID')
+    logging.debug(f'authorPHID {user_id}')
+    if user_id is None:
+        logging.error('cannot find author of the revision')
+        sys.exit(1)
+    projects = phabtalk.user_projects(user_id)
+    logging.info(f'user projects: {", ".join(projects)}')
     # Cancel any existing builds.
     # Do this before setting own 'ph_buildable_revision'.
     try:
@@ -43,8 +55,17 @@ if __name__ == '__main__':
     if trigger is None:
         trigger = 'premerge-checks'
 
-    steps = []
-    steps.append({
+    env = {
+        'ph_scripts_refspec': '${BUILDKITE_BRANCH}',
+        'ph_user_project_slugs': ",".join(projects),
+        # TODO: those two are for "apply_patch.sh". Maybe just look for "ph_" env in patch_diff.py?
+        'LOG_LEVEL': log_level,
+        'BASE_COMMIT': base_commit,
+    }
+    for e in os.environ:
+        if e.startswith('ph_'):
+            env[e] = os.getenv(e)
+    steps = [{
         'label': 'create branch',
         'key': 'create-branch',
         'commands': [
@@ -53,11 +74,8 @@ if __name__ == '__main__':
         ],
         'agents': {'queue': 'service'},
         'timeout_in_minutes': 20,
-        'env': {
-            'LOG_LEVEL': log_level,
-            'BASE_COMMIT': base_commit,
-        }
-    })
+        'env': env
+    }]
     if run_build:
         trigger_build_step = {
             'trigger': trigger,
@@ -66,14 +84,8 @@ if __name__ == '__main__':
             'depends_on': 'create-branch',
             'build': {
                 'branch': f'phab-diff-{diff_id}',
-                'env': {},
+                'env': env,
             },
         }
-        for e in os.environ:
-            if e.startswith('ph_'):
-                trigger_build_step['build']['env'][e] = os.getenv(e)
-        # Set scripts source from the current build if it's not yet defined.
-        if 'ph_scripts_refspec' not in trigger_build_step['build']['env']:
-            trigger_build_step['build']['env']['ph_scripts_refspec'] = '${BUILDKITE_BRANCH}'
         steps.append(trigger_build_step)
     print(yaml.dump({'steps': steps}))
