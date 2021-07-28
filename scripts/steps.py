@@ -88,7 +88,7 @@ def bazel(modified_files: Set[str]) -> List:
             logging.info('bazel build is skipped as "bazel_build" is not listed in user projects and no files in '
                          'utils/bazel/ are modified')
             return []
-    agents = {'queue': 'llvm-bazel'}
+    agents = {'queue': 'llvm-bazel-premerge'}
     t = os.getenv('ph_bazel_agents')
     if t is not None:
         agents = json.loads(t)
