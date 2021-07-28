@@ -139,7 +139,8 @@ class ChooseProjects:
         unmapped_changes = False
         for changed_file in changed_files:
             project = changed_file.split('/', maxsplit=1)
-            if project == 'utils':
+            # There is no utils project.
+            if project[0] == 'utils':
                 continue
             if (project is None) or (project[0] not in self.all_projects):
                 unmapped_changes = True
