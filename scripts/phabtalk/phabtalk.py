@@ -23,11 +23,13 @@ import argparse
 
 import backoff
 from phabricator import Phabricator
+from benedict import benedict
 
 
 class PhabTalk:
     """Talk to Phabricator to upload build results.
        See https://secure.phabricator.com/conduit/method/harbormaster.sendmessage/
+       You might want to use it as it provides retries on most of the calls.
     """
 
     def __init__(self, token: Optional[str], host: Optional[str] = 'https://reviews.llvm.org/api/',
@@ -46,6 +48,11 @@ class PhabTalk:
         """Get the revision ID for a diff from Phabricator."""
         result = self._phab.differential.querydiffs(ids=[diff])
         return 'D' + result[diff]['revisionID']
+
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
+    def get_diff(self, diff_id: int):
+        """Get a diff from Phabricator based on its diff id."""
+        return self._phab.differential.getdiff(diff_id=diff_id)
 
     def comment_on_diff(self, diff_id: str, text: str):
         """Add a comment to a differential based on the diff_id"""
@@ -143,6 +150,27 @@ class PhabTalk:
             logging.warning('PHID is not provided, cannot create URL artifact')
             return
         self.create_artifact(phid, str(uuid.uuid4()), 'uri', {'uri': url, 'ui.external': True, 'name': name})
+
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
+    def user_projects(self, user_phid: str) -> List[str]:
+        """Returns slugs of all projects user has a membership."""
+        projects = benedict(self._phab.project.search(constraints={'members': [user_phid]}))
+        slugs = []
+        for p in projects.get('data', []):
+            slug = benedict(p).get('fields.slug')
+            if slug:
+                slugs.append(p['fields']['slug'])
+        return slugs
+
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
+    def get_revision(self, revision_id: int):
+        """Get a revision from Phabricator based on its revision id."""
+        return self._phab.differential.query(ids=[revision_id])[0]
+
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
+    def get_diff(self, diff_id: int):
+        """Get a diff from Phabricator based on its diff id."""
+        return self._phab.differential.getdiff(diff_id=diff_id)
 
 
 class Step:

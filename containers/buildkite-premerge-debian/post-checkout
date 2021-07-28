@@ -16,7 +16,8 @@
 
 set -eu
 
-# Run prune as git will start to complain about
+# Run prune as git will start to complain "warning: There are too many unreachable loose objects; run 'git prune' to remove them.".
+# That happens as we routinely drop old branches.
 git prune
 if [ -f ".git/gc.log" ]; then
   echo ".git/gc.log exist"

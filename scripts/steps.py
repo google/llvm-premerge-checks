@@ -17,7 +17,7 @@ import io
 import json
 import logging
 import os
-from typing import List
+from typing import List, Set
 
 from exec_utils import watch_shell
 import yaml
@@ -73,6 +73,40 @@ def generic_linux(projects: str, check_diff: bool) -> List:
         ]},
     }
     return [linux_buld_step]
+
+
+def bazel(modified_files: Set[str]) -> List:
+    if os.getenv('ph_skip_bazel') is not None:
+        logging.info('bazel build is skipped as "ph_skip_bazel" is set')
+        return []
+    updated_build = any(s.startswith('utils/bazel/') for s in modified_files)
+    if updated_build:
+        logging.info('files in utils/bazel/ modified, will trigger bazel build')
+    else:
+        user_projects = os.getenv('ph_user_project_slugs', '').split(',')
+        if 'bazel_build' not in user_projects:
+            logging.info('bazel build is skipped as "bazel_build" is not listed in user projects and no files in '
+                         'utils/bazel/ are modified')
+            return []
+    agents = {'queue': 'llvm-bazel'}
+    t = os.getenv('ph_bazel_agents')
+    if t is not None:
+        agents = json.loads(t)
+    return [{
+        'label': ':bazel: bazel',
+        'key': 'bazel',
+        'commands': [
+            'set -eu',
+            'cd utils/bazel',
+            'bazel query //... + @llvm-project//... | xargs bazel test --config=generic_clang --config=rbe --test_output=errors --test_tag_filters=-nobuildkite --build_tag_filters=-nobuildkite',
+        ],
+        'agents': agents,
+        'timeout_in_minutes': 120,
+        'retry': {'automatic': [
+            {'exit_status': -1, 'limit': 2},  # Agent lost
+            {'exit_status': 255, 'limit': 2},  # Forced agent shutdown
+        ]},
+    }]
 
 
 def generic_windows(projects: str) -> List:

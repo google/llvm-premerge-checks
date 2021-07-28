@@ -19,7 +19,7 @@ import os
 from buildkite_utils import annotate, feedback_url, set_metadata
 from choose_projects import ChooseProjects
 import git
-from steps import generic_linux, generic_windows, from_shell_output, checkout_scripts
+from steps import generic_linux, generic_windows, from_shell_output, checkout_scripts, bazel
 import yaml
 
 steps_generators = [
@@ -73,6 +73,7 @@ if __name__ == '__main__':
     if os.getenv('ph_skip_generated') is None:
         for gen in steps_generators:
             steps.extend(from_shell_output(gen))
+    steps.extend(bazel(modified_files))
 
     if phid is None:
         logging.warning('ph_target_phid is not specified. Skipping "Report" step')

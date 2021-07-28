@@ -219,7 +219,7 @@ class ApplyPatch:
 
     @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
     def get_diff(self, diff_id: int):
-        """Get a diff from Phabricator based on it's diff id."""
+        """Get a diff from Phabricator based on its diff id."""
         return self.phab.differential.getdiff(diff_id=diff_id)
 
     @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
