@@ -13,9 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Script runs in checked out llvm-project directory.
+
 import os
 
-from steps import generic_linux, generic_windows, from_shell_output
+from steps import generic_linux, generic_windows, from_shell_output, extend_steps_env
+from sync_fork import sync_fork
+import git
 import yaml
 
 steps_generators = [
@@ -27,7 +31,18 @@ if __name__ == '__main__':
     no_cache = os.getenv('ph_no_cache') is not None
     log_level = os.getenv('ph_log_level', 'WARNING')
     notify_emails = list(filter(None, os.getenv('ph_notify_emails', '').split(',')))
+    # Syncing LLVM fork so any pipelines started from upstream llvm-project#
+    # but then triggered a build on fork will observe the commit.
+    sync_fork(os.path.join(os.getenv('BUILDKITE_BUILD_PATH'), 'llvm-project-fork'), [os.getenv('BUILDKITE_BRANCH'), 'main'])
     steps = []
+
+    env = {}
+    for e in os.environ:
+        if e.startswith('ph_'):
+            env[e] = os.getenv(e)
+    repo = git.Repo('.')
+    env['ph_commit_sha'] = repo.head.commit.hexsha
+
     steps.extend(generic_linux(
         os.getenv('ph_projects', 'llvm;clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;openmp;polly;flang'),
         False))
@@ -39,10 +54,14 @@ if __name__ == '__main__':
         os.getenv('ph_projects', 'llvm;clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;polly;flang')))
 
     if os.getenv('ph_skip_generated') is None:
+        e = os.environ.copy()
+        # BUILDKITE_COMMIT might be an alias, e.g. "HEAD". Resolve it to make the build hermetic.
+        e["BUILDKITE_COMMIT"] = repo.head.commit.hexsha
         for gen in steps_generators:
-            steps.extend(from_shell_output(gen))
+            steps.extend(from_shell_output(gen, env=e))
 
     notify = []
     for e in notify_emails:
         notify.append({'email': e})
+    extend_steps_env(steps, env)
     print(yaml.dump({'steps': steps, 'notify': notify}))
