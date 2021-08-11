@@ -13,13 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Script runs in checked out llvm-project directory.
+
 import logging
 import os
 
 from buildkite_utils import annotate, feedback_url, set_metadata
 from choose_projects import ChooseProjects
 import git
-from steps import generic_linux, generic_windows, from_shell_output, checkout_scripts, bazel
+from steps import generic_linux, generic_windows, from_shell_output, checkout_scripts, bazel, extend_steps_env
 import yaml
 
 steps_generators = [
@@ -42,8 +44,14 @@ if __name__ == '__main__':
     set_metadata('ph_buildable_diff', os.getenv("ph_buildable_diff"))
     set_metadata('ph_buildable_revision', os.getenv('ph_buildable_revision'))
     set_metadata('ph_build_id', os.getenv("ph_build_id"))
-    # List all affected projects.
+
+    env = {}
+    for e in os.environ:
+        if e.startswith('ph_'):
+            env[e] = os.getenv(e)
     repo = git.Repo('.')
+    env['ph_commit_sha'] = repo.head.commit.hexsha
+    # List all affected projects.
     patch = repo.git.diff("HEAD~1")
     cp = ChooseProjects('.')
     modified_files = cp.get_changed_files(patch)
@@ -71,8 +79,11 @@ if __name__ == '__main__':
         steps.extend(generic_windows(';'.join(sorted(windows_projects))))
     # Add custom checks.
     if os.getenv('ph_skip_generated') is None:
+        e = os.environ.copy()
+        # BUILDKITE_COMMIT might be an alias, e.g. "HEAD". Resolve it to make the build hermetic.
+        e["BUILDKITE_COMMIT"] = repo.head.commit.hexsha
         for gen in steps_generators:
-            steps.extend(from_shell_output(gen))
+            steps.extend(from_shell_output(gen, env=e))
     steps.extend(bazel(modified_files))
 
     if phid is None:
@@ -95,4 +106,5 @@ if __name__ == '__main__':
         }
         steps.append(report_step)
 
+    extend_steps_env(steps, env)
     print(yaml.dump({'steps': steps}))

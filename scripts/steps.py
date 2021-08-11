@@ -17,7 +17,7 @@ import io
 import json
 import logging
 import os
-from typing import List, Set
+from typing import List, Set, Dict
 
 from exec_utils import watch_shell
 import yaml
@@ -153,7 +153,7 @@ def generic_windows(projects: str) -> List:
     return [windows_buld_step]
 
 
-def from_shell_output(command) -> []:
+def from_shell_output(command, **kwargs) -> []:
     """
     Executes shell command and parses stdout as multidoc yaml file, see
     https://buildkite.com/docs/agent/v3/cli-pipeline#pipeline-format.
@@ -165,7 +165,7 @@ def from_shell_output(command) -> []:
     logging.debug(f'invoking "{path}"')
     out = io.BytesIO()
     err = io.BytesIO()
-    rc = watch_shell(out.write, err.write, path)
+    rc = watch_shell(out.write, err.write, path, **kwargs)
     logging.debug(f'exit code: {rc}, stdout: "{out.getvalue().decode()}", stderr: "{err.getvalue().decode()}"')
     steps = []
     if rc != 0:
@@ -210,3 +210,21 @@ def checkout_scripts(target_os: str, scripts_refspec: str) -> []:
         'pip install -q -r $${SRC}/scripts/requirements.txt',
         'cd "$$BUILDKITE_BUILD_CHECKOUT_PATH"',
     ]
+
+
+def extend_dict(target: Dict, extra: Dict) -> Dict:
+    if not target:
+        return extra
+    for k in extra:
+        if k in target:
+            continue
+        target[k] = extra[k]
+    return target
+
+
+def extend_steps_env(steps: List[Dict], env: Dict):
+    for s in steps:
+        if 'commands' in s:
+            s['env'] = extend_dict(s.get('env'), env)
+        if 'build' in s:
+            s['build']['env'] = extend_dict(s['build'].get('env'), env)
