@@ -49,14 +49,25 @@ RUN pip install psutil
 # install python dependencies for the scripts
 RUN pip install -r https://raw.githubusercontent.com/google/llvm-premerge-checks/main/scripts/requirements.txt
 
+RUN curl -LO https://github.com/mstorsjo/llvm-mingw/releases/download/20211002/llvm-mingw-20211002-ucrt-x86_64.zip && `
+    powershell Expand-Archive llvm-mingw-*-ucrt-x86_64.zip -DestinationPath . && `
+    del llvm-mingw-*-ucrt-x86_64.zip && `
+    ren llvm-mingw-20211002-ucrt-x86_64 llvm-mingw
+
 # configure Python encoding
 ENV PYTHONIOENCODING=UTF-8
 
 # update the path variable    
 # C:\Program Files\Git\usr\bin contains a usable bash and other unix tools.
+# C:\llvm-mingw\bin contains Clang configured for mingw targets and
+#     corresponding sysroots. Both the 'llvm' package (with Clang defaulting
+#     to MSVC targets) and this directory contains executables named
+#     'clang.exe' - add this last to let the other one have precedence.
+#     To use these compilers, use the triple prefixed form, e.g.
+#     x86_64-w64-mingw32-clang.
 RUN powershell -Command `
     [System.Environment]::SetEnvironmentVariable('PATH', `
-    [System.Environment]::GetEnvironmentVariable('PATH', 'machine') + ';C:\Program Files\Git\usr\bin', `
+    [System.Environment]::GetEnvironmentVariable('PATH', 'machine') + ';C:\Program Files\Git\usr\bin;C:\llvm-mingw\bin', `
     'machine')
 
 # use this folder to store the worksapce'
