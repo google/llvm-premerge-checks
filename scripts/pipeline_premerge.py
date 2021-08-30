@@ -50,7 +50,6 @@ if __name__ == '__main__':
         if e.startswith('ph_'):
             env[e] = os.getenv(e)
     repo = git.Repo('.')
-    env['ph_commit_sha'] = repo.head.commit.hexsha
     # List all affected projects.
     patch = repo.git.diff("HEAD~1")
     cp = ChooseProjects('.')
