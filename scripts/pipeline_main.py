@@ -41,8 +41,6 @@ if __name__ == '__main__':
         if e.startswith('ph_'):
             env[e] = os.getenv(e)
     repo = git.Repo('.')
-    env['ph_commit_sha'] = repo.head.commit.hexsha
-
     steps.extend(generic_linux(
         os.getenv('ph_projects', 'llvm;clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;openmp;polly;flang'),
         False))
@@ -56,7 +54,8 @@ if __name__ == '__main__':
     if os.getenv('ph_skip_generated') is None:
         e = os.environ.copy()
         # BUILDKITE_COMMIT might be an alias, e.g. "HEAD". Resolve it to make the build hermetic.
-        e["BUILDKITE_COMMIT"] = repo.head.commit.hexsha
+        if ('BUILDKITE_COMMIT' not in env) or (env['BUILDKITE_COMMIT'] == "HEAD"):
+            env['BUILDKITE_COMMIT'] = repo.head.commit.hexsha
         for gen in steps_generators:
             steps.extend(from_shell_output(gen, env=e))
 
