@@ -75,23 +75,25 @@ def generic_linux(projects: str, check_diff: bool) -> List:
     return [linux_buld_step]
 
 
-def bazel(modified_files: Set[str]) -> List:
+def bazel(modified_files: Set[str], force: bool = False) -> List:
     if os.getenv('ph_skip_bazel') is not None:
         logging.info('bazel build is skipped as "ph_skip_bazel" is set')
         return []
     updated_build = any(s.startswith('utils/bazel/') for s in modified_files)
-    if updated_build:
-        logging.info('files in utils/bazel/ modified, will trigger bazel build')
-    else:
-        user_projects = os.getenv('ph_user_project_slugs', '').split(',')
-        if 'bazel_build' not in user_projects:
-            logging.info('bazel build is skipped as "bazel_build" is not listed in user projects and no files in '
-                         'utils/bazel/ are modified')
-            return []
+    if not force:
+        if updated_build:
+            logging.info('files in utils/bazel/ modified, will trigger bazel build')
+        else:
+            user_projects = os.getenv('ph_user_project_slugs', '').split(',')
+            if 'bazel_build' not in user_projects:
+                logging.info('bazel build is skipped as "bazel_build" is not listed in user projects and no files in '
+                             'utils/bazel/ are modified')
+                return []
     agents = {'queue': 'llvm-bazel-premerge'}
     t = os.getenv('ph_bazel_agents')
     if t is not None:
         agents = json.loads(t)
+        
     return [{
         'label': ':bazel: bazel',
         'key': 'bazel',

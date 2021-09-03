@@ -17,7 +17,7 @@
 
 import os
 
-from steps import generic_linux, generic_windows, from_shell_output, extend_steps_env
+from steps import generic_linux, generic_windows, from_shell_output, extend_steps_env, bazel
 from sync_fork import sync_fork
 import git
 import yaml
@@ -50,7 +50,7 @@ if __name__ == '__main__':
     #  two placess).
     steps.extend(generic_windows(
         os.getenv('ph_projects', 'llvm;clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;polly;flang')))
-
+    steps.extend(bazel([], force=True))
     if os.getenv('ph_skip_generated') is None:
         e = os.environ.copy()
         # BUILDKITE_COMMIT might be an alias, e.g. "HEAD". Resolve it to make the build hermetic.
