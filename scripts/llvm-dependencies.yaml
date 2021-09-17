@@ -43,7 +43,7 @@ dependencies:
   polly: 
     - llvm
   pstl: []
-  debuginfo-tests:
+  cross-project-tests:
     - clang
     - lld
 
@@ -53,7 +53,7 @@ allprojects:
   - clang
   - clang-tools-extra
   - compiler-rt
-  - debuginfo-tests
+  - cross-project-tests
   - flang
   - libc
   - libclc
@@ -78,7 +78,7 @@ excludedProjects:
     - libcxx  # no windows support
     - libcxxabi  # no windows support
     - openmp # TODO: check: kuhnel has trouble with the Perl installation
-    - debuginfo-tests # test failing
+    - cross-project-tests # test failing
     - polly # test failing
     # test stuck, needs to be killed manually: instrprof-multiprocess.test
     - compiler-rt
@@ -86,11 +86,11 @@ excludedProjects:
     - libcxx  # has custom checks
     - libcxxabi  # has custom checks
     # tests keep failing:
-    # debuginfo-tests :: llgdb-tests/asan-deque.cpp
-    # debuginfo-tests :: llgdb-tests/asan.c
-    # debuginfo-tests :: llgdb-tests/safestack.c
-    # debuginfo-tests :: llvm-prettyprinters/gdb/llvm-support.gdb
-    - debuginfo-tests
+    # cross-project-tests :: llgdb-tests/asan-deque.cpp
+    # cross-project-tests :: llgdb-tests/asan.c
+    # cross-project-tests :: llgdb-tests/safestack.c
+    # cross-project-tests :: llvm-prettyprinters/gdb/llvm-support.gdb
+    - cross-project-tests
     # 00:57:27.087  Failing Tests (45):
     #   00:57:27.087    lldb-api :: commands/expression/import-std-module/basic/TestImportStdModule.py
     #   00:57:27.087    lldb-api :: commands/expression/import-std-module/conflicts/TestStdModuleWithConflicts.py
