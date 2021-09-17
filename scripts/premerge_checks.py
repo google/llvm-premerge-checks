@@ -33,6 +33,8 @@ from buildkite_utils import upload_file, annotate, strip_emojis
 from exec_utils import watch_shell, if_not_matches, tee
 from phabtalk.phabtalk import Report, PhabTalk, Step
 
+from choose_projects import ChooseProjects
+
 
 def ninja_all_report(step: Step, _: Report):
     step.reproduce_commands.append('ninja all')
@@ -52,6 +54,16 @@ def ninja_check_all_report(step: Step, _: Report):
         sys.stderr.buffer.write,
         'ninja check-all', cwd=build_dir)
     logging.debug(f'ninja check-all: returned {rc}')
+    step.set_status_from_exit_code(rc)
+
+def ninja_check_projects_report(step: Step, _: Report, checks: str):
+    print('Full log will be available in Artifacts "ninja-check.log"', flush=True)
+    step.reproduce_commands.append(f'ninja {checks}')
+    rc = watch_shell(
+        sys.stdout.buffer.write,
+        sys.stderr.buffer.write,
+        f'ninja {checks}', cwd=build_dir)
+    logging.debug(f'ninja {checks}: returned {rc}')
     step.set_status_from_exit_code(rc)
 
 
@@ -76,7 +88,7 @@ def run_step(name: str, report: Report, thunk: Callable[[Step, Report], None]) -
 
 def cmake_report(projects: str, step: Step, _: Report):
     global build_dir
-    cmake_result, build_dir, cmake_artifacts, commands = run_cmake.run(projects, os.getcwd())
+    cmake_result, build_dir, cmake_artifacts, commands = run_cmake.run(projects, repo_path=os.getcwd())
     for file in cmake_artifacts:
         if os.path.exists(file):
             shutil.copy2(file, artifacts_dir)
@@ -94,12 +106,14 @@ def as_dict(obj):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Runs premerge checks8')
     parser.add_argument('--log-level', type=str, default='WARNING')
+    parser.add_argument('--build-and-test-all', action='store_true',
+                        help="Run `ninja all` and `ninja check-all`, instead of "
+                        "the default of running `ninja check-{project}`.")
     parser.add_argument('--check-clang-format', action='store_true')
     parser.add_argument('--check-clang-tidy', action='store_true')
     parser.add_argument('--projects', type=str, default='detect',
-                        help="Projects to select, either a list or projects like 'clang;libc', or "
-                             "'detect' to automatically infer proejcts from the diff, or "
-                             "'default' to add all enabled projects")
+                        help="Projects to test as a list of projects like 'clang;libc'."
+                        " Dependent projects are automatically added to the CMake invocation.")
     args = parser.parse_args()
     logging.basicConfig(level=args.log_level, format='%(levelname)-7s %(message)s')
 
@@ -116,12 +130,24 @@ if __name__ == '__main__':
     report.name = step_key
     report.success = True
 
-    cmake = run_step('cmake', report, lambda s, r: cmake_report(args.projects, s, r))
+    projects = set(args.projects.split(";"))
+    cp = ChooseProjects(None)
+    dependencies = cp.get_dependencies(projects)
+    logging.info(f"Dependencies: {dependencies}")
+    enabled_projects = ";".join(dependencies.union(projects))
+
+    cmake = run_step('cmake', report, lambda s, r: cmake_report(enabled_projects, s, r))
     commands_in_build = True
     if cmake.success:
-        ninja_all = run_step('ninja all', report, ninja_all_report)
-        if ninja_all.success:
-            run_step('ninja check-all', report, ninja_check_all_report)
+        if args.build_and_test_all:
+            ninja_all = run_step('ninja all', report, ninja_all_report)
+            if ninja_all.success:
+                run_step('ninja check-all', report, ninja_check_all_report)
+        else:
+            checks = " ".join(cp.get_check_targets(projects))
+            logging.info(f"Running checks: {checks}")
+            report_lambda: Callable[Step, Report] = lambda s, r: ninja_check_projects_report(s, r, checks)
+            run_step(f"ninja {checks}", report, report_lambda)
         if args.check_clang_tidy:
             if commands_in_build:
                 s = Step('')

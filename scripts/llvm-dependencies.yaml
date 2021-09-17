@@ -46,25 +46,27 @@ dependencies:
 
 # List of all projects in the LLVM monorepository. This list is taken from
 # llvm/CMakeLists.txt in "set(LLVM_ALL_PROJECTS ..."
+# The value for all project is the list of targets to tests when this project
+# is affected by a patch.
 allprojects:
-  - clang
-  - clang-tools-extra
-  - compiler-rt
-  - cross-project-tests
-  - flang
-  - libc
-  - libclc
-  - libcxx
-  - libcxxabi
-  - libunwind
-  - lld
-  - lldb
-  - mlir
-  - openmp
-  - parallel-libs
-  - polly
-  - pstl
-  - llvm
+  clang: ["check-clang"]
+  clang-tools-extra: ["check-clang-tools"]
+  compiler-rt: ["check-all"]  # check-compiler-rt seems to exist only in standalone builds.
+  cross-project-tests: ["check-cross-project"]
+  flang: ["check-flang"]
+  libc: ["check-libc"]
+  libclc: ["check-all"] # There does not seem to be a more specific target.
+  libcxx: ["check-cxx"]
+  libcxxabi: ["check-cxxabi"]
+  libunwind: ["check-unwind"]
+  lld: ["check-lld"]
+  lldb: ["check-all"] # FIXME: `check-lldb` may not include every lldb tests?
+  mlir: ["check-mlir"]
+  openmp: ["check-all"] # There does not seem to be a more specific target.
+  parallel-libs: ["check-all"]
+  polly: ["check-polly-tests"]
+  pstl: ["check-all"] # There does not seem to be a more specific target.
+  llvm: ["check-llvm"]
 
 # projects excluded from automatic configuration as they could not be built
 excludedProjects:

@@ -60,11 +60,19 @@ class ChooseProjects:
         for user, used_list in self.dependencies.items():
             for used in used_list:
                 self.usages.setdefault(used, []).append(user)
-        self.all_projects = self.config['allprojects']
+        self.all_projects = self.config['allprojects'].keys()
 
     def get_excluded(self, target: str) -> Set[str]:
         excluded = self.config['excludedProjects'][target]
         return set(excluded if excluded is not None else [])
+
+    def get_check_targets(self, affected_projects: Set[str]) -> Set[str]:
+        """Return the `check-xxx` targets to pass to ninja for the given list of projects"""
+        targets = set()
+        all_projects = self.config['allprojects']
+        for project in affected_projects:
+            targets.update(set(all_projects[project]))
+        return targets
 
     @staticmethod
     def _detect_os() -> str:
@@ -73,7 +81,7 @@ class ChooseProjects:
             return 'windows'
         return 'linux'
 
-    def choose_projects(self, patch: str = None) -> List[str]:
+    def choose_projects(self, patch: str = None, current_os: str = None) -> List[str]:
         """List all touched project with all projects that they depend on and also
         all projects that depend on them"""
         if self.llvm_dir is None:
@@ -90,23 +98,37 @@ class ChooseProjects:
             logging.warning('There were changes that could not be mapped to a project.'
                             'Building all projects instead!')
             return self.FALLBACK_PROJECTS
-        return self.extend_projects(changed_projects)
+        return self.extend_projects(changed_projects, current_os)
 
-    def extend_projects(self, projects: Set[str]) -> List[str]:
+    def extend_projects(self, projects: Set[str], current_os : str = None) -> List[str]:
         logging.info(f'projects: {projects}')
+        if not current_os:
+            current_os = self._detect_os()
+        excluded_projects = self.get_excluded(current_os)
         affected_projects = self.get_affected_projects(projects)
         logging.info(f'with affected projects: {affected_projects}')
-        affected_projects = self.add_dependencies(affected_projects)
-        logging.info(f'with dependencies: {affected_projects}')
-        to_exclude = affected_projects.intersection(self.get_excluded(self._detect_os()))
-        if len(to_exclude) != 0:
-            affected_projects = affected_projects - to_exclude
-            logging.warning(f'{to_exclude} projects are excluded')
-            logging.info(f'without excluded: {affected_projects}')
-        return sorted(affected_projects)
+        to_exclude = affected_projects.intersection(excluded_projects)
+        if len(to_exclude):
+            logging.warning(f'{to_exclude} projects are excluded on {current_os}')
+        affected_projects = affected_projects - to_exclude
+        all_dependencies = set()
+        for project in affected_projects:
+            dependencies = self.get_dependencies(affected_projects)
+            logging.debug(f'> project {project} with dependencies: {dependencies}')
+            to_exclude = dependencies.intersection(excluded_projects)
+            if len(to_exclude) != 0:
+                logging.warning(f'Excluding project {project} because of excluded dependencies {to_exclude}')
+                affected_projects = affected_projects - project
+            else:
+                all_dependencies.update(dependencies)
+        logging.info(f'full dependencies: {all_dependencies}')
+        return sorted(affected_projects), sorted(all_dependencies)
 
     def run(self):
-        print(';'.join(self.choose_projects()))
+        affected_projects, dependencies = self.choose_projects()
+        print("Affected:", ';'.join(affected_projects))
+        print("Dependencies:", ';'.join(dependencies))
+        print("Check targets:", ';'.join(self.get_check_targets(affected_projects)))
         return 0
 
     def match_projects_dirs(self) -> bool:
@@ -116,7 +138,7 @@ class ChooseProjects:
         subdirs = os.listdir(self.llvm_dir)
         for project in self.all_projects:
             if project not in subdirs:
-                logging.error('Project no found in LLVM root folder: {}'.format(project))
+                logging.error('Project not found in LLVM root folder: {}'.format(project))
                 return False
         return True
 
@@ -135,6 +157,7 @@ class ChooseProjects:
 
     def get_changed_projects(self, changed_files: Set[str]) -> Tuple[Set[str], bool]:
         """Get list of projects affected by the change."""
+        logging.info("Get list of projects affected by the change.")
         changed_projects = set()
         unmapped_changes = False
         for changed_file in changed_files:
@@ -167,21 +190,24 @@ class ChooseProjects:
         logging.info(f'added {affected_projects - changed_projects} projects as they are affected')
         return affected_projects
 
-    def add_dependencies(self, projects: Set[str]) -> Set[str]:
-        """Return projects and their dependencies.
+    def get_dependencies(self, projects: Set[str]) -> Set[str]:
+        """Return transitive dependencies for a given project.
 
-        All all dependencies to `projects` so that they can be built.
+        These are the required dependencies for given `projects` so that they can be built.
         """
-        result = set(projects)
-        last_len = -1
-        while len(result) != last_len:
-            last_len = len(result)
-            changes = set()
-            for project in result:
-                if project in self.dependencies:
-                    changes.update(self.dependencies[project])
-            result.update(changes)
-        return result
+        all_dependencies = set()
+        # Recursive call to add a project and all its dependencies to `all_dependencies`.
+        def add_dependencies_for_project(project: str):
+            if project in all_dependencies:
+                return
+            if project in self.dependencies:
+                for dependent in self.dependencies[project]:
+                    if dependent not in projects:
+                        all_dependencies.add(dependent)
+                        add_dependencies_for_project(dependent)
+        for project in projects:
+            add_dependencies_for_project(project)
+        return all_dependencies
 
     def get_all_enabled_projects(self) -> List[str]:
         """Get list of all not-excluded projects for current platform."""
@@ -191,7 +217,7 @@ class ChooseProjects:
 if __name__ == "__main__":
     logging.basicConfig(filename='choose_projects.log', level=logging.INFO)
     parser = argparse.ArgumentParser(
-        description='Compute the projects affected by a change.')
+        description='Compute the projects affected by a change. A patch file is expected on stdin.')
     parser.add_argument('llvmdir', default='.')
     args = parser.parse_args()
     chooser = ChooseProjects(args.llvmdir)

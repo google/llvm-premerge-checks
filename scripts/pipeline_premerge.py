@@ -50,32 +50,21 @@ if __name__ == '__main__':
         if e.startswith('ph_'):
             env[e] = os.getenv(e)
     repo = git.Repo('.')
+    steps = []
     # List all affected projects.
     patch = repo.git.diff("HEAD~1")
     cp = ChooseProjects('.')
-    modified_files = cp.get_changed_files(patch)
-    modified_projects, unmapped_changes = cp.get_changed_projects(modified_files)
-    if unmapped_changes:
-        logging.warning('There were changes that could not be mapped to a project. Checking everything')
-        modified_projects = set(cp.all_projects)
-    logging.info(f'modified projects: {modified_projects}')
-    # Add projects that depend on modified.
-    affected_projects = cp.get_affected_projects(modified_projects)
-    steps = []
-    projects = cp.add_dependencies(affected_projects)
-    logging.info(f'projects with dependencies: {projects}')
-    # Add generic Linux checks.
-    excluded_linux = cp.get_excluded('linux')
-    logging.info(f'excluded for linux: {excluded_linux}')
-    linux_projects = projects - excluded_linux
+
+    linux_projects, dependencies = cp.choose_projects(patch = patch, current_os = "linux")
+    logging.info(f'linux_projects: {linux_projects} (dependencies: {dependencies}')
     if len(linux_projects) > 0:
         steps.extend(generic_linux(';'.join(sorted(linux_projects)), True))
-    # Add generic Windows steps.
-    excluded_windows = cp.get_excluded('windows')
-    logging.info(f'excluded for windows: {excluded_windows}')
-    windows_projects = projects - excluded_windows
+
+    windows_projects, dependencies = cp.choose_projects(patch = patch, current_os = "windows")
+    logging.info(f'windows_projects: {windows_projects} (dependencies: {dependencies}')
     if len(windows_projects) > 0:
         steps.extend(generic_windows(';'.join(sorted(windows_projects))))
+
     # Add custom checks.
     if os.getenv('ph_skip_generated') is None:
         e = os.environ.copy()
@@ -83,6 +72,7 @@ if __name__ == '__main__':
         e["BUILDKITE_COMMIT"] = repo.head.commit.hexsha
         for gen in steps_generators:
             steps.extend(from_shell_output(gen, env=e))
+    modified_files = cp.get_changed_files(patch)
     steps.extend(bazel(modified_files))
 
     if phid is None:
