@@ -32,9 +32,6 @@ dependencies:
   lldb: 
     - clang
     - llvm
-  llgo: 
-    - llvm
-    - clang
   mlir: 
     - llvm
   openmp:
@@ -73,7 +70,6 @@ allprojects:
 excludedProjects:
   windows:
     - lldb
-    - llgo
     - libunwind
     - libcxx  # no windows support
     - libcxxabi  # no windows support
