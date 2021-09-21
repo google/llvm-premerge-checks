@@ -49,7 +49,7 @@ if __name__ == '__main__':
     # TODO: Make this project list be evaluated through "choose_projects"(? as now we define "all" and exclusions in
     #  two placess).
     steps.extend(generic_windows(
-        os.getenv('ph_projects', 'llvm;clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;polly;flang')))
+        os.getenv('ph_projects', 'llvm;clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;mlir;polly;flang')))
     steps.extend(bazel([], force=True))
     if os.getenv('ph_skip_generated') is None:
         e = os.environ.copy()
