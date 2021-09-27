@@ -75,6 +75,7 @@ excludedProjects:
     - libunwind
     - libcxx  # no windows support
     - libcxxabi  # no windows support
+    - libc # no windows support
     - openmp # TODO: check: kuhnel has trouble with the Perl installation
     - cross-project-tests # test failing
     - polly # test failing
