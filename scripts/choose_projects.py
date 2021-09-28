@@ -71,6 +71,9 @@ class ChooseProjects:
         targets = set()
         all_projects = self.config['allprojects']
         for project in affected_projects:
+            if project == "all":
+                targets = set(["check-all"])
+                return targets
             targets.update(set(all_projects[project]))
         return targets
 
@@ -90,14 +93,14 @@ class ChooseProjects:
         llvm_dir = os.path.abspath(os.path.expanduser(self.llvm_dir))
         logging.info('Scanning LLVM in {}'.format(llvm_dir))
         if not self.match_projects_dirs():
-            return self.FALLBACK_PROJECTS
+            return self.FALLBACK_PROJECTS, set()
         changed_files = self.get_changed_files(patch)
         changed_projects, unmapped_changes = self.get_changed_projects(changed_files)
 
         if unmapped_changes:
             logging.warning('There were changes that could not be mapped to a project.'
                             'Building all projects instead!')
-            return self.FALLBACK_PROJECTS
+            return self.FALLBACK_PROJECTS, set()
         return self.extend_projects(changed_projects, current_os)
 
     def extend_projects(self, projects: Set[str], current_os : str = None) -> List[str]:
