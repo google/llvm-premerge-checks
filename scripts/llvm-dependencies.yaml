@@ -27,17 +27,17 @@ dependencies:
   libcxxabi: []
   libclc: []
   libunwind: []
-  lld:  
+  lld:
     - llvm
-  lldb: 
+  lldb:
     - clang
     - llvm
-  mlir: 
+  mlir:
     - llvm
   openmp:
     - clang
   parallel-libs: []
-  polly: 
+  polly:
     - llvm
   pstl: []
   cross-project-tests:
@@ -78,6 +78,8 @@ excludedProjects:
     - openmp # TODO: check: kuhnel has trouble with the Perl installation
     - cross-project-tests # test failing
     - polly # test failing
+    - check-libc
+    - check-cxxabi
     # test stuck, needs to be killed manually: instrprof-multiprocess.test
     - compiler-rt
   linux:
