@@ -1,6 +1,6 @@
 # Status
 
-No known issues :see_no_evil:
+Premerge checks are disabled due a high number of false positives.
 
 # Overview
 
