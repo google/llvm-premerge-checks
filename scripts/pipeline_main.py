@@ -44,9 +44,9 @@ if __name__ == '__main__':
     repo = git.Repo('.')
 
     cp = ChooseProjects(None)
-    linux_projects, _ = cp.get_all_enabled_projects('linux')
+    linux_projects = cp.get_all_enabled_projects('linux')
     steps.extend(generic_linux(os.getenv('ph_projects', ';'.join(linux_projects)), check_diff=False))
-    windows_projects, _ = cp.get_all_enabled_projects('windows')
+    windows_projects = cp.get_all_enabled_projects('windows')
     steps.extend(generic_windows(os.getenv('ph_projects', ';'.join(windows_projects))))
     steps.extend(bazel([], force=True))
     if os.getenv('ph_skip_generated') is None:
