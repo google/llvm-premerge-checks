@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+backoff = "==1.10.0"
+lxml = "==4.6.3"
+pathspec = "==0.8.1"
+phabricator = "==0.8.1"
+pyaml = "==20.4.0"
+requests = "==2.25.1"
+unidiff = "==0.6.0"
+python-benedict = "==0.23.2"
+GitPython = "==3.1.14"
+types-pyyaml = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"

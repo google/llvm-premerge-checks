@@ -23,9 +23,7 @@ import re
 import shutil
 import sys
 import time
-from functools import partial
-from typing import Callable
-
+from typing import Callable, List, Type
 import clang_format_report
 import clang_tidy_report
 import run_cmake
@@ -146,7 +144,7 @@ if __name__ == '__main__':
         else:
             checks = " ".join(cp.get_check_targets(projects))
             logging.info(f"Running checks: {checks}")
-            report_lambda: Callable[Step, Report] = lambda s, r: ninja_check_projects_report(s, r, checks)
+            report_lambda: Callable[[Step, Report], None] = lambda s, r: ninja_check_projects_report(s, r, checks)
             run_step(f"ninja {checks}", report, report_lambda)
         if args.check_clang_tidy:
             if commands_in_build:

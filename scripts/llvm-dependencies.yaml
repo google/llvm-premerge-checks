@@ -20,8 +20,8 @@ dependencies:
     - mlir
     - clang
   libc:
-  - clang
-  - clang-tools-extra
+    - clang
+    - clang-tools-extra
   # FIXME: not sure about 'libcxx' and 'libcxxabi'
   libcxx: []
   libcxxabi: []
@@ -46,8 +46,7 @@ dependencies:
 
 # List of all projects in the LLVM monorepository. This list is taken from
 # llvm/CMakeLists.txt in "set(LLVM_ALL_PROJECTS ..."
-# The value for all project is the list of targets to tests when this project
-# is affected by a patch.
+# The value for all project is the list of ninja targets to run.
 allprojects:
   clang: ["check-clang"]
   clang-tools-extra: ["check-clang-tools"]

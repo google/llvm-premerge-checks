@@ -16,11 +16,12 @@
 # Script runs in checked out llvm-project directory.
 
 import os
-
+from typing import Dict
 from steps import generic_linux, generic_windows, from_shell_output, extend_steps_env, bazel
 from sync_fork import sync_fork
 import git
 import yaml
+from choose_projects import ChooseProjects
 
 steps_generators = [
     '${BUILDKITE_BUILD_CHECKOUT_PATH}/libcxx/utils/ci/buildkite-pipeline-snapshot.sh',
@@ -31,33 +32,30 @@ if __name__ == '__main__':
     no_cache = os.getenv('ph_no_cache') is not None
     log_level = os.getenv('ph_log_level', 'WARNING')
     notify_emails = list(filter(None, os.getenv('ph_notify_emails', '').split(',')))
-    # Syncing LLVM fork so any pipelines started from upstream llvm-project#
+    # Syncing LLVM fork so any pipelines started from upstream llvm-project
     # but then triggered a build on fork will observe the commit.
-    sync_fork(os.path.join(os.getenv('BUILDKITE_BUILD_PATH'), 'llvm-project-fork'), [os.getenv('BUILDKITE_BRANCH'), 'main'])
+    sync_fork(os.path.join(os.getenv('BUILDKITE_BUILD_PATH', ''), 'llvm-project-fork'), [os.getenv('BUILDKITE_BRANCH'), 'main'])
     steps = []
 
-    env = {}
+    env: Dict[str, str] = {}
     for e in os.environ:
         if e.startswith('ph_'):
-            env[e] = os.getenv(e)
+            env[e] = os.getenv(e, '')
     repo = git.Repo('.')
-    steps.extend(generic_linux(
-        os.getenv('ph_projects', 'llvm;clang;clang-tools-extra;libc;libcxx;libcxxabi;lld;libunwind;mlir;openmp;polly;flang'),
-        False))
-    # FIXME: openmp is removed as it constantly fails.
 
-    # TODO: Make this project list be evaluated through "choose_projects"(? as now we define "all" and exclusions in
-    #  two placess).
-    steps.extend(generic_windows(
-        os.getenv('ph_projects', 'llvm;clang;clang-tools-extra;libc;lld;mlir;polly;flang')))
+    cp = ChooseProjects(None)
+    linux_projects, _ = cp.get_all_enabled_projects('linux')
+    steps.extend(generic_linux(os.getenv('ph_projects', ';'.join(linux_projects)), check_diff=False))
+    windows_projects, _ = cp.get_all_enabled_projects('windows')
+    steps.extend(generic_windows(os.getenv('ph_projects', ';'.join(windows_projects))))
     steps.extend(bazel([], force=True))
     if os.getenv('ph_skip_generated') is None:
-        e = os.environ.copy()
+        env = os.environ.copy()
         # BUILDKITE_COMMIT might be an alias, e.g. "HEAD". Resolve it to make the build hermetic.
         if ('BUILDKITE_COMMIT' not in env) or (env['BUILDKITE_COMMIT'] == "HEAD"):
             env['BUILDKITE_COMMIT'] = repo.head.commit.hexsha
         for gen in steps_generators:
-            steps.extend(from_shell_output(gen, env=e))
+            steps.extend(from_shell_output(gen, env=env))
 
     notify = []
     for e in notify_emails:

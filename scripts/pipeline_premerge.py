@@ -17,6 +17,7 @@
 
 import logging
 import os
+from typing import Dict
 
 from buildkite_utils import annotate, feedback_url, set_metadata
 from choose_projects import ChooseProjects
@@ -45,33 +46,33 @@ if __name__ == '__main__':
     set_metadata('ph_buildable_revision', os.getenv('ph_buildable_revision'))
     set_metadata('ph_build_id', os.getenv("ph_build_id"))
 
-    env = {}
+    env: Dict[str, str] = {}
     for e in os.environ:
         if e.startswith('ph_'):
-            env[e] = os.getenv(e)
+            env[e] = os.getenv(e, '')
     repo = git.Repo('.')
     steps = []
     # List all affected projects.
     patch = repo.git.diff("HEAD~1")
     cp = ChooseProjects('.')
 
-    linux_projects, dependencies = cp.choose_projects(patch = patch, current_os = "linux")
-    logging.info(f'linux_projects: {linux_projects} (dependencies: {dependencies}')
+    linux_projects = cp.choose_projects(patch = patch, os_name = "linux")
+    logging.info(f'linux_projects: {linux_projects}')
     if len(linux_projects) > 0:
-        steps.extend(generic_linux(';'.join(sorted(linux_projects)), True))
+        steps.extend(generic_linux(';'.join(linux_projects), check_diff=True))
 
-    windows_projects, dependencies = cp.choose_projects(patch = patch, current_os = "windows")
-    logging.info(f'windows_projects: {windows_projects} (dependencies: {dependencies}')
+    windows_projects = cp.choose_projects(patch = patch, os_name = "windows")
+    logging.info(f'windows_projects: {windows_projects}')
     if len(windows_projects) > 0:
-        steps.extend(generic_windows(';'.join(sorted(windows_projects))))
+        steps.extend(generic_windows(';'.join(windows_projects)))
 
     # Add custom checks.
     if os.getenv('ph_skip_generated') is None:
-        e = os.environ.copy()
+        env = os.environ.copy()
         # BUILDKITE_COMMIT might be an alias, e.g. "HEAD". Resolve it to make the build hermetic.
-        e["BUILDKITE_COMMIT"] = repo.head.commit.hexsha
+        env["BUILDKITE_COMMIT"] = repo.head.commit.hexsha
         for gen in steps_generators:
-            steps.extend(from_shell_output(gen, env=e))
+            steps.extend(from_shell_output(gen, env=env))
     modified_files = cp.get_changed_files(patch)
     steps.extend(bazel(modified_files))
 

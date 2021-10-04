@@ -7,3 +7,4 @@ containers/workspace
 **/.DS_Store
 **/.ipynb_checkpoints
 scripts/metrics/cache.json
+Pipfile.lock
