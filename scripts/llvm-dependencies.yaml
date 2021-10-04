@@ -61,9 +61,9 @@ allprojects:
   lld: ["check-lld"]
   lldb: ["check-all"] # FIXME: `check-lldb` may not include every lldb tests?
   mlir: ["check-mlir"]
-  openmp: ["check-all"] # There does not seem to be a more specific target.
+  openmp: ["check-openmp"]
   parallel-libs: ["check-all"]
-  polly: ["check-polly-tests"]
+  polly: ["check-polly-tests", "check-polly"]
   pstl: ["check-all"] # There does not seem to be a more specific target.
   llvm: ["check-llvm"]
 
@@ -78,7 +78,6 @@ excludedProjects:
     - openmp # TODO: check: kuhnel has trouble with the Perl installation
     - cross-project-tests # test failing
     - polly # test failing
-    - check-libc
     - check-cxxabi
     # test stuck, needs to be killed manually: instrprof-multiprocess.test
     - compiler-rt

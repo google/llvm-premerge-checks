@@ -23,7 +23,7 @@ from phabtalk.phabtalk import PhabTalk
 
 if __name__ == '__main__':
     diff_id = os.getenv("ph_buildable_diff")
-    revision_id = os.getenv("ph_buildable_revision")
+    revision_id = os.getenv("ph_buildable_revision", '')
     log_level = os.getenv('ph_log_level', 'INFO')
     base_commit = os.getenv('ph_base_commit', 'auto')
     run_build = os.getenv('ph_skip_build') is None

@@ -50,12 +50,12 @@ if __name__ == '__main__':
     steps.extend(generic_windows(os.getenv('ph_projects', ';'.join(windows_projects))))
     steps.extend(bazel([], force=True))
     if os.getenv('ph_skip_generated') is None:
-        env = os.environ.copy()
+        gen_env = os.environ.copy()
         # BUILDKITE_COMMIT might be an alias, e.g. "HEAD". Resolve it to make the build hermetic.
         if ('BUILDKITE_COMMIT' not in env) or (env['BUILDKITE_COMMIT'] == "HEAD"):
             env['BUILDKITE_COMMIT'] = repo.head.commit.hexsha
         for gen in steps_generators:
-            steps.extend(from_shell_output(gen, env=env))
+            steps.extend(from_shell_output(gen, env=gen_env))
 
     notify = []
     for e in notify_emails:
