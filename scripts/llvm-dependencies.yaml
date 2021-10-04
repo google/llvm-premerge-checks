@@ -63,7 +63,7 @@ allprojects:
   mlir: ["check-mlir"]
   openmp: ["check-openmp"]
   parallel-libs: ["check-all"]
-  polly: ["check-polly-tests", "check-polly"]
+  polly: ["check-polly-tests", "check-polly"] # TODO: redundant?
   pstl: ["check-all"] # There does not seem to be a more specific target.
   llvm: ["check-llvm"]
 

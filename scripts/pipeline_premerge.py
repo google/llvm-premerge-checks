@@ -68,9 +68,8 @@ if __name__ == '__main__':
 
     # Add custom checks.
     if os.getenv('ph_skip_generated') is None:
-        env = os.environ.copy()
-        # BUILDKITE_COMMIT might be an alias, e.g. "HEAD". Resolve it to make the build hermetic.
-        env["BUILDKITE_COMMIT"] = repo.head.commit.hexsha
+        if os.getenv('BUILDKITE_COMMIT', 'HEAD') == "HEAD":
+            env['BUILDKITE_COMMIT'] = repo.head.commit.hexsha
         for gen in steps_generators:
             steps.extend(from_shell_output(gen, env=env))
     modified_files = cp.get_changed_files(patch)
