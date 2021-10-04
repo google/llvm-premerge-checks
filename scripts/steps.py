@@ -46,7 +46,7 @@ def generic_linux(projects: str, check_diff: bool) -> List:
 
     if check_diff:
         commands.extend([
-            '$${SRC}/scripts/premerge_checks.py --check-clang-format --check-clang-tidy '
+            '$${SRC}/scripts/premerge_checks.py --check-clang-format '
             f'--projects="{projects}" --log-level={log_level}',
         ])
     else:
@@ -93,7 +93,7 @@ def bazel(modified_files: Set[str], force: bool = False) -> List:
     t = os.getenv('ph_bazel_agents')
     if t is not None:
         agents = json.loads(t)
-        
+
     return [{
         'label': ':bazel: bazel',
         'key': 'bazel',
