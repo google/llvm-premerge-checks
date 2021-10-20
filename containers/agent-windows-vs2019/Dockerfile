@@ -40,8 +40,24 @@ RUN powershell -NoProfile -InputFormat None -Command `
 
 # install tools as described in https://llvm.org/docs/GettingStartedVS.html
 # and a few more that were not documented...
-RUN choco install -y ninja git python3
-RUN choco install -y activeperl --version 5.24.3.2404001
+RUN choco install -y ninja git
+# Pin an older version of Python; the current Python 3.10 fails when
+# doing "pip install" for the other dependencies, as it fails to find libxml
+# while compiling some package.
+RUN choco install -y python3 --version 3.9.7
+
+# ActivePerl is currently not installable via Chocolatey, see
+# http://disq.us/p/2ipditb. Install StrawberryPerl instead. Unfortunately,
+# StrawberryPerl not only installs Perl, but also a redundant C/C++ compiler
+# toolchain, and a copy of pkg-config which can cause misdetections for other
+# built products, see
+# https://github.com/StrawberryPerl/Perl-Dist-Strawberry/issues/11 for further
+# details. Remove the redundant and unnecessary parts of the StrawberryPerl
+# install.
+RUN choco install -y strawberryperl && `
+    rmdir /q /s c:\strawberry\c && `
+    del /q c:\strawberry\perl\bin\pkg-config*
+
 # libcxx requires clang(-cl) to be available
 RUN choco install -y sccache llvm
 RUN pip install psutil
