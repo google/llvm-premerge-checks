@@ -36,7 +36,6 @@ dependencies:
     - llvm
   openmp:
     - clang
-  parallel-libs: []
   polly:
     - llvm
   pstl: []
@@ -62,7 +61,6 @@ allprojects:
   lldb: ["check-all"] # FIXME: `check-lldb` may not include every lldb tests?
   mlir: ["check-mlir"]
   openmp: ["check-openmp"]
-  parallel-libs: ["check-all"]
   polly: ["check-polly"]
   pstl: ["check-all"] # There does not seem to be a more specific target.
   llvm: ["check-llvm"]
