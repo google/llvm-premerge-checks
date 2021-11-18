@@ -89,7 +89,7 @@ interact together.
 build and run agents locally.
 
 If you have any questions please contact by [mail](mailto:goncahrov@google.com)
-or find user "goncharov" on [LLVM Discord](https://discord.gg/VrcTUs).
+or find user "goncharov" on [LLVM Discord](https://discord.gg/xS7Z362).
 
 # Additional Information
 
