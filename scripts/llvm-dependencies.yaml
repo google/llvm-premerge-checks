@@ -78,7 +78,6 @@ excludedProjects:
     - check-cxxabi
     # test stuck, needs to be killed manually: instrprof-multiprocess.test
     - compiler-rt
-    - flang # no windows support
   linux:
     - libcxx  # has custom checks
     - libcxxabi  # has custom checks
