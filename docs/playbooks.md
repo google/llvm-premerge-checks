@@ -7,7 +7,7 @@
     + [Buildkite](#buildkite)
   * [Custom environment variables](#custom-environment-variables)
   * [Update HTTP auth credentials](#update-http-auth-credentials)
-  
+
 # Playbooks
 
 ## Development environment
@@ -21,8 +21,8 @@ pip install -r ./scripts/requirements.txt
 ```
 optional:
 ```shell script
-pip install jupyterlab pandas seaborn #  for jupyter labs.  
-```  
+pip install jupyterlab pandas seaborn #  for jupyter labs.
+```
 
 ## Testing scripts locally
 
@@ -36,18 +36,18 @@ It's recommended to test even smallest changes before committing them to the `ma
 
 1. Create a pull request here.
 1. Manually create a buildkite build in the pipeline you are updating and specify
-    environment variable `ph_scripts_refspec="pull/123/head"`. Replace `123` 
-    with your PR number. If you don't have access to create buildkite builds, 
+    environment variable `ph_scripts_refspec="pull/123/head"`. Replace `123`
+    with your PR number. If you don't have access to create buildkite builds,
     please ask a reviewer to do that.
-  
+
    To test "premerge-tests" pipeline pick an existing build and copy "ph_"
    parameters from it, omitting "ph_target_phid" to skip updating an existing
-   review.   
-   
+   review.
+
    See also [custom environment variables](#custom-environment-variables).
 1. Wait for build to complete and maybe attach a link to it to your PR.
 
-To test changes for the pipeline "setup" step please experiment on a copy first. 
+To test changes for the pipeline "setup" step please experiment on a copy first.
 
 ## Deployment to a clean infrastructure
 
@@ -57,7 +57,7 @@ General remarks:
 classified as healthy. Until then, you will only see some generic error
 message.
 
-These are the steps to set up the build server on a clean infrastructure:  
+These are the steps to set up the build server on a clean infrastructure:
 1. Configure the tools on your local machine:
     ```bash
     ./local_setup.sh
@@ -98,8 +98,8 @@ To setup new machine in GCP:
 
 1. Pick a GCP Windows image with Desktop Support.
     * pick a "persistent SSD" as boot Disk. This is much faster.
-    * make sure that you give enough permissions in "Identity and API access" to be able to e.g. push new docker images to GCR. 
-    
+    * make sure that you give enough permissions in "Identity and API access" to be able to e.g. push new docker images to GCR.
+
 1. Format the local SSD partition and use it as workspace.
 1. install [Chocolately](https://chocolatey.org/docs/installation):
     ```powershell
@@ -139,18 +139,18 @@ To setup new machine in GCP:
 1. To deploy container:
     ```powershell
     cd llvm-premerge-checks\containers
-    .\build_deploy.ps1 agent-windows-buildkite    
+    .\build_deploy.ps1 agent-windows-buildkite
     ```
 
-   or 
+   or
 
    ```powershell
    cd llvm-premerge-checks\containers
    .\build_run.ps1 agent-windows-buildkite cmd
    ```
-   
+
    Test this newly uploaded image:
-    
+
       ```powershell
     c:\llvm-premerge-check\scripts\windows_agent_start_buildkite.ps1
     ```
@@ -160,12 +160,12 @@ To setup new machine in GCP:
 To spawn a new Windows agent:
 
 1. Go to the [GCP page](https://pantheon.corp.google.com/compute/instances?project=llvm-premerge-checks&instancessize=50).
-1. Add new windows machine wih OS "Windows Server" and version with "desktop experience" (so you can RDP) and boot disk size ~500 Gb. There is a "windows-agent-template" that might not be up to date. 
-1. Go to the [GCP page](https://pantheon.corp.google.com/compute/instances?project=llvm-premerge-checks&instancessize=50) again 
+1. Add new windows machine wih OS "Windows Server" and version with "desktop experience" (so you can RDP) and boot disk size ~500 Gb. There is a "windows-agent-template" that might not be up to date.
+1. Go to the [GCP page](https://pantheon.corp.google.com/compute/instances?project=llvm-premerge-checks&instancessize=50) again
 1. Login to the new machine via RDP (you will need a RDP client, e.g. Chrome app).
 1. (optional, quality of life) Add a powershell shortcut at desktop with "run as admin" flag. Create a folder with machine name (e.g "w16c2-2") somewhere and click "add new toolbar" on windows toolbar: this way it will be easier to identify which machine you are working with later.
 1. Run these commands in the power shell under admin to bootstrap the Windows machine:
-```powershell 
+```powershell
 Invoke-WebRequest -uri 'https://raw.githubusercontent.com/google/llvm-premerge-checks/main/scripts/windows_agent_bootstrap.ps1' -OutFile c:\windows_agent_bootstrap.ps1
 c:/windows_agent_bootstrap.ps1
 ```
@@ -187,9 +187,9 @@ Most commonly used are:
 - `ph_scripts_refspec`: ("main" by default): refspec branch of llvm-premerge-checks to use. This variable is also used in pipeline "bootstrap" in Buildkite interface. Use "branch-name" for branches and "pull/123/head" for Pull Requests.
 - `ph_dry_run_report`: do not report any results back to Phabricator.
 - `ph_no_cache`: (if set to any value) clear compilation cache before the build.
-- `ph_projects`: which projects to use, "detect" will look on diff to infer the projects, "default" selects all projects.
+- `ph_projects`: which projects to use (semicolon separated), "detect" will look on diff to infer the projects, "default" selects all projects.
 - `ph_notify_email`: comma-separated list of email addresses to be notified when build is complete.
-- `ph_log_level` ("DEBUG", "INFO", "WARNING" (default) or "ERROR"): log level for build scripts. 
+- `ph_log_level` ("DEBUG", "INFO", "WARNING" (default) or "ERROR"): log level for build scripts.
 - `ph_linux_agents`, `ph_windows_agents`: custom JSON constraints on agents. For example, you might put one machine to a custom queue if it's errornous and send jobs to it with `ph_windows_agents={"queue": "custom"}`.
 - `ph_skip_linux`, `ph_skip_windows` (if set to any value): skip build on this OS.
 - `ph_skip_generated`: don't run custom steps generated from within llvm-project.
@@ -213,7 +213,7 @@ kubectl get secret http-auth -n buildkite -o yaml
 # base64 decode it's data to 'auth'.
 echo <data/auth from yaml> | base64 --decode > auth
 # add / update passwords
-htpasswd -b auth <user> <pass> 
+htpasswd -b auth <user> <pass>
 # update secret
 kubectl delete secret http-auth -n buildkite
 kubectl create secret generic http-auth -n buildkite --from-file=./auth
