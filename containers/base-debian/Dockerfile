@@ -8,6 +8,7 @@ RUN echo 'intall build dependencies'; \
         zip wget git \
         cmake gdb build-essential  \
         ninja-build \
+        libelf-dev libffi-dev gcc-multilib \
         ccache \
         python3 python3-psutil \
         python3-pip python3-setuptools \
@@ -15,8 +16,8 @@ RUN echo 'intall build dependencies'; \
         swig python3-dev libedit-dev libncurses5-dev libxml2-dev liblzma-dev golang rsync jq;
 RUN wget https://apt.llvm.org/llvm.sh; \
     chmod +x llvm.sh; \
-    ./llvm.sh 12;\
-    apt install -y clang-format-12 clang-tidy-12
+    ./llvm.sh 13;\
+    apt install -y clang-format-13 clang-tidy-13
 
 RUN echo 'configure locale'; \
     sed --in-place '/en_US.UTF-8/s/^#//' /etc/locale.gen ;\
@@ -30,11 +31,11 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
-RUN ln -s /usr/bin/clang-12 /usr/bin/clang;\
-    ln -s /usr/bin/clang++-12 /usr/bin/clang++;\
-    ln -s /usr/bin/clang-tidy-12 /usr/bin/clang-tidy;\
-    ln -s /usr/bin/clang-tidy-diff-12.py /usr/bin/clang-tidy-diff;\
-    ln -s /usr/bin/clang-format-12 /usr/bin/clang-format;\
-    ln -s /usr/bin/clang-format-diff-12 /usr/bin/clang-format-diff;\
-    ln -s /usr/bin/lld-12 /usr/bin/lld
+RUN ln -s /usr/bin/clang-13 /usr/bin/clang;\
+    ln -s /usr/bin/clang++-13 /usr/bin/clang++;\
+    ln -s /usr/bin/clang-tidy-13 /usr/bin/clang-tidy;\
+    ln -s /usr/bin/clang-tidy-diff-13.py /usr/bin/clang-tidy-diff;\
+    ln -s /usr/bin/clang-format-13 /usr/bin/clang-format;\
+    ln -s /usr/bin/clang-format-diff-13 /usr/bin/clang-format-diff;\
+    ln -s /usr/bin/lld-13 /usr/bin/lld
 
