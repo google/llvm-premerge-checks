@@ -5,7 +5,7 @@ ftfy==6.0.1; python_version >= '3.6'
 gitdb==4.0.7
 gitpython==3.1.17
 idna==2.10
-lxml==4.6.3
+lxml==4.6.5
 mailchecker==4.0.7
 pathspec==0.8.1
 phabricator==0.8.1
