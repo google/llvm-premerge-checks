@@ -4,6 +4,8 @@
 
 dependencies:
   llvm: []
+  bolt:
+    - llvm
   clang:
     - llvm
   clang-tools-extra:
@@ -47,6 +49,7 @@ dependencies:
 # llvm/CMakeLists.txt in "set(LLVM_ALL_PROJECTS ..."
 # The value for all project is the list of ninja targets to run.
 allprojects:
+  bolt: ["check-bolt"]
   clang: ["check-clang"]
   clang-tools-extra: ["check-clang-tools"]
   compiler-rt: ["check-all"]  # check-compiler-rt seems to exist only in standalone builds.
