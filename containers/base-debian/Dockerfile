@@ -13,7 +13,6 @@ RUN echo 'intall build dependencies'; \
         python3 python3-psutil \
         python3-pip python3-setuptools \
         lsb-release software-properties-common \
-        libjemalloc-dev \
         swig python3-dev libedit-dev libncurses5-dev libxml2-dev liblzma-dev golang rsync jq;
 RUN wget https://apt.llvm.org/llvm.sh; \
     chmod +x llvm.sh; \
