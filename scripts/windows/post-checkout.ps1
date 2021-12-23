@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo "running git gc"
-pwd
-git gc
+# As git gc takes non-trivial time on windows, run it only 5% of the time.
+if (( Get-Random -Maximum 100 ) -lt 5 ) {
+  echo "running git gc"
+  pwd
+  git gc
+}
+
