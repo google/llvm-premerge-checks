@@ -4,6 +4,10 @@ Premerge checks are disabled due a high number of false positives.
 
 # Overview
 
+Presentation by Louis Dione on LLVM devmtg 2021 https://youtu.be/B7gB6van7Bw
+
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/B7gB6van7Bw/0.jpg)](https://www.youtube.com/watch?v=B7gB6van7Bw)
+
 The *pre-merge checks* for the [LLVM project](http://llvm.org/) are a
 [continuous integration
 (CI)](https://en.wikipedia.org/wiki/Continuous_integration) workflow. The
