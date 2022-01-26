@@ -88,6 +88,24 @@ These are the steps to set up the build server on a clean infrastructure:
     ```
 1. Configure it
 
+## Running Docker containers
+
+`./containers/build_run.sh` provides a good way to run a container once to check that it builds and contains good package versions. To work with a container and
+persist it state do (taking 'base-debian' as example):
+
+```
+cd ./containers/base-debian
+sudo docker build -t base-debian .
+sudo docker run -it base-debian /bin/bash
+```
+
+to resume it from where you left
+
+```
+sudo docker start -a -i $(sudo docker ps -a -f ancestor=base-debian -q -l)
+```
+
+
 ## Creating docker containers on Windows
 
 If you want to build/update/test docker container for Windows, you need to do this on a Windows machine.
@@ -218,3 +236,23 @@ htpasswd -b auth <user> <pass>
 kubectl delete secret http-auth -n buildkite
 kubectl create secret generic http-auth -n buildkite --from-file=./auth
 ```
+
+## Update github-ssh secret
+
+This Kubernetes stores github ssh access files for llvm.premerge.tests@gmail.com user.
+
+To access it run `kubectl get secret github-ssh -n buildkite -o yaml | tee github-ssh.yam`.
+It has 3 entries: "id_rsa", "id_rsa.pub", "known_hosts".
+If you need to updated it, edit resulting yaml above with updated base 64 values.
+
+To updated "known_hosts" run `ssh-keyscan github.com` and store base64 encoded output in "known_hosts".
+Then run `kubectl apply -f github-ssh.yaml`.
+
+To create this secret from scratch run
+
+`kubectl create secret generic github-ssh --namespace buildkite --from-file ./id_rsa --from-file ./id_rsa.pub --from-file ./known_hosts`
+
+providing all files needed.
+
+Note that containers have to be restarted as ssh settings are copied at startup
+(entrypoint.sh).
