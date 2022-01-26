@@ -27,4 +27,6 @@ arguments:
     # CCACHE is enabled in script iff environment variable `CCACHE_DIR` is set
     - '-D LLVM_ENABLE_LLD=ON'
     - '-D CMAKE_CXX_FLAGS=-gmlt'
+    # Bolt https://github.com/google/llvm-premerge-checks/issues/364#issuecomment-1013952831.
+    - '-DBOLT_CLANG_EXE=/usr/bin/clang -DBOLT_LLD_EXE=/usr/bin/lld'
   windows: []
