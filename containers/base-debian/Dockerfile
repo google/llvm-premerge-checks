@@ -45,5 +45,6 @@ RUN ln -s /usr/bin/clang-13 /usr/bin/clang;\
     ln -s /usr/bin/clang-tidy-diff-13.py /usr/bin/clang-tidy-diff;\
     ln -s /usr/bin/clang-format-13 /usr/bin/clang-format;\
     ln -s /usr/bin/clang-format-diff-13 /usr/bin/clang-format-diff;\
-    ln -s /usr/bin/lld-13 /usr/bin/lld
+    ln -s /usr/bin/lld-13 /usr/bin/lld;\
+    ln -s /usr/bin/ld.lld-13 /usr/bin/ld.lld
 
