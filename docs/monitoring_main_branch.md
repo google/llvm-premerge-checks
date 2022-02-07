@@ -5,25 +5,24 @@ for use in pre-merge testing.
 
 ## Background
 
-TODO explain background:
-  * Phab only has diffs, we need to apply these on a git base revision.
-  * Many of the base revisions are broken. 
-  * pre-merge fails due to unrelated issues.
-  * goal: reduce % of broken revisions by getting them fixed faster
-
+The stability of the pre-merge testing largely depends on the stability of the
+LLVM main branch: Whenever something is broken on the main branch, also 
+pre-merge testing will fail: The patches from Phabricator are applied to some
+revision on the main branch before they can be built. So the fewer revisions of
+the main branch being broken, the more stable pre-merge testing will be.
 
 ## High-level Design
 
-  We propose to run a Buildbot worker on the main branch with the same
-  Docker image we're using for pre-merge testing. That worker shall check all
-  commits to main for build and test failures with regards to the configuration
-  we're using for pre-merge testing. Whenever these builds fails, Buildbot 
-  notifies the commiters and gives them the opportunity to fix or revert their
-  patch. 
+We propose to run a Buildbot worker on the main branch with the same
+Docker image we're using for pre-merge testing. That worker shall check all
+commits to main for build and test failures with regards to the configuration
+we're using for pre-merge testing. Whenever these builds fails, Buildbot 
+notifies the commiters and gives them the opportunity to fix or revert their
+patch. 
   
-  This is much faster than a having a human investigate the issue and notify the
-  committers. By having faster feedback the main branch is broken for fewer
-  revisions and this the probability of a false-positive pre-merge test is lower.
+This is much faster than a having a human investigate the issue and notify the
+committers. By having faster feedback the main branch is broken for fewer
+revisions and this the probability of a false-positive pre-merge test is lower.
 
 ## Machine setup
 
