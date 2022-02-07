@@ -28,7 +28,7 @@ revisions and this the probability of a false-positive pre-merge test is lower.
 
 We would deploy another container as part of the existing Kubernetes cluster for
 pre-merge testing. The image would be based on 
-[buildkite-premerge-debian]https://github.com/google/llvm-premerge-checks/blob/main/containers/buildkite-premerge-debian/Dockerfile)
+[buildkite-premerge-debian](https://github.com/google/llvm-premerge-checks/blob/main/containers/buildkite-premerge-debian/Dockerfile)
 , and we would just add the things needed for the Buildbot agent by resuing the
 setup of an existing worker (e.g. 
 [clangd-ubuntu-clang](https://github.com/llvm/llvm-zorg/blob/main/Buildbot/google/docker/Buildbot-clangd-ubuntu-clang/Dockerfile.)
