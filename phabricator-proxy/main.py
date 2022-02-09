@@ -5,7 +5,7 @@ from urllib.parse import urlparse, parse_qs
 import json
 
 app = flask.Flask(__name__)
-app.config["DEBUG"] = True # TODO: make production
+app.config["DEBUG"] = False
 buildkite_api_token = os.getenv("BUILDKITE_API_TOKEN", "")
 
 
