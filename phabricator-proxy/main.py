@@ -1,13 +1,31 @@
-import flask
-import requests
-import os
+from cmath import log
+from flask.logging import default_handler
 from urllib.parse import urlparse, parse_qs
+import flask
 import json
+import logging
+import logging.handlers
+import os
+import requests
+
+
+buildkite_api_token = os.getenv("BUILDKITE_API_TOKEN", "")
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = False
-buildkite_api_token = os.getenv("BUILDKITE_API_TOKEN", "")
-
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+errHandler = logging.FileHandler('error.log', encoding='utf-8',)
+errHandler.setLevel(logging.ERROR)
+errHandler.setFormatter(formatter)
+app.logger.addHandler(errHandler)
+rotatingHandler = logging.handlers.TimedRotatingFileHandler('info.log', when='D', encoding='utf-8', backupCount=8)
+rotatingHandler.setFormatter(formatter)
+app.logger.addHandler(rotatingHandler)
+app.logger.setLevel(logging.INFO)
+stdoutLog = logging.StreamHandler()
+stdoutLog.setFormatter(formatter)
+app.logger.addHandler(stdoutLog)
+app.logger.removeHandler(default_handler)
 
 @app.route('/', methods=['GET'])
 def home():
