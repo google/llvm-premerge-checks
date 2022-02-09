@@ -21,7 +21,7 @@ spec:
   selector:
     matchLabels:
       app: phabricator-proxy
-  replicas: 1 
+  replicas: 1
   template:
     metadata:
       labels:
@@ -29,7 +29,7 @@ spec:
     spec:
       containers:
       - name: phabricator-proxy
-        image: gcr.io/llvm-premerge-checks/phabricator-proxy
+        image: gcr.io/llvm-premerge-checks/phabricator-proxy:latest
         ports:
         - containerPort: 8080
         env:
