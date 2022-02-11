@@ -42,8 +42,6 @@ if ($ssd) {
     cmd /C "mklink /j C:\ProgramData\Docker D:\docker"
 }
 
-
-
 # install Docker
 # Install-PackageProvider -Name NuGet -Force
 Install-Module -Name DockerMsftProvider -Repository PSGallery -Force
@@ -78,6 +76,10 @@ Start-Process -FilePath "notepad" -Wait -Args "c:\credentials\buildkite-env.ps1"
 
 # Add task to start agent after restart.
 schtasks.exe /create /tn "Start Buildkite agent" /ru SYSTEM /SC ONSTART /DELAY 0005:00 /tr "powershell -command 'C:\llvm-premerge-checks\scripts\windows_agent_start_buildkite.ps1 -workdir c:\ws'"
+
+# Install cloud agent to monitor https://cloud.google.com/stackdriver/docs/solutions/agents/ops-agent/installation#agent-install-latest-windows .
+(New-Object Net.WebClient).DownloadFile("https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.ps1", "${env:UserProfile}\add-google-cloud-ops-agent-repo.ps1")
+Invoke-Expression "${env:UserProfile}\add-google-cloud-ops-agent-repo.ps1 -AlsoInstall"
 
 # Reboot
 Write-Host "Need to restart"
