@@ -19,7 +19,7 @@ import os
 
 from phabtalk.phabtalk import PhabTalk
 from buildkite_utils import format_url, BuildkiteApi, strip_emojis
-import test_results_report
+import scripts.xunit_utils as xunit_utils
 from benedict import benedict
 
 
@@ -50,7 +50,7 @@ def process_unit_test_reports(bk: BuildkiteApi, build: benedict, prefix: str) ->
                 continue
             content = bk.get(a.get('download_url')).content
             ctx = strip_emojis(prefix + ' ' + job.get('name', build.get('pipeline.name')))
-            failed_tests.extend(test_results_report.parse_failures(content, ctx))
+            failed_tests.extend(xunit_utils.parse_failures(content, ctx))
     return failed_tests
 
 

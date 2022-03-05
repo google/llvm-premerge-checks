@@ -15,13 +15,13 @@
 
 # Script runs in checked out llvm-project directory.
 
-import os
-from typing import Dict
-from steps import generic_linux, generic_windows, from_shell_output, extend_steps_env, bazel
-from sync_fork import sync_fork
-import git
-import yaml
 from choose_projects import ChooseProjects
+from steps import generic_linux, generic_windows, from_shell_output, extend_steps_env, bazel
+from typing import Dict
+import git
+import git_utils
+import os
+import yaml
 
 steps_generators = [
     '${BUILDKITE_BUILD_CHECKOUT_PATH}/libcxx/utils/ci/buildkite-pipeline-snapshot.sh',
@@ -34,7 +34,8 @@ if __name__ == '__main__':
     notify_emails = list(filter(None, os.getenv('ph_notify_emails', '').split(',')))
     # Syncing LLVM fork so any pipelines started from upstream llvm-project
     # but then triggered a build on fork will observe the commit.
-    sync_fork(os.path.join(os.getenv('BUILDKITE_BUILD_PATH', ''), 'llvm-project-fork'), [os.getenv('BUILDKITE_BRANCH'), 'main'])
+    repo = git_utils.initLlvmFork(os.path.join(os.getenv('BUILDKITE_BUILD_PATH', ''), 'llvm-project-fork'))
+    git_utils.syncRemotes(repo, 'upstream', 'origin')
     steps = []
 
     env: Dict[str, str] = {}
