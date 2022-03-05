@@ -52,8 +52,11 @@ if __name__ == '__main__':
     steps.extend(bazel([], force=True))
     if os.getenv('ph_skip_generated') is None:
         # BUILDKITE_COMMIT might be an alias, e.g. "HEAD". Resolve it to make the build hermetic.
-        if os.getenv('BUILDKITE_COMMIT', 'HEAD') == "HEAD":
+        env['BUILDKITE_COMMIT'] = os.getenv('BUILDKITE_COMMIT')
+        if env['BUILDKITE_COMMIT'] == "HEAD":
             env['BUILDKITE_COMMIT'] = repo.head.commit.hexsha
+        env['BUILDKITE_BRANCH'] = os.getenv('BUILDKITE_BRANCH')
+        env['BUILDKITE_MESSAGE'] = os.getenv('BUILDKITE_MESSAGE')
         for gen in steps_generators:
             steps.extend(from_shell_output(gen, env=env))
 
