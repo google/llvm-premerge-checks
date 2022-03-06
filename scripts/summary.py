@@ -19,7 +19,7 @@ import os
 
 from phabtalk.phabtalk import PhabTalk
 from buildkite_utils import format_url, BuildkiteApi, strip_emojis
-import scripts.xunit_utils as xunit_utils
+import xunit_utils
 from benedict import benedict
 
 
