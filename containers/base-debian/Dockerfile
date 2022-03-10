@@ -11,6 +11,8 @@ RUN echo 'intall packages'; \
         cmake gdb build-essential  \
         ninja-build \
         libelf-dev libffi-dev gcc-multilib \
+# for llvm-libc tests that build mpfr and gmp from source
+        autoconf automake libtool \
 # for bolt subproject
         libc6-dev-i386 \
         ccache \
