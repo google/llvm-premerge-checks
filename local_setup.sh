@@ -20,7 +20,7 @@
 ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # install all the required tools for managing the cluster
-sudo apt install -y google-cloud-sdk kubectl docker
+sudo apt install -y google-cloud-sdk kubectl docker google-cloud-sdk-gke-gcloud-auth-plugin
 
 # configure gCloud
 source "${ROOT_DIR}/k8s_config"
