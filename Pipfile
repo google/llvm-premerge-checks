@@ -5,7 +5,7 @@ name = "pypi"
 
 [packages]
 backoff = "==1.10.0"
-lxml = "==4.6.5"
+lxml = "==4.9.1"
 pathspec = "==0.8.1"
 phabricator = "==0.8.1"
 pyaml = "==20.4.0"
