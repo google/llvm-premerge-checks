@@ -88,3 +88,4 @@ excludedProjects:
     - libcxxabi  # has custom checks
     - cross-project-tests # tests failing
     - lldb # tests failing
+    - openmp # https://github.com/google/llvm-premerge-checks/issues/410
