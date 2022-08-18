@@ -42,6 +42,7 @@ def generic_linux(projects: str, check_diff: bool) -> List:
         'dpkg -l >> artifacts/packages.txt',
         *checkout_scripts('linux', scripts_refspec),
         'set +e',
+        'pip install -q -r ./mlir/python/requirements.txt',
     ]
 
     if check_diff:
@@ -131,7 +132,7 @@ def generic_windows(projects: str) -> List:
             clear_sccache if no_cache else '',
             'sccache --zero-stats',
             *checkout_scripts('windows', scripts_refspec),
-
+            'pip install -q -r ./mlir/python/requirements.txt',
             'powershell -command "'
             f'%SRC%/scripts/premerge_checks.py --projects=\'{projects}\' --log-level={log_level}; '
             '$$exit=$$?;'
