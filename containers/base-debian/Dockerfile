@@ -27,7 +27,7 @@ RUN echo 'install llvm 13'; \
     chmod +x llvm.sh; \
     ./llvm.sh 13;\
     apt-get update; \
-    apt install -y clang-format-13 clang-tidy-13 lld-13;
+    apt install -y clang-format-13 clang-tidy-13;
 
 RUN echo 'configure locale'; \
     sed --in-place '/en_US.UTF-8/s/^#//' /etc/locale.gen ;\
