@@ -5,7 +5,7 @@ RUN echo 'install buildkite' ;\
     sh -c 'echo deb https://apt.buildkite.com/buildkite-agent stable main > /etc/apt/sources.list.d/buildkite-agent.list' ;\
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 32A37959C2FA5C3C99EFBC32A79206696452D198 ;\
     apt-get update ;\
-    apt-get install -y buildkite-agent tini gosu; \
+    apt-get install -y buildkite-agent tini gosu lld-13 clang-13 clang-tidy-13 clang-format-13; \
     apt-get clean;
 COPY *.sh /usr/local/bin/
 RUN chmod og+rx /usr/local/bin/*.sh
@@ -17,3 +17,11 @@ VOLUME /var/lib/buildkite-agent
 
 ENTRYPOINT ["entrypoint.sh"]
 CMD ["gosu", "buildkite-agent", "buildkite-agent", "start", "--no-color"]
+
+RUN ln -s /usr/bin/clang-13 /usr/bin/clang;\
+    ln -s /usr/bin/clang++-13 /usr/bin/clang++;\
+    ln -s /usr/bin/clang-tidy-13 /usr/bin/clang-tidy;\
+    ln -s /usr/bin/clang-tidy-diff-13.py /usr/bin/clang-tidy-diff;\
+    ln -s /usr/bin/clang-format-13 /usr/bin/clang-format;\
+    ln -s /usr/bin/clang-format-diff-13 /usr/bin/clang-format-diff;\
+    ln -s /usr/bin/lld-13 /usr/bin/lld
