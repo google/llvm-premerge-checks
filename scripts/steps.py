@@ -101,6 +101,7 @@ def bazel(modified_files: Set[str], force: bool = False) -> List:
         'commands': [
             'set -eu',
             'cd utils/bazel',
+            'ls /usr/bin/'
             '/usr/bin/lld --help',
             # TODO: remove linkopt being overriden once lld is properly available
             'bazel query //... + @llvm-project//... | xargs bazel test --config=ci --remote_cache=https://storage.googleapis.com/llvm-bazel-cache --google_default_credentials=true --copt=-Werror --host_copt=-Werror --linkopt=-fuse-ld=/usr/bin/lld --host_linkopt=-fuse-ld=/usr/bin/lld',
