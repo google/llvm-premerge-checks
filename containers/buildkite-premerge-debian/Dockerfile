@@ -5,9 +5,17 @@ RUN echo 'install buildkite' ;\
     sh -c 'echo deb https://apt.buildkite.com/buildkite-agent stable main > /etc/apt/sources.list.d/buildkite-agent.list' ;\
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 32A37959C2FA5C3C99EFBC32A79206696452D198 ;\
     apt-get update ;\
-    apt-get install -y buildkite-agent tini gosu lld-13 clang-13 clang-tidy-13 clang-format-13; \
+    apt-get install -y buildkite-agent tini gosu; \
     apt-get clean;
 COPY *.sh /usr/local/bin/
+
+# LLVM must be installed after prerequsite packages.
+RUN echo 'install llvm 13'; \
+    wget https://apt.llvm.org/llvm.sh; \
+    chmod +x llvm.sh; \
+    ./llvm.sh 13;\
+    apt-get update; \
+    apt install -y clang-format-13 clang-tidy-13;
 
 RUN ln -s /usr/bin/clang-13 /usr/bin/clang;\
     ln -s /usr/bin/clang++-13 /usr/bin/clang++;\
