@@ -102,7 +102,7 @@ def bazel(modified_files: Set[str], force: bool = False) -> List:
             'set -eu',
             'cd utils/bazel',
             # TODO: remove linkopt being overriden once lld is properly available
-            'bazel query //... + @llvm-project//... | xargs bazel test --config=ci --remote_cache=https://storage.googleapis.com/llvm-bazel-cache --google_default_credentials=true --copt=-Werror --host_copt=-Werror --linkopt="" --host_linkopt=""',
+            'bazel query //... + @llvm-project//... | xargs bazel test --config=ci --remote_cache=https://storage.googleapis.com/llvm-bazel-cache --google_default_credentials=true --copt=-Werror --host_copt=-Werror --linkopt=-fuse-ld=ld --host_linkopt=-fuse-ld=ld',
         ],
         'agents': agents,
         'timeout_in_minutes': 120,
