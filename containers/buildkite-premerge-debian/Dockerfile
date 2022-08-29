@@ -8,6 +8,15 @@ RUN echo 'install buildkite' ;\
     apt-get install -y buildkite-agent tini gosu lld-13 clang-13 clang-tidy-13 clang-format-13; \
     apt-get clean;
 COPY *.sh /usr/local/bin/
+
+RUN ln -s /usr/bin/clang-13 /usr/bin/clang;\
+    ln -s /usr/bin/clang++-13 /usr/bin/clang++;\
+    ln -s /usr/bin/clang-tidy-13 /usr/bin/clang-tidy;\
+    ln -s /usr/bin/clang-tidy-diff-13.py /usr/bin/clang-tidy-diff;\
+    ln -s /usr/bin/clang-format-13 /usr/bin/clang-format;\
+    ln -s /usr/bin/clang-format-diff-13 /usr/bin/clang-format-diff;\
+    ln -s /usr/bin/lld-13 /usr/bin/lld
+
 RUN chmod og+rx /usr/local/bin/*.sh
 COPY --chown=buildkite-agent:buildkite-agent pre-checkout /etc/buildkite-agent/hooks
 COPY --chown=buildkite-agent:buildkite-agent post-checkout /etc/buildkite-agent/hooks
@@ -17,11 +26,3 @@ VOLUME /var/lib/buildkite-agent
 
 ENTRYPOINT ["entrypoint.sh"]
 CMD ["gosu", "buildkite-agent", "buildkite-agent", "start", "--no-color"]
-
-RUN ln -s /usr/bin/clang-13 /usr/bin/clang;\
-    ln -s /usr/bin/clang++-13 /usr/bin/clang++;\
-    ln -s /usr/bin/clang-tidy-13 /usr/bin/clang-tidy;\
-    ln -s /usr/bin/clang-tidy-diff-13.py /usr/bin/clang-tidy-diff;\
-    ln -s /usr/bin/clang-format-13 /usr/bin/clang-format;\
-    ln -s /usr/bin/clang-format-diff-13 /usr/bin/clang-format-diff;\
-    ln -s /usr/bin/lld-13 /usr/bin/lld
