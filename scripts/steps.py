@@ -100,7 +100,7 @@ def bazel(modified_files: Set[str], force: bool = False) -> List:
         'commands': [
             'set -eu',
             'cd utils/bazel',
-            'bazel query //... + @llvm-project//... | xargs bazel test --config=generic_clang --config=rbe --copt=-Werror --host_copt=-Werror --test_output=errors --test_tag_filters=-nobuildkite --build_tag_filters=-nobuildkite',
+            'bazel query //... + @llvm-project//... | xargs bazel test --config=ci',
         ],
         'agents': agents,
         'timeout_in_minutes': 120,
