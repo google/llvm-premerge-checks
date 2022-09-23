@@ -15,14 +15,14 @@
 # based on documentation on
 # https://github.com/jetstack/cert-manager/blob/master/docs/tutorials/acme/quick-start/index.rst
 
-apiVersion: cert-manager.io/v1alpha2
+apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
   name: letsencrypt-staging
 spec:
   acme:
     server: https://acme-staging-v02.api.letsencrypt.org/directory
-    email: kuhnel@google.com
+    email: goncharov@google.com
     privateKeySecretRef:
       name: letsencrypt-staging
     solvers:
@@ -30,14 +30,14 @@ spec:
         ingress:
           class: nginx
 ---
-apiVersion: cert-manager.io/v1alpha2
+apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
   name: letsencrypt-prod
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: kuhnel@google.com
+    email: goncharov@google.com
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:

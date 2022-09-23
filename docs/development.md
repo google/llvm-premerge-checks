@@ -102,8 +102,16 @@ HTTP authentication and forwards all requests from load balancer to
 Follow up to date docs to install [reverse
 proxy](https://kubernetes.github.io/ingress-nginx/deploy/#gce-gke).
  
-We also have [certificate manager](
-http://docs.cert-manager.io/en/latest/getting-started/install/kubernetes.html) and 
+[cert-manager] is installed with helm https://cert-manager.io/docs/installation/helm/ 
+
+helm install \
+  cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --create-namespace \
+  --version v1.9.1 \
+  --set installCRDs=true 
+  
+We also have [certificate manager](https://cert-manager.io/docs/) and 
 [lets-encrypt configuration](../kubernetes/cert-issuer.yaml) in place, but they are
 not used at the moment and should be removed if we decide to live with static IP.
 
