@@ -16,7 +16,6 @@ kind: Service
 apiVersion: v1
 metadata:
   name: phabricator-proxy
-  namespace: buildkite
 spec:
   selector:
     app: phabricator-proxy

@@ -16,7 +16,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: phabricator-proxy
-  namespace: buildkite
 spec:
   selector:
     matchLabels:
@@ -32,6 +31,7 @@ spec:
         image: gcr.io/llvm-premerge-checks/phabricator-proxy:latest
         ports:
         - containerPort: 8080
+          protocol: TCP
         env:
         - name: BUILDKITE_API_TOKEN
           valueFrom:

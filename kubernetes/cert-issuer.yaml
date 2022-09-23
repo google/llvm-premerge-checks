@@ -26,9 +26,14 @@ spec:
     privateKeySecretRef:
       name: letsencrypt-staging
     solvers:
-    - http01:
-        ingress:
-          class: nginx
+    - dns01:
+        cloudDNS:
+          # The ID of the GCP project
+          project: "llvm-premerge-checks"
+          # This is the secret used to access the service account
+          serviceAccountSecretRef:
+            name: clouddns-dns01-solver-svc-acct
+            key: key.json
 ---
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
@@ -41,6 +46,12 @@ spec:
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:
-    - http01:
-        ingress:
-          class: nginx
+    - dns01:
+        cloudDNS:
+          project: "llvm-premerge-checks"
+          serviceAccountSecretRef:
+            name: clouddns-dns01-solver-svc-acct
+            key: key.json
+    # - http01:
+    #     ingress:
+    #       class: gce
