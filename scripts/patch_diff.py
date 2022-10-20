@@ -31,13 +31,21 @@ from phabricator import Phabricator
 LLVM_GITHUB_URL = 'ssh://git@github.com/llvm/llvm-project'
 FORK_REMOTE_URL = 'ssh://git@github.com/llvm-premerge-tests/llvm-project'
 
+"""How far back the script searches in the git history to find Revisions that
+have already landed. """
+APPLIED_SCAN_LIMIT = datetime.timedelta(days=90)
+
 
 class ApplyPatch:
     """Apply a diff from Phabricator on local working copy.
 
-    This script is a rewrite of `arc patch`.
+    This script is a rewrite of `arc patch` to accommodate for dependencies
+    that have already landed, but could not be identified by `arc patch`.
 
     For a given diff_id, this class will get the dependencies listed on Phabricator.
+    For each dependency D it will check the diff history:
+    - if D has already landed, skip it.
+    - If D has not landed, it will download the patch for D and try to apply it locally.
     Once this class has applied all dependencies, it will apply the original diff.
 
     This script must be called from the root folder of a local checkout of 
@@ -87,10 +95,13 @@ class ApplyPatch:
             self.revision_id = revision['id']
             dependencies = self.get_dependencies(revision)
             dependencies.reverse()  # Now revisions will be from oldest to newest.
+            missing, landed = self.classify_revisions(dependencies)
             if len(dependencies) > 0:
                 logging.info('This diff depends on: {}'.format(revision_list_to_str(dependencies)))
+                logging.info('  Already landed: {}'.format(revision_list_to_str(landed)))
+                logging.info('  Will be applied: {}'.format(revision_list_to_str(missing)))
             plan = []
-            for r in dependencies:
+            for r in missing:
                 d = self.get_diff(r['diffs'][0])
                 plan.append((r, d))
             plan.append((revision, diff))
@@ -282,6 +293,37 @@ class ApplyPatch:
     @backoff.on_exception(backoff.expo, Exception, max_tries=5, logger='', factor=3)
     def get_raw_diff(self, diff_id: str) -> str:
         return self.phab.differential.getrawdiff(diffID=diff_id).response
+
+    def get_landed_revisions(self):
+        """Get list of landed revisions from current git branch."""
+        diff_regex = re.compile(r'^Differential Revision: https://reviews\.llvm\.org/(.*)$', re.MULTILINE)
+        earliest_commit = None
+        rev = self.base_revision
+        age_limit = datetime.datetime.now() - APPLIED_SCAN_LIMIT
+        if rev == 'auto':  # FIXME: use revison that created the branch
+            rev = 'main'
+        for commit in self.repo.iter_commits(rev):
+            if datetime.datetime.fromtimestamp(commit.committed_date) < age_limit:
+                break
+            earliest_commit = commit
+            result = diff_regex.search(commit.message)
+            if result is not None:
+                yield result.group(1)
+        if earliest_commit is not None:
+            logging.info(f'Earliest analyzed commit in history {earliest_commit.hexsha}, '
+                         f'{earliest_commit.committed_datetime}')
+        return
+
+    def classify_revisions(self, revisions: List[Dict]) -> Tuple[List[Dict], List[Dict]]:
+        """Check which of the dependencies have already landed on the current branch."""
+        landed_deps = []
+        missing_deps = []
+        for d in revisions:
+            if diff_to_str(d['id']) in self.get_landed_revisions():
+                landed_deps.append(d)
+            else:
+                missing_deps.append(d)
+        return missing_deps, landed_deps
 
 
 def diff_to_str(diff: int) -> str:
