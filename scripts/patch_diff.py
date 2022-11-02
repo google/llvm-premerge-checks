@@ -95,7 +95,8 @@ class ApplyPatch:
                 logging.info('This diff depends on: {}'.format(revision_list_to_str(dependencies)))
             plan = []
             for r in dependencies:
-                if r['status']['value'] is 'closed':
+                if r['statusName'] == 'Closed':
+                    logging.info(f'skipping revision {r["id"]} - it is closed, assuming it has landed')
                     continue
                 d = self.get_diff(r['diffs'][0])
                 plan.append((r, d))
