@@ -25,11 +25,12 @@ dependencies:
   libc:
     - clang
     - clang-tools-extra
-  # FIXME: not sure about 'libcxx' and 'libcxxabi'
   libcxx:
     - clang
+    - lldb
   libcxxabi:
     - clang
+    - lldb
   libclc: []
   lld:
     - llvm
