@@ -6,20 +6,20 @@ import requests
 #         print(json.loads(re.json()))
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser(description='Run sample build on buildkite.')    
+  parser = argparse.ArgumentParser(description='Run sample build on buildkite.')
   parser.add_argument('--dryrun', action='store_true')
   args = parser.parse_args()
 
   d = json.dumps({
       'branch': 'main',
-      'commit': 'HEAD',
+      'commit': '20ba079dda7be1a72d64cebc9f55d909bf29f6c1',
       'env': {
           #'ph_skip_linux': 'skip',
           'ph_skip_generated': 'skip',
           'ph_log_level': 'DEBUG',
-          'ph_skip_windows': 'skip',
+          # 'ph_skip_windows': 'skip',
           'ph_linux_agents': '{"queue": "linux-test"}',
-          # 'ph_windows_agents': f'{{"name": "", "queue": "{queue}"}}',    
+          'ph_windows_agents': f'{{"queue": "windows-test"}}',
       }})
   print(d)
   if (args.dryrun):
