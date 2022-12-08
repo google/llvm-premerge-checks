@@ -14,12 +14,13 @@ if __name__ == '__main__':
       'branch': 'main',
       'commit': '20ba079dda7be1a72d64cebc9f55d909bf29f6c1',
       'env': {
-          #'ph_skip_linux': 'skip',
+          'ph_skip_linux': 'skip',
           'ph_skip_generated': 'skip',
           'ph_log_level': 'DEBUG',
           # 'ph_skip_windows': 'skip',
           'ph_linux_agents': '{"queue": "linux-test"}',
-          'ph_windows_agents': f'{{"queue": "windows-test"}}',
+          'ph_windows_agents': f'{{"name": "win-dev", "queue": "windows-test"}}',
+          'ph_scripts_refspec': 'windows-vscmd',
       }})
   print(d)
   if (args.dryrun):
