@@ -131,6 +131,7 @@ def generic_windows(projects: str) -> List:
         'commands': [
             clear_sccache if no_cache else '',
             'sccache --zero-stats',
+            'C:\\BuildTools\\Common7\\Tools\\VsDevCmd.bat -arch=amd64 -host_arch=amd64',
             *checkout_scripts('windows', scripts_refspec),
             'pip install -q -r ./mlir/python/requirements.txt',
             'powershell -command "'
