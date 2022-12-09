@@ -25,6 +25,13 @@ def initLlvmFork(path: str) -> git.Repo:
       logging.info(f'{path} does not exist, cloning repository...')
       git.Repo.clone_from(FORK_REMOTE_URL, path)
   repo = git.Repo(path)
+  # Remove index lock just in case.
+  lock_file = f"{repo.working_tree_dir}/.git/index.lock"
+  try:
+    os.remove(lock_file)
+    logging.info(f"removed {lock_file}")
+  except FileNotFoundError:
+    logging.info(f"{lock_file} does not exist")
   repo.remote('origin').set_url(FORK_REMOTE_URL)
   if 'upstream' not in repo.remotes:
     repo.create_remote('upstream', url=LLVM_GITHUB_URL)
