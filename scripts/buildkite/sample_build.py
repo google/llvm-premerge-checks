@@ -14,13 +14,15 @@ if __name__ == '__main__':
       'branch': 'main',
       'commit': '20ba079dda7be1a72d64cebc9f55d909bf29f6c1',
       'env': {
-          'ph_skip_linux': 'skip',
           'ph_skip_generated': 'skip',
           'ph_log_level': 'DEBUG',
-          # 'ph_skip_windows': 'skip',
+          'ph_skip_linux': 'skip',
           'ph_linux_agents': '{"queue": "linux-test"}',
+          # 'ph_skip_windows': 'skip',
           'ph_windows_agents': f'{{"name": "win-dev", "queue": "windows-test"}}',
-          'ph_scripts_refspec': 'windows-vscmd',
+          # 'ph_windows_agents': f'{{"queue": "windows"}}',
+          # 'ph_scripts_refspec': 'windows-vscmd',
+          'ph_projects': 'clang',
       }})
   print(d)
   if (args.dryrun):
@@ -35,4 +37,5 @@ if __name__ == '__main__':
     data=d,
     headers={'Authorization': f'Bearer {token}'})
   print(re.status_code)
-  print(re)
+  j = re.json()
+  print(j['web_url'])

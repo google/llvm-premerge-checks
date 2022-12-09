@@ -44,7 +44,7 @@ class ApplyPatch:
     - If D is not closed, it will download the patch for D and try to apply it locally.
     Once this class has applied all dependencies, it will apply the original diff.
 
-    This script must be called from the root folder of a local checkout of 
+    This script must be called from the root folder of a local checkout of
     https://github.com/llvm/llvm-project or given a path to clone into.
     """
 
@@ -156,6 +156,13 @@ class ApplyPatch:
 
         As origin is disjoint from upstream, it needs to be updated by this script.
         """
+        # Remove index lock just in case.
+        lock_file = f"{self.repo.working_tree_dir}/.git/index.lock"
+        try:
+          os.remove(lock_file)
+          logging.info(f"removed {lock_file}")
+        except FileNotFoundError:
+          logging.info(f"{lock_file} does not exist")
         logging.info('Syncing local, origin and upstream...')
         if 'upstream' not in self.repo.remotes:
             self.repo.create_remote('upstream', url=LLVM_GITHUB_URL)
