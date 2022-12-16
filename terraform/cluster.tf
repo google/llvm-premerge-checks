@@ -39,6 +39,7 @@ resource "google_container_node_pool" "linux_agents_nodepool" {
 
   node_config {
     machine_type = var.linux-agents-machine-type
+    image_type = "cos_containerd"
 
     #todo: assign right permissions and use custom service account
     service_account = "1047329282069-compute@developer.gserviceaccount.com" #google_service_account.llvm_premerge_checks_sa.email
@@ -49,7 +50,28 @@ resource "google_container_node_pool" "linux_agents_nodepool" {
 
   autoscaling {
     min_node_count = 0
-    max_node_count = 6
+    max_node_count = var.linux-agents-count
+  }
+}
+
+resource "google_container_node_pool" "windows_agents_nodepool" {
+  name    = "windows-agents"
+  cluster = google_container_cluster.llvm_premerge_checks_cluster.id
+
+  node_config {
+    machine_type = var.windows-agents-machine-type
+    image_type = "windows_ltsc_containerd" # todo ltsc or sac ?
+
+    #todo: assign right permissions and use custom service account
+    service_account = "1047329282069-compute@developer.gserviceaccount.com" #google_service_account.llvm_premerge_checks_sa.email
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/cloud-platform"
+    ]
+  }
+
+  autoscaling {
+    min_node_count = 0
+    max_node_count = var.windows-agents-count
   }
 }
 
@@ -90,5 +112,10 @@ resource "kubernetes_manifest" "buildkite_conduit_api_token_secret" {
 
 resource "kubernetes_manifest" "buildkite_linux_agent" {
   manifest   = yamldecode(templatefile("kubernetes/linux-agents.yaml", { project-id = var.project-id, gke-nodepool = google_container_node_pool.linux_agents_nodepool.name, build-queue = var.linux-agents-build-queue, cpu-request = var.linux-agents-cpu-request, mem-request = var.linux-agents-mem-request, replicas-count = var.linux-agents-count }))
+  depends_on = [kubernetes_manifest.buildkite_namespace]
+}
+
+resource "kubernetes_manifest" "buildkite_windows_agent" {
+  manifest   = yamldecode(templatefile("kubernetes/windows-agents.yaml", { project-id = var.project-id, gke-nodepool = google_container_node_pool.windows_agents_nodepool.name, build-queue = var.windows-agents-build-queue, cpu-request = var.windows-agents-cpu-request, mem-request = var.windows-agents-mem-request, replicas-count = var.windows-agents-count }))
   depends_on = [kubernetes_manifest.buildkite_namespace]
 }

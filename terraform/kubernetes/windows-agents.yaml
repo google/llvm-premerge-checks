@@ -15,7 +15,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: linux-agents
+  name: windows-agents
   namespace: buildkite
 spec:
   replicas: ${replicas-count}
@@ -26,15 +26,15 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: agent-premerge-debian
+      app: agent-premerge-windows
   template:
     metadata:
       labels:
-        app: agent-premerge-debian
+        app: agent-premerge-windows
     spec:
       containers:
-        - name: buildkite-premerge-debian
-          image: gcr.io/${project-id}/buildkite-premerge-debian
+        - name: buildkite-premerge-windows
+          image: gcr.io/${project-id}/buildkite-premerge-windows
           resources:
             limits:
               cpu: ${cpu-request}
@@ -42,13 +42,11 @@ spec:
             requests:
               cpu: ${cpu-request}
               memory: ${mem-request}
-          volumeMounts:
-            - name: github-ssh
-              mountPath: /mnt/ssh
-            - name: workdir
-              mountPath: /var/lib/buildkite-agent
+          # volumeMounts:
+          #   - name: workdir
+          #     mountPath: "C:\\ws"
           env:
-            - name: BUILDKITE_AGENT_TOKEN
+            - name: buildkiteAgentToken
               valueFrom:
                 secretKeyRef:
                   name: buildkite-agent-token
@@ -59,8 +57,8 @@ spec:
                  fieldPath: metadata.name
             - name: BUILDKITE_AGENT_TAGS
               value: "queue=${build-queue},name=$(POD_NAME)"
-            - name: BUILDKITE_BUILD_PATH
-              value: "/var/lib/buildkite-agent/builds"
+            # - name: BUILDKITE_BUILD_PATH
+            #   value: "C:\\ws"
             - name: CONDUIT_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -71,12 +69,14 @@ spec:
                 secretKeyRef:
                   name: buildkite-api-token-readonly
                   key: token
-      volumes:
-        - name: github-ssh
-          secret:
-            secretName: github-ssh
-        - name: workdir
-          emptyDir: {}
+      # volumes:
+      #   - name: workdir
+      #     emptyDir: {}
       nodeSelector:
         cloud.google.com/gke-nodepool: ${gke-nodepool}
+      tolerations:
+      - key: "node.kubernetes.io/os"
+        operator: "Equal"
+        value: "windows"
+        effect: "NoSchedule"
       terminationGracePeriodSeconds: 3600
