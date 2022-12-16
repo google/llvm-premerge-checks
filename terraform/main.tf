@@ -5,7 +5,7 @@ resource "google_project_service" "cloudbuild_api" {
 }
 
 resource "google_storage_bucket" "terraform_state" {
-  name     = "terraform-state-${var.project-id}" #todo var
+  name     = "terraform-state-${var.project-id}"
   location = "EU"
 }
 
@@ -35,7 +35,7 @@ resource "google_compute_router" "router" {
   network = google_compute_network.vpc_network.id
 
   bgp {
-    asn = 64514
+    asn = 64514 #todo recheck
   }
 }
 

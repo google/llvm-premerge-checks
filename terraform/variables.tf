@@ -57,6 +57,31 @@ variable "linux-agents-mem-request" {
   default = "80Gi"
 }
 
+variable "windows-agents-machine-type" {
+  type    = string
+  default = "c2-standard-16"
+}
+
+variable "windows-agents-count" {
+  type    = number
+  default = 8
+}
+
+variable "windows-agents-build-queue" {
+  type    = string
+  default = "windows"
+}
+
+variable "windows-agents-cpu-request" {
+  type    = string
+  default = "15"
+}
+
+variable "windows-agents-mem-request" {
+  type    = string
+  default = "60Gi"
+}
+
 variable "buildkite-api-token-readonly" {
   type = string
 }
