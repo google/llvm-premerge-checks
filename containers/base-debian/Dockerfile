@@ -1,7 +1,7 @@
 # debian:unstable to get a go version > 1.11 (migth have other packages with different version, please check before updating)
 FROM debian:unstable
 
-
+ENV LLVMVER=13
 
 RUN echo 'intall packages'; \
     apt-get update; \
@@ -22,12 +22,12 @@ RUN echo 'intall packages'; \
         swig python3-dev libedit-dev libncurses5-dev libxml2-dev liblzma-dev golang rsync jq;
 
 # LLVM must be installed after prerequsite packages.
-RUN echo 'install llvm 13'; \
+RUN echo 'install llvm ${LLVMVER}'; \
     wget https://apt.llvm.org/llvm.sh; \
     chmod +x llvm.sh; \
-    ./llvm.sh 13;\
+    ./llvm.sh $LLVMVER;\
     apt-get update; \
-    apt install -y clang-format-13 clang-tidy-13;
+    apt install -y clang-format-$LLVMVER clang-tidy-$LLVMVER;
 
 RUN echo 'configure locale'; \
     sed --in-place '/en_US.UTF-8/s/^#//' /etc/locale.gen ;\
@@ -41,12 +41,12 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
-RUN ln -s /usr/bin/clang-13 /usr/bin/clang;\
-    ln -s /usr/bin/clang++-13 /usr/bin/clang++;\
-    ln -s /usr/bin/clang-tidy-13 /usr/bin/clang-tidy;\
-    ln -s /usr/bin/clang-tidy-diff-13.py /usr/bin/clang-tidy-diff;\
-    ln -s /usr/bin/clang-format-13 /usr/bin/clang-format;\
-    ln -s /usr/bin/clang-format-diff-13 /usr/bin/clang-format-diff;\
-    ln -s /usr/bin/lld-13 /usr/bin/lld;\
-    ln -s /usr/bin/ld.lld-13 /usr/bin/ld.lld
+RUN ln -s /usr/bin/clang-$LLVMVER /usr/bin/clang;\
+    ln -s /usr/bin/clang++-$LLVMVER /usr/bin/clang++;\
+    ln -s /usr/bin/clang-tidy-$LLVMVER /usr/bin/clang-tidy;\
+    ln -s /usr/bin/clang-tidy-diff-${LLVMVER}.py /usr/bin/clang-tidy-diff;\
+    ln -s /usr/bin/clang-format-$LLVMVER /usr/bin/clang-format;\
+    ln -s /usr/bin/clang-format-diff-$LLVMVER /usr/bin/clang-format-diff;\
+    ln -s /usr/bin/lld-$LLVMVER /usr/bin/lld;\
+    ln -s /usr/bin/ld.lld-$LLVMVER /usr/bin/ld.lld
 
