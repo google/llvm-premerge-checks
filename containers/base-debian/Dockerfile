@@ -1,7 +1,7 @@
 # debian:unstable to get a go version > 1.11 (migth have other packages with different version, please check before updating)
 FROM debian:unstable
 
-ENV LLVMVER=13
+ENV LLVMVER=14
 
 RUN echo 'intall packages'; \
     apt-get update; \
