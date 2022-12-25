@@ -32,8 +32,8 @@ spec:
         app: agent-premerge-debian
     spec:
       containers:
-        - name: buildkite-premerge-debian
-          image: gcr.io/llvm-premerge-checks/buildkite-premerge-debian:latest
+        - name: test-debian
+          image: gcr.io/llvm-premerge-checks/test:latest
           resources:
             limits:
               cpu: 30
@@ -57,7 +57,7 @@ spec:
                 fieldRef:
                  fieldPath: metadata.name
             - name: BUILDKITE_AGENT_TAGS
-              value: "queue=linux-test,name=$(POD_NAME)"
+              value: "queue=linux-google-test,name=$(POD_NAME)"
             - name: BUILDKITE_BUILD_PATH
               value: "/var/lib/buildkite-agent/builds"
             - name: CONDUIT_TOKEN

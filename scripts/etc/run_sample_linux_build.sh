@@ -9,7 +9,7 @@ cd build
 export CC="clang"
 export CXX="clang++"
 export LD="LLD"
-cmake ../llvm -D LLVM_ENABLE_PROJECTS="bolt;compiler-rt;libc;pstl;polly;llvm;libclc;clang;mlir;clang-tools-extra;flang;lld" -G Ninja -D CMAKE_BUILD_TYPE=Release -D LLVM_ENABLE_ASSERTIONS=ON -D LLVM_BUILD_EXAMPLES=ON -D LLVM_LIT_ARGS="-v --xunit-xml-output test-results.xml" -D LLVM_ENABLE_LLD=ON -D CMAKE_CXX_FLAGS=-gmlt -DBOLT_CLANG_EXE=/usr/bin/clang
+cmake ../llvm -D LLVM_ENABLE_PROJECTS="bolt;compiler-rt;libc;pstl;polly;llvm;libclc;clang;mlir;clang-tools-extra;flang;lld" -G Ninja -D CMAKE_BUILD_TYPE=Release -D LLVM_ENABLE_ASSERTIONS=ON -D LLVM_BUILD_EXAMPLES=ON -D LLVM_LIT_ARGS="-v --xunit-xml-output test-results.xml --resultdb-output resultdb.json" -D LLVM_ENABLE_LLD=ON -D CMAKE_CXX_FLAGS=-gmlt -DBOLT_CLANG_EXE=/usr/bin/clang
 # ^note that compiler cache arguments are omitted
 ln -s $PWD/compile_commands.json ../compile_commands.json
 ninja check-all

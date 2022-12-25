@@ -12,17 +12,21 @@ if __name__ == '__main__':
 
   d = json.dumps({
       'branch': 'main',
-      'commit': '20ba079dda7be1a72d64cebc9f55d909bf29f6c1',
+      'commit': '40dd8ff3310ba69247c911d1b5fd7ad7cfde81b9',
       'env': {
           'ph_skip_generated': 'skip',
           'ph_log_level': 'DEBUG',
-          'ph_skip_linux': 'skip',
-          'ph_linux_agents': '{"queue": "linux-test"}',
+          #'ph_skip_linux': 'skip',
+          #'ph_linux_agents': '{"queue": "linux-google-test"}',
+          'ph_linux_agents': '{"queue": "linux"}',
+          # 'ph_linux_agents': '{"queue": "linux-clang15-test"}',
           # 'ph_skip_windows': 'skip',
           'ph_windows_agents': f'{{"name": "win-dev", "queue": "windows-test"}}',
           # 'ph_windows_agents': f'{{"queue": "windows"}}',
           # 'ph_scripts_refspec': 'windows-vscmd',
-          'ph_projects': 'clang',
+          'ph_projects': 'all',
+          'ph_skip_windows': 'skip',
+          # 'ph_windows_agents': f'{{"name": "", "queue": "{queue}"}}',
       }})
   print(d)
   if (args.dryrun):

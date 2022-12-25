@@ -13,21 +13,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-set -euo pipefail
+set -eo pipefail
 
 USER=buildkite-agent
-mkdir -p "${BUILDKITE_BUILD_PATH}"
-chown -R ${USER}:${USER} "${BUILDKITE_BUILD_PATH}"
+P="${BUILDKITE_BUILD_PATH:-/var/lib/buildkite-agent}"
+set -u
+mkdir -p "$P"
+chown -R ${USER}:${USER} "$P"
 
-export CCACHE_DIR="${BUILDKITE_BUILD_PATH}"/ccache
+export CCACHE_DIR="${P}"/ccache
 export CCACHE_MAXSIZE=20G
 mkdir -p "${CCACHE_DIR}"
 chown -R ${USER}:${USER} "${CCACHE_DIR}"
 
 # /mnt/ssh should contain known_hosts, id_rsa and id_rsa.pub .
 mkdir -p /var/lib/buildkite-agent/.ssh
-cp /mnt/ssh/* /var/lib/buildkite-agent/.ssh
-chmod 700 /var/lib/buildkite-agent/.ssh
-chmod 600 /var/lib/buildkite-agent/.ssh/*
-chown -R buildkite-agent:buildkite-agent /var/lib/buildkite-agent/.ssh/
+if [ -d /mnt/ssh ]; then
+  cp /mnt/ssh/* /var/lib/buildkite-agent/.ssh || echo "no "
+  chmod 700 /var/lib/buildkite-agent/.ssh
+  chmod 600 /var/lib/buildkite-agent/.ssh/*
+  chown -R buildkite-agent:buildkite-agent /var/lib/buildkite-agent/.ssh/
+else
+  echo "/mnt/ssh is not mounted"
+fi
 exec /usr/bin/tini -g -- $@
