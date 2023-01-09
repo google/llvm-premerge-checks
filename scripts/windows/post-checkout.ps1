@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # As git gc takes non-trivial time on windows, run it only 5% of the time.
-if (( Get-Random -Maximum 100 ) -lt 5 ) {
+if (( Get-Random -Maximum 100 ) -lt 10 ) {
   echo "running git gc"
   pwd
   git gc
