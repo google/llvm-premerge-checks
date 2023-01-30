@@ -56,7 +56,7 @@ spec:
                 fieldRef:
                  fieldPath: metadata.name
             - name: BUILDKITE_AGENT_TAGS
-              value: "queue=${build-queue},name=$(POD_NAME)"
+              value: "queue=${build-queue},name=$(POD_NAME),project=${project-id}"
             # - name: BUILDKITE_BUILD_PATH
             #   value: "C:\\ws"
             - name: CONDUIT_TOKEN

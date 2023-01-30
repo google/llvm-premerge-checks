@@ -2,6 +2,18 @@ variable "project-id" {
   type = string
 }
 
+variable "billing-account" {
+  type = string
+}
+
+variable "billing-budget" {
+  type = number
+}
+
+variable "billing-admins" {
+  type = map(any)
+}
+
 variable "region" {
   type    = string
   default = "europe-west3"

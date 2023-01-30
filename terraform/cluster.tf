@@ -3,6 +3,33 @@ resource "google_service_account" "llvm_premerge_checks_sa" {
   display_name = "Service Account used with the gke cluster"
 }
 
+resource "google_project_iam_binding" "sa_gcr_reader_role" {
+  project = var.project-id
+  role    = "roles/storage.objectViewer"
+
+  members = [
+    "serviceAccount:${google_service_account.llvm_premerge_checks_sa.email}"
+  ]
+}
+
+resource "google_project_iam_binding" "sa_mertics_writer_role" {
+  project = var.project-id
+  role    = "roles/monitoring.metricWriter"
+
+  members = [
+    "serviceAccount:${google_service_account.llvm_premerge_checks_sa.email}"
+  ]
+}
+
+resource "google_project_iam_binding" "sa_logging_writer_role" {
+  project = var.project-id
+  role    = "roles/logging.logWriter"
+
+  members = [
+    "serviceAccount:${google_service_account.llvm_premerge_checks_sa.email}"
+  ]
+}
+
 resource "google_container_cluster" "llvm_premerge_checks_cluster" {
   name = "llvm-premerge-checks-cluster"
 
@@ -31,6 +58,7 @@ resource "google_container_cluster" "llvm_premerge_checks_cluster" {
     cluster_secondary_range_name  = "pods"
     services_secondary_range_name = "services"
   }
+  depends_on = [google_project_service.compute_api, google_project_service.container_api]
 }
 
 resource "google_container_node_pool" "linux_agents_nodepool" {
@@ -39,10 +67,12 @@ resource "google_container_node_pool" "linux_agents_nodepool" {
 
   node_config {
     machine_type = var.linux-agents-machine-type
-    image_type = "cos_containerd"
+    image_type   = "cos_containerd"
+    disk_size_gb = 500
+    disk_type    = "pd-ssd"
 
     #todo: assign right permissions and use custom service account
-    service_account = "1047329282069-compute@developer.gserviceaccount.com" #google_service_account.llvm_premerge_checks_sa.email
+    service_account = google_service_account.llvm_premerge_checks_sa.email
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform"
     ]
@@ -60,10 +90,12 @@ resource "google_container_node_pool" "windows_agents_nodepool" {
 
   node_config {
     machine_type = var.windows-agents-machine-type
-    image_type = "windows_ltsc_containerd" # todo ltsc or sac ?
+    image_type   = "windows_ltsc_containerd" # todo ltsc or sac ?
+    disk_size_gb = 500
+    disk_type    = "pd-ssd"
 
     #todo: assign right permissions and use custom service account
-    service_account = "1047329282069-compute@developer.gserviceaccount.com" #google_service_account.llvm_premerge_checks_sa.email
+    service_account = google_service_account.llvm_premerge_checks_sa.email
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform"
     ]
@@ -113,9 +145,19 @@ resource "kubernetes_manifest" "buildkite_conduit_api_token_secret" {
 resource "kubernetes_manifest" "buildkite_linux_agent" {
   manifest   = yamldecode(templatefile("kubernetes/linux-agents.yaml", { project-id = var.project-id, gke-nodepool = google_container_node_pool.linux_agents_nodepool.name, build-queue = var.linux-agents-build-queue, cpu-request = var.linux-agents-cpu-request, mem-request = var.linux-agents-mem-request, replicas-count = var.linux-agents-count }))
   depends_on = [kubernetes_manifest.buildkite_namespace]
+  # wait {
+  #   fields = {
+  #     "status.phase" = "Running"
+  #   }
+  # }
 }
 
 resource "kubernetes_manifest" "buildkite_windows_agent" {
   manifest   = yamldecode(templatefile("kubernetes/windows-agents.yaml", { project-id = var.project-id, gke-nodepool = google_container_node_pool.windows_agents_nodepool.name, build-queue = var.windows-agents-build-queue, cpu-request = var.windows-agents-cpu-request, mem-request = var.windows-agents-mem-request, replicas-count = var.windows-agents-count }))
   depends_on = [kubernetes_manifest.buildkite_namespace]
+  # wait {
+  #   fields = {
+  #     "status.phase" = "Running"
+  #   }
+  # }
 }
