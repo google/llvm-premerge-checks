@@ -4,9 +4,30 @@ resource "google_project_service" "cloudbuild_api" {
   service = "cloudbuild.googleapis.com"
 }
 
+resource "google_project_service" "compute_api" {
+  service = "compute.googleapis.com"
+}
+
+resource "google_project_service" "container_api" {
+  service = "container.googleapis.com"
+}
+
+resource "google_project_service" "cloudresourcemanager_api" {
+  service = "cloudresourcemanager.googleapis.com"
+}
+
+resource "google_project_service" "cloudbilling_api" {
+  service = "cloudbilling.googleapis.com"
+}
+
+resource "google_project_service" "billingbudgets_api" {
+  service = "billingbudgets.googleapis.com"
+}
+
 resource "google_storage_bucket" "terraform_state" {
-  name     = "terraform-state-${var.project-id}"
-  location = "EU"
+  name                        = "terraform-state-${var.project-id}"
+  uniform_bucket_level_access = true
+  location                    = "EU"
 }
 
 resource "google_compute_network" "vpc_network" {
