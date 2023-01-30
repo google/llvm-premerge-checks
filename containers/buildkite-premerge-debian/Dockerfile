@@ -8,13 +8,15 @@ RUN echo 'intall packages'; \
         cmake gdb build-essential  \
         ninja-build \
         libelf-dev libffi-dev gcc-multilib \
-# for llvm-libc tests that build mpfr and gmp from source
+        # for llvm-libc tests that build mpfr and gmp from source
         autoconf automake libtool \
         ccache \
         python3 python3-psutil \
         python3-pip python3-setuptools \
         lsb-release software-properties-common \
-        swig python3-dev libedit-dev libncurses5-dev libxml2-dev liblzma-dev golang rsync jq;
+        swig python3-dev libedit-dev libncurses5-dev libxml2-dev liblzma-dev golang rsync jq \
+        # for llvm installation script
+        sudo;
 
 # LLVM must be installed after prerequsite packages.
 ENV LLVM_VERSION=15
@@ -31,6 +33,7 @@ RUN echo 'install llvm ${LLVM_VERSION}'; \
     ln -s /usr/bin/clang-format-${LLVM_VERSION} /usr/bin/clang-format;\
     ln -s /usr/bin/clang-format-diff-${LLVM_VERSION} /usr/bin/clang-format-diff;\
     ln -s /usr/bin/lld-${LLVM_VERSION} /usr/bin/lld;\
+    ln -s /usr/bin/lldb-${LLVM_VERSION} /usr/bin/lldb;\
     ln -s /usr/bin/ld.lld-${LLVM_VERSION} /usr/bin/ld.lld
 
 RUN echo 'configure locale'; \
