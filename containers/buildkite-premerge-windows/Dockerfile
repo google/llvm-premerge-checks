@@ -1,6 +1,7 @@
 # escape=`
 
 # Agent image for LLVM org cluster.
+# maybe mcr.microsoft.com/windows/servercore:ltsc2022?
 FROM mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-ltsc2019
 
 # Restore the default Windows shell for correct batch processing.
