@@ -22,6 +22,7 @@ arguments:
     - '-D CMAKE_BUILD_TYPE=Release'
     - '-D LLVM_ENABLE_ASSERTIONS=ON'
     - '-D LLVM_BUILD_EXAMPLES=ON'
+    - '-D COMPILER_RT_BUILD_LIBFUZZER=OFF' # Libfuzzer tests are flaky.
     - '-D LLVM_LIT_ARGS="-v --xunit-xml-output test-results.xml"'
   linux:
     # CCACHE is enabled in script iff environment variable `CCACHE_DIR` is set
