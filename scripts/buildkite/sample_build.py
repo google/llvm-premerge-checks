@@ -3,8 +3,6 @@ import json
 import argparse
 import requests
 
-#         print(json.loads(re.json()))
-
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Run sample build on buildkite.')
   parser.add_argument('--dryrun', action='store_true')
@@ -18,14 +16,13 @@ if __name__ == '__main__':
           'ph_log_level': 'DEBUG',
           #'ph_skip_linux': 'skip',
           #'ph_linux_agents': '{"queue": "linux-google-test"}',
-          'ph_linux_agents': '{"queue": "linux"}',
+          'ph_linux_agents': '{"queue": "linux-test"}',
           # 'ph_linux_agents': '{"queue": "linux-clang15-test"}',
           # 'ph_skip_windows': 'skip',
-          'ph_windows_agents': f'{{"name": "win-dev", "queue": "windows-test"}}',
-          # 'ph_windows_agents': f'{{"queue": "windows"}}',
+          #'ph_windows_agents': f'{{"name": "win-dev", "queue": "windows-test"}}',
+         'ph_windows_agents': '{"queue": "windows-test"}',
           # 'ph_scripts_refspec': 'windows-vscmd',
           'ph_projects': 'all',
-          'ph_skip_windows': 'skip',
           # 'ph_windows_agents': f'{{"name": "", "queue": "{queue}"}}',
       }})
   print(d)
