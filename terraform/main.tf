@@ -1,5 +1,36 @@
 #todo automatically rebuild buildkite images
 
+data "google_project" "current_project" {
+  project_id = var.project-id
+}
+
+locals {
+  cloud_build_sa_roles = ["roles/storage.objectAdmin", "roles/compute.instanceAdmin", "roles/compute.securityAdmin"]
+}
+
+# data "google_iam_policy" "cloud_build_sa" {
+#   binding {
+#     role = "roles/iam.serviceAccountUser"
+
+#     members = [
+#       "serviceAccount:${data.google_project.current_project.number}-compute@developer.gserviceaccount.com",
+#     ]
+#   }
+# }
+
+# resource "google_service_account_iam_policy" "admin-account-iam" {
+#   service_account_id = "${data.google_project.current_project.id}/serviceAccounts/${data.google_project.current_project.number}@cloudbuild.gserviceaccount.com"
+#   policy_data        = data.google_iam_policy.cloud_build_sa.policy_data
+# }
+
+resource "google_project_iam_member" "cloudbuild_sa_roles" {
+  project = var.project-id
+  for_each = toset(local.cloud_build_sa_roles)
+  role    = each.value
+
+  member = "serviceAccount:${data.google_project.current_project.number}@cloudbuild.gserviceaccount.com"
+}
+
 resource "google_project_service" "cloudbuild_api" {
   service = "cloudbuild.googleapis.com"
 }

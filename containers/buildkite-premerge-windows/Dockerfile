@@ -93,7 +93,7 @@ RUN powershell -Command `
 RUN git config --system core.longpaths true & `
     git config --global core.autocrlf false
 
-# For debugging of files beeing locked by some processes.
+# handle for debugging of files beeing locked by some processes.
 RUN choco install -y handle
 COPY start_agent.ps1 C:\scripts\
 COPY pre-checkout.bat c:\buildkite-agent\hooks\

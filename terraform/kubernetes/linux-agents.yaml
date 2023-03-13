@@ -34,7 +34,7 @@ spec:
     spec:
       containers:
         - name: buildkite-premerge-debian
-          image: gcr.io/${project-id}/buildkite-premerge-debian
+          image: gcr.io/${project-id}/buildkite-premerge-debian:latest
           resources:
             limits:
               cpu: ${cpu-request}

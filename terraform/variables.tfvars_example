@@ -3,17 +3,17 @@ billing-account              = ""
 billing-budget               = 25000
 billing-admins               = {"test": "test@test.com"}
 
-linux-agents-machine-type    = "e2-standard-8"
-linux-agents-count           = 1
-linux-agents-build-queue     = "linux-test"
-linux-agents-cpu-request     = "6"
-linux-agents-mem-request     = "8Gi"
+#linux-agents-machine-type    = "e2-standard-8"
+#linux-agents-count           = 1
+#linux-agents-build-queue     = "linux-test"
+#linux-agents-cpu-request     = "6"
+#linux-agents-mem-request     = "8Gi"
 
-windows-agents-machine-type    = "e2-standard-8"
-windows-agents-count           = 1
-windows-agents-build-queue     = "windows-test"
-windows-agents-cpu-request     = "6"
-windows-agents-mem-request     = "8Gi"
+#windows-agents-machine-type    = "e2-standard-8"
+#windows-agents-count           = 1
+#windows-agents-build-queue     = "windows-test"
+#windows-agents-cpu-request     = "6"
+#windows-agents-mem-request     = "8Gi"
 
 buildkite-api-token-readonly = ""
 buildkite-agent-token        = ""

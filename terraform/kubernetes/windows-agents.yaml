@@ -34,7 +34,7 @@ spec:
     spec:
       containers:
         - name: buildkite-premerge-windows
-          image: gcr.io/${project-id}/buildkite-premerge-windows
+          image: gcr.io/${project-id}/buildkite-premerge-windows:latest
           resources:
             limits:
               cpu: ${cpu-request}
