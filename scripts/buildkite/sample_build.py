@@ -10,9 +10,8 @@ if __name__ == '__main__':
 
   d = json.dumps({
       'branch': 'main',
-      'commit': '40dd8ff3310ba69247c911d1b5fd7ad7cfde81b9',
-      'env': {
-          'ph_skip_generated': 'skip',
+      'commit': 'd3fa067e699cf3ba4bc89f7d51d26f0faed7fa86',
+      'env': {          
           'ph_log_level': 'DEBUG',
           #'ph_skip_linux': 'skip',
           #'ph_linux_agents': '{"queue": "linux-google-test"}',
@@ -22,7 +21,8 @@ if __name__ == '__main__':
           #'ph_windows_agents': f'{{"name": "win-dev", "queue": "windows-test"}}',
          'ph_windows_agents': '{"queue": "windows-test"}',
           # 'ph_scripts_refspec': 'windows-vscmd',
-          'ph_projects': 'all',
+          # 'ph_projects': 'all',
+          'ph_skip_generated': 'skip',
           # 'ph_windows_agents': f'{{"name": "", "queue": "{queue}"}}',
       }})
   print(d)
