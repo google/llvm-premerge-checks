@@ -1,7 +1,5 @@
 project-id                   = ""
-billing-account              = ""
-billing-budget               = 25000
-billing-admins               = {"test": "test@test.com"}
+#billing-admins               = {"test": "test@test.com"}
 
 #linux-agents-machine-type    = "e2-standard-8"
 #linux-agents-count           = 1

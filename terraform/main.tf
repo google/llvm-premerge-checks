@@ -5,9 +5,11 @@ data "google_project" "current_project" {
 }
 
 locals {
-  cloud_build_sa_roles = ["roles/storage.objectAdmin", "roles/compute.instanceAdmin", "roles/compute.securityAdmin"]
+  cloud_build_sa_roles = ["roles/storage.objectAdmin", "roles/compute.instanceAdmin", "roles/compute.securityAdmin", "roles/secretmanager.secretAccessor"]
+  enabled_apis = ["secretmanager.googleapis.com", "billingbudgets.googleapis.com", "cloudbuild.googleapis.com", "compute.googleapis.com", "container.googleapis.com", "cloudresourcemanager.googleapis.com", "cloudbilling.googleapis.com"]
 }
 
+#todo create separate sa for cloud build
 # data "google_iam_policy" "cloud_build_sa" {
 #   binding {
 #     role = "roles/iam.serviceAccountUser"
@@ -24,35 +26,16 @@ locals {
 # }
 
 resource "google_project_iam_member" "cloudbuild_sa_roles" {
-  project = var.project-id
+  project  = var.project-id
   for_each = toset(local.cloud_build_sa_roles)
-  role    = each.value
+  role     = each.value
 
   member = "serviceAccount:${data.google_project.current_project.number}@cloudbuild.gserviceaccount.com"
 }
 
-resource "google_project_service" "cloudbuild_api" {
-  service = "cloudbuild.googleapis.com"
-}
-
-resource "google_project_service" "compute_api" {
-  service = "compute.googleapis.com"
-}
-
-resource "google_project_service" "container_api" {
-  service = "container.googleapis.com"
-}
-
-resource "google_project_service" "cloudresourcemanager_api" {
-  service = "cloudresourcemanager.googleapis.com"
-}
-
-resource "google_project_service" "cloudbilling_api" {
-  service = "cloudbilling.googleapis.com"
-}
-
-resource "google_project_service" "billingbudgets_api" {
-  service = "billingbudgets.googleapis.com"
+resource "google_project_service" "google_api" {
+  for_each = toset(local.enabled_apis)
+  service = each.value
 }
 
 resource "google_storage_bucket" "terraform_state" {

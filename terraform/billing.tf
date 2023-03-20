@@ -1,10 +1,8 @@
 #todo fix billing alert creation
-data "google_billing_account" "account" {
-  billing_account = var.billing-account
-}
+#todo do not create billing if option in variables is off
 
 resource "google_billing_budget" "budget" {
-  billing_account = data.google_billing_account.account.id
+  billing_account = data.google_project.current_project.billing_account
   display_name    = "budget"
   amount {
     specified_amount {
@@ -14,7 +12,7 @@ resource "google_billing_budget" "budget" {
   }
 
   budget_filter {
-    projects               = ["projects/${var.project-id}"]
+    projects               = ["projects/${data.google_project.current_project.number}"]
     credit_types_treatment = "EXCLUDE_ALL_CREDITS"
     #services = ["services/24E6-581D-38E5"] # Bigquery
   }
@@ -29,11 +27,12 @@ resource "google_billing_budget" "budget" {
     threshold_percent = 1.0
   }
 
+  #TODO add if not empty billing admins var. Else use default admins
   all_updates_rule {
     monitoring_notification_channels = [
       for k, v in google_monitoring_notification_channel.notification_channel : google_monitoring_notification_channel.notification_channel[k].id
     ]
-    disable_default_iam_recipients = true
+    disable_default_iam_recipients = length(var.billing-admins) < 1 ? false : true
   }
 }
 

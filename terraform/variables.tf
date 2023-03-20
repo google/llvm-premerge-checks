@@ -2,16 +2,14 @@ variable "project-id" {
   type = string
 }
 
-variable "billing-account" {
-  type = string
-}
-
 variable "billing-budget" {
-  type = number
+  type    = number
+  default = "25000"
 }
 
 variable "billing-admins" {
-  type = map(any)
+  type    = map(any)
+  default = {}
 }
 
 variable "region" {
