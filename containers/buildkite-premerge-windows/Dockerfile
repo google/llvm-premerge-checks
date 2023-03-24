@@ -15,9 +15,9 @@ ARG CHANNEL_URL=https://aka.ms/vs/16/release/channel
 ADD ${CHANNEL_URL} C:\TEMP\VisualStudio.chman
 
 # Install Build Tools with C++ workload.
-#   - Documentation for docker installation 
+#   - Documentation for docker installation
 #     https://docs.microsoft.com/en-us/visualstudio/install/build-tools-container?view=vs-2019
-#   - Documentation on workloads 
+#   - Documentation on workloads
 #     https://docs.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-build-tools?view=vs-2019#c-build-tools
 #   - Documentation on flags
 #     https://docs.microsoft.com/en-us/visualstudio/install/use-command-line-parameters-to-install-visual-studio?view=vs-2019
@@ -30,7 +30,7 @@ RUN C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --nocache `
     --includeRecommended `
     || IF "%ERRORLEVEL%"=="3010" EXIT 0
 
-# Register DIA dll (Debug Interface Access) so it can be used to symbolize 
+# Register DIA dll (Debug Interface Access) so it can be used to symbolize
 # the stack traces. Register dll for 32 and 64 bit.
 # see https://developercommunity.visualstudio.com/content/problem/290674/msdia140dll-is-not-registered-on-vs2017-hosts.html
 RUN regsvr32 /S "C:\BuildTools\DIA SDK\bin\amd64\msdia140.dll" & `
@@ -76,7 +76,7 @@ RUN curl -LO https://github.com/mstorsjo/llvm-mingw/releases/download/20220323/l
 # configure Python encoding
 ENV PYTHONIOENCODING=UTF-8
 
-# update the path variable    
+# update the path variable
 # C:\Program Files\Git\usr\bin contains a usable bash and other unix tools.
 # C:\llvm-mingw\bin contains Clang configured for mingw targets and
 #     corresponding sysroots. Both the 'llvm' package (with Clang defaulting
