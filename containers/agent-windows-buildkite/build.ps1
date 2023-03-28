@@ -13,7 +13,6 @@
 # limitations under the License.
 
 $ROOT_DIR=(Get-Item $PSScriptRoot).Parent.FullName
-. ${ROOT_DIR}\scripts\common.ps1
 $IMAGE_NAME='agent-windows-buildkite'
 
 # get config options
