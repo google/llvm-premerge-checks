@@ -35,7 +35,7 @@ Phabricator side these things were configured
 - Herald [rule for everyone](https://reviews.llvm.org/H576) and for [beta
 testers](https://reviews.llvm.org/H511). Note that right now there is no
 difference between beta and "normal" builds.
-  
+
 - the [merge_guards_bot user](https://reviews.llvm.org/p/merge_guards_bot/)
 account for writing comments.
 
@@ -44,7 +44,7 @@ account for writing comments.
 Buildkite allows [dynamically define pipelines as the output of a
 command](https://buildkite.com/docs/pipelines/defining-steps#dynamic-pipelines).
 That gives us the flexibility to generate pipeline code using the code from a
-specific branch of pre-merge checks. Thus, 
+specific branch of pre-merge checks. Thus,
 [changes can be tested](./playbooks.md#testing-changes-before-merging)
 before affecting everyone.
 
@@ -101,21 +101,21 @@ HTTP authentication and forwards all requests from load balancer to
 
 Follow up to date docs to install [reverse
 proxy](https://kubernetes.github.io/ingress-nginx/deploy/#gce-gke).
- 
-[cert-manager] is installed with helm https://cert-manager.io/docs/installation/helm/ 
+
+[cert-manager] is installed with helm https://cert-manager.io/docs/installation/helm/
 
 helm install \
   cert-manager jetstack/cert-manager \
   --namespace cert-manager \
   --create-namespace \
   --version v1.9.1 \
-  --set installCRDs=true 
-  
-We also have [certificate manager](https://cert-manager.io/docs/) and 
+  --set installCRDs=true
+
+We also have [certificate manager](https://cert-manager.io/docs/) and
 [lets-encrypt configuration](../kubernetes/cert-issuer.yaml) in place, but they are
 not used at the moment and should be removed if we decide to live with static IP.
 
-HTTP auth is configured with k8s secret 'http-auth' in 'buildkite' namespace 
+HTTP auth is configured with k8s secret 'http-auth' in 'buildkite' namespace
 (see [how to update auth](playbooks.md#update-http-auth-credentials)).
 
 ## Linux agents
@@ -156,11 +156,10 @@ debugged, updated, and scaled easily:
 
 - [Linux](../containers/buildkite-premerge-debian/Dockerfile). We use
 [Kubernetes deployment](../kubernetes/buildkite) to manage these agents.
-  
-- [Windows](../containers/agent-windows-buildkite/Dockerfile) based on [Windows
-vs2019](../containers/agent-windows-vs2019). At the moment they are run as
+
+- [Windows](../containers/agent-windows-buildkite/Dockerfile). At the moment they are run as
 multiple individual VM instances.
-  
+
 See [playbooks](playbooks.md) how to manage and set up machines.
 
 # Compilation caching
