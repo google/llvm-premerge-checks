@@ -68,10 +68,10 @@ RUN pip install psutil
 # install python dependencies for the scripts
 RUN pip install -r https://raw.githubusercontent.com/google/llvm-premerge-checks/main/scripts/requirements.txt
 
-RUN curl -LO https://github.com/mstorsjo/llvm-mingw/releases/download/20220323/llvm-mingw-20220323-ucrt-x86_64.zip && `
+RUN curl -LO https://github.com/mstorsjo/llvm-mingw/releases/download/20230320/llvm-mingw-20230320-ucrt-x86_64.zip && `
     powershell Expand-Archive llvm-mingw-*-ucrt-x86_64.zip -DestinationPath . && `
     del llvm-mingw-*-ucrt-x86_64.zip && `
-    ren llvm-mingw-20220323-ucrt-x86_64 llvm-mingw
+    ren llvm-mingw-20230320-ucrt-x86_64 llvm-mingw
 
 # configure Python encoding
 ENV PYTHONIOENCODING=UTF-8
