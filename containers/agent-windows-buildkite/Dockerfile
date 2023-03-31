@@ -83,10 +83,27 @@ ENV PYTHONIOENCODING=UTF-8
 #     'clang.exe' - add this last to let the other one have precedence.
 #     To use these compilers, use the triple prefixed form, e.g.
 #     x86_64-w64-mingw32-clang.
+# C:\buildtools and SDK paths are ones that are set by c:\BuildTools\Common7\Tools\VsDevCmd.bat -arch=amd64 -host_arch=amd64
 RUN powershell -Command `
     [System.Environment]::SetEnvironmentVariable('PATH', `
-    [System.Environment]::GetEnvironmentVariable('PATH', 'machine') + ';C:\Program Files\Git\usr\bin;C:\llvm-mingw\bin', `
-    'machine')
+    [System.Environment]::GetEnvironmentVariable('PATH', 'machine') + ';C:\Program Files\Git\usr\bin;C:\llvm-mingw\bin' `
+    + ';C:\BuildTools\Common7\IDE\' `
+    + ';C:\BuildTools\Common7\IDE\CommonExt ensions\Microsoft\TeamFoundation\Team Explorer' `
+    + ';C:\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin' `
+    + ';C:\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja' `
+    + ';C:\BuildTools\Common7\IDE\CommonExtensions\Microsoft\TeamFoundation\Team Explorer' `
+    + ';C:\BuildTools\Common7\IDE\CommonExtensions\Microsoft\TestWindow' `
+    + ';C:\BuildTools\Common7\IDE\VC\VCPackages' `
+    + ';C:\BuildTools\Common7\Tools\' `
+    + ';C:\BuildTools\Common7\Tools\devinit' `
+    + ';C:\BuildTools\MSBuild\Current\Bin' `
+    + ';C:\BuildTools\MSBuild\Current\bin\Roslyn' `
+    + ';C:\BuildTools\VC\Tools\MSVC\14.29.30133\bin\HostX64\x64' `
+    + ';C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\x64\' `
+    + ';C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64' `
+    + ';C:\Program Files (x86)\Windows Kits\10\bin\x64' `
+    + ';C:\Windows\Microsoft.NET\Framework64\v4.0.30319' `
+    ,'machine')
 
 # use this folder to store the worksapce'
 VOLUME C:\ws

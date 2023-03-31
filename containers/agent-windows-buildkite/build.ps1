@@ -14,19 +14,12 @@
 
 $ROOT_DIR=(Get-Item $PSScriptRoot).Parent.FullName
 $IMAGE_NAME='agent-windows-buildkite'
-
-# get config options
-Get-Content "${ROOT_DIR}\..\k8s_config" | Foreach-Object{
-    if (! $_.StartsWith('#') ){
-        $var = $_.Split('=')
-        New-Variable -Name $var[0] -Value $var[1]
-    }
-}
-
-$QUALIFIED_NAME="${GCR_HOSTNAME}/${GCP_PROJECT}/${IMAGE_NAME}"
+$QUALIFIED_NAME='gcr.io/llvm-premerge-checks/agent-windows-buildkite'
 
 Write-Host "Building ${IMAGE_NAME}..."
-docker build . -t "${IMAGE_NAME}:latest"
-docker tag "${IMAGE_NAME}:latest" "${QUALIFIED_NAME}:latest"
+docker build . -t "${IMAGE_NAME}"
+docker tag "${IMAGE_NAME}" "${QUALIFIED_NAME}:latest" 
+docker tag "${IMAGE_NAME}" "${QUALIFIED_NAME}:stable" 
 Write-Host "to push image, run"
 Write-Host "docker push ${QUALIFIED_NAME}:latest"
+Write-Host "docker push ${QUALIFIED_NAME}:stable"

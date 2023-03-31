@@ -21,8 +21,7 @@ param(
     [string]$workdir = "c:\ws"
 )
 
-New-Item $workdir -Force -ItemType Directorys
-
+New-Item $workdir -Force -ItemType Directory
 cd c:\llvm-premerge-checks
 git pull
 c:\llvm-premerge-checks\scripts\windows\start_container.ps1 -version $version -workdir $workdir
