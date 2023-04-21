@@ -33,7 +33,7 @@ spec:
     spec:
       containers:
         - name: test-debian
-          image: gcr.io/llvm-premerge-checks/test:latest
+          image: gcr.io/llvm-premerge-checks/buildkite-premerge-debian:latest
           resources:
             limits:
               cpu: 30

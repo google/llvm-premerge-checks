@@ -5,7 +5,7 @@ RUN echo 'intall packages'; \
     apt-get install -y --no-install-recommends \
         locales openssh-client gnupg ca-certificates  \
         zip wget git \
-        cmake gdb build-essential  \
+        gdb build-essential  \
         ninja-build \
         libelf-dev libffi-dev gcc-multilib \
         # for llvm-libc tests that build mpfr and gmp from source
@@ -18,10 +18,19 @@ RUN echo 'intall packages'; \
         # for llvm installation script
         sudo;
 
+# debian stable cmake is 3.18, we need to install a more recent version.
+RUN wget --no-verbose -O /cmake.sh https://github.com/Kitware/CMake/releases/download/v3.23.3/cmake-3.23.3-linux-x86_64.sh; \
+    chmod +x /cmake.sh; \
+    mkdir -p /etc/cmake; \
+    /cmake.sh --prefix=/etc/cmake --skip-license; \
+    ln -s /etc/cmake/bin/cmake /usr/bin/cmake; \
+    cmake --version; \
+    rm /cmake.sh
+
 # LLVM must be installed after prerequsite packages.
-ENV LLVM_VERSION=15
+ENV LLVM_VERSION=16
 RUN echo 'install llvm ${LLVM_VERSION}'; \
-    wget https://apt.llvm.org/llvm.sh; \
+    wget --no-verbose https://apt.llvm.org/llvm.sh; \
     chmod +x llvm.sh; \
     ./llvm.sh ${LLVM_VERSION};\
     apt-get update; \
