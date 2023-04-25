@@ -2,8 +2,7 @@ steps:
  - name: gcr.io/cloud-builders/git
    args:
      - '-c'
-     - 'git clone ${_GIT_REPO} repo'
-     #- 'git clone https://gitlab-token:$$GITLAB_TOKEN@${_REPO_URL} repo'
+     - 'git clone ${_GIT_REPO} repo --depth 1'
    entrypoint: bash
  - name: hashicorp/terraform
    args:
@@ -15,53 +14,44 @@ steps:
    args:
      - plan
      - '-var=project-id=${PROJECT_ID}'
-     - '-var=buildkite-api-token-readonly=${_BUILDKITE_API_TOKEN_READONLY}'
-     - '-var=buildkite-agent-token=${_BUILDKITE_AGENT_TOKEN}'
-     - '-var=conduit-api-token=${_CONDUIT_API_TOKEN}'
-     - '-var=git-id-rsa=${_GIT_ID_RSA}'
-     - '-var=id-rsa-pub=${_ID_RSA_PUB}'
-     - '-var=git-known-hosts=${_GIT_KNOWN_HOSTS}'
-     - '-out=/workspace/tfplan-$BUILD_ID'
+     - '-var=buildkite-api-token-readonly=$$BUILDKITE_API_TOKEN_READONLY'
+     - '-var=buildkite-agent-token=$$BUILDKITE_AGENT_TOKEN'
+     - '-var=conduit-api-token=$$CONDUIT_API_TOKEN'
+     - '-var=git-id-rsa=$$GIT_ID_RSA'
+     - '-var=id-rsa-pub=$$ID_RSA_PUB'
+     - '-var=git-known-hosts=$$GIT_KNOWN_HOSTS'
+     - '-out=/workspace/tfplan-${BUILD_ID}'
    secretEnv:
-    - _BUILDKITE_API_TOKEN_READONLY
-    - _BUILDKITE_AGENT_TOKEN
-    - _CONDUIT_API_TOKEN
-    - _GIT_ID_RSA
-    - _ID_RSA_PUB
-    - _GIT_KNOWN_HOSTS
+    - 'BUILDKITE_API_TOKEN_READONLY'
+    - 'BUILDKITE_AGENT_TOKEN'
+    - 'CONDUIT_API_TOKEN'
+    - 'GIT_ID_RSA'
+    - 'ID_RSA_PUB'
+    - 'GIT_KNOWN_HOSTS'
    dir: repo/terraform
 #  - name: hashicorp/terraform
 #    args:
 #      - apply
 #      - '-auto-approve'
-#      - '-var=project-id=${PROJECT_ID}'
-#      - '-var=buildkite-api-token-readonly=${BUILDKITE_API_TOKEN_READONLY}'
-#      - '-var=buildkite-agent-token=${BUILDKITE_AGENT_TOKEN}'
-#      - '-var=conduit-api-token=${CONDUIT_API_TOKEN}'
-#      - '-var=git-id-rsa=${GIT_ID_RSA}'
-#      - '-var=id-rsa-pub=${ID_RSA_PUB}'
-#      - '-var=git-known-hosts=${GIT_KNOWN_HOSTS}'
-#      - /workspace/tfplan-$BUILD_ID
+#      - /workspace/tfplan-${BUILD_ID}
 #    dir: repo/terraform
 substitutions:
- _GIT_REPO: https://github.com/movsic/llvm-premerge-checks.git #$(body.project.git_http_url)
- #_REPO_URL: '${_GIT_REPO##https://}'
+ _GIT_REPO: $(body.project.git_http_url)
  _TF_BACKEND_BUCKET: 'terraform-state-${PROJECT_ID}'
  _TF_BACKEND_PREFIX: terraform/state
 availableSecrets:
  secretManager:
    - versionName: 'projects/${PROJECT_ID}/secrets/buildkite-api-token-readonly/versions/latest'
-     env: _BUILDKITE_API_TOKEN_READONLY
+     env: 'BUILDKITE_API_TOKEN_READONLY'
    - versionName: 'projects/${PROJECT_ID}/secrets/buildkite-agent-token/versions/latest'
-     env: _BUILDKITE_AGENT_TOKEN
+     env: 'BUILDKITE_AGENT_TOKEN'
    - versionName: 'projects/${PROJECT_ID}/secrets/conduit-api-token/versions/latest'
-     env: _CONDUIT_API_TOKEN
+     env: 'CONDUIT_API_TOKEN'
    - versionName: 'projects/${PROJECT_ID}/secrets/git-id-rsa/versions/latest'
-     env: _GIT_ID_RSA
+     env: 'GIT_ID_RSA'
    - versionName: 'projects/${PROJECT_ID}/secrets/id-rsa-pub/versions/latest'
-     env: _ID_RSA_PUB
+     env: 'ID_RSA_PUB'
    - versionName: 'projects/${PROJECT_ID}/secrets/git-known-hosts/versions/latest'
-     env: _GIT_KNOWN_HOSTS
+     env: 'GIT_KNOWN_HOSTS'
 options:
   dynamic_substitutions: true
-  substitution_option: 'ALLOW_LOOSE'

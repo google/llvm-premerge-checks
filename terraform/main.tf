@@ -5,8 +5,16 @@ data "google_project" "current_project" {
 }
 
 locals {
-  cloud_build_sa_roles = ["roles/storage.objectAdmin", "roles/compute.instanceAdmin", "roles/compute.securityAdmin", "roles/secretmanager.secretAccessor"]
-  enabled_apis = ["secretmanager.googleapis.com", "billingbudgets.googleapis.com", "cloudbuild.googleapis.com", "compute.googleapis.com", "container.googleapis.com", "cloudresourcemanager.googleapis.com", "cloudbilling.googleapis.com"]
+  cloud_build_sa_roles = ["roles/editor", "roles/storage.objectAdmin", "roles/secretmanager.secretAccessor","roles/secretmanager.viewer","roles/resourcemanager.projectIamAdmin"]
+  enabled_apis = [
+    "secretmanager.googleapis.com", 
+    "billingbudgets.googleapis.com", 
+    "cloudbuild.googleapis.com", 
+    "compute.googleapis.com", 
+    "container.googleapis.com", 
+    "cloudresourcemanager.googleapis.com", 
+    "cloudbilling.googleapis.com"
+  ]
 }
 
 #todo create separate sa for cloud build
@@ -42,6 +50,7 @@ resource "google_storage_bucket" "terraform_state" {
   name                        = "terraform-state-${var.project-id}"
   uniform_bucket_level_access = true
   location                    = "EU"
+  depends_on = [google_project_service.google_api]
 }
 
 resource "google_compute_network" "vpc_network" {

@@ -10,10 +10,12 @@ resource "google_billing_budget" "budget" {
       units         = var.billing-budget
     }
   }
+  
 
   budget_filter {
     projects               = ["projects/${data.google_project.current_project.number}"]
     credit_types_treatment = "EXCLUDE_ALL_CREDITS"
+    calendar_period        = "MONTH"
     #services = ["services/24E6-581D-38E5"] # Bigquery
   }
 

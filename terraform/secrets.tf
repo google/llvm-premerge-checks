@@ -16,11 +16,11 @@ resource "google_secret_manager_secret" "secret" {
   replication {
     automatic = true
   }
+  depends_on = [google_project_service.google_api]
 }
 
 resource "google_secret_manager_secret_version" "secret_version" {
   for_each = local.secrets
   secret = google_secret_manager_secret.secret[each.key].id
-
   secret_data = each.value
 }
