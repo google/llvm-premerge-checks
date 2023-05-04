@@ -7,7 +7,7 @@ containers/workspace
 **/.DS_Store
 **/.ipynb_checkpoints
 scripts/metrics/cache.json
-.venv
+.envrc
 
 # Local .terraform directories
 **/.terraform/*
