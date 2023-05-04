@@ -16,7 +16,7 @@
 import argparse
 import logging
 import os
-from typing import Optional
+from typing import Any, Optional
 from lxml import etree
 from phabtalk.phabtalk import Report, Step
 
@@ -81,10 +81,14 @@ def parse_failures(test_xml: bytes, context: str) -> []:
             'namespace': test_case.attrib['classname'],
             'result': 'fail',
             'duration': float(test_case.attrib['time']),
-            'details': failure.text
+            'details': failure.text,
         })
     return failed_cases
 
+def add_context_prefix(tests: list[Any], prefix: str) -> list[Any]:
+  for c in tests:
+    c['engine'] = prefix + c['engine']
+  return tests
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Processes results from xml report')
