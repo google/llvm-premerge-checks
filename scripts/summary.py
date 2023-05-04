@@ -54,6 +54,9 @@ def process_build(bk: BuildkiteApi, build: benedict) -> Tuple[list[jobResult], b
         job = benedict(job)
         job_type = job.get('type')
         logging.info(f'Processing job ID={job.get("id")}')
+        if job.get('id') == os.getenv("BUILDKITE_JOB_ID"):
+            logging.info("job ID matches current job, ignoring")
+            continue
         job_state = job.get('state')
         if job_type == 'waiter':
             logging.info('job type is "waiter", ignoring')
