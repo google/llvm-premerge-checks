@@ -110,18 +110,13 @@ def print_jobs(jobs: list[jobResult], pad: str):
         print(f"{pad} {j.name} {j.success}")
         print_jobs(j.sub, pad + '  ')
 
-# Returns a flat list of job results. Sub jobs get a prefix of a parent one.
-def flatten_jobs(jobs: list[jobResult], prefix: str) -> Tuple[list[jobResult], list[Any]]:
-    r = []
+# Returns a flat list of job tests, appends prefix of job names to test names.
+def flatten_tests(jobs: list[jobResult], prefix: str) -> list[Any]:
     t = []
     for j in jobs:
-        j.name = prefix + j.name
         t.extend(xunit_utils.add_context_prefix(j.tests, prefix))
-        r.append(j)
-        sr, st = flatten_jobs(j.sub, f"{j.name} - ")
-        r.extend(sr)
-        t.extend(st)
-    return [r, t]
+        t.extend(flatten_tests(j.sub, f"{prefix}{j.name} - "))
+    return t
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -149,14 +144,14 @@ if __name__ == '__main__':
         # Build type is https://buildkite.com/docs/apis/rest-api/builds#get-a-build.
         build = bk.get_build(bk_pipeline_slug, bk_build_number)
         jobs, success = process_build(bk, build)
-        jobs, failed_tests = flatten_jobs(jobs, '')
+        failed_tests = flatten_tests(jobs, '')
         if args.debug:
             print_jobs(jobs, '')
             for t in failed_tests:
                 t['details'] = ''
         for j in jobs:
             if not j.success:
-                phabtalk.maybe_add_url_artifact(ph_target_phid, j.url, j.name)
+                phabtalk.maybe_add_url_artifact(ph_target_phid, j.url, j.name + " FAILED")
         report_success = success
     finally:
         build_url = f'https://reviews.llvm.org/harbormaster/build/{os.getenv("ph_build_id")}'
