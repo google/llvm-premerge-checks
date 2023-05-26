@@ -18,7 +18,7 @@ metadata:
   name: linux-agents
   namespace: buildkite
 spec:
-  replicas: 5
+  replicas: 0
   strategy:
     rollingUpdate:
       maxSurge: 25%
