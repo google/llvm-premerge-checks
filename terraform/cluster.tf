@@ -58,7 +58,7 @@ resource "google_container_cluster" "llvm_premerge_checks_cluster" {
     cluster_secondary_range_name  = "pods"
     services_secondary_range_name = "services"
   }
-  depends_on = [google_project_service.compute_api, google_project_service.container_api]
+  depends_on = [google_project_service.google_api]
 }
 
 resource "google_container_node_pool" "linux_agents_nodepool" {
@@ -79,8 +79,9 @@ resource "google_container_node_pool" "linux_agents_nodepool" {
   }
 
   autoscaling {
-    min_node_count = 0
-    max_node_count = var.linux-agents-count
+    min_node_count  = 0
+    max_node_count  = var.linux-agents-count
+    location_policy = "BALANCED"
   }
 }
 
@@ -102,8 +103,9 @@ resource "google_container_node_pool" "windows_agents_nodepool" {
   }
 
   autoscaling {
-    min_node_count = 0
-    max_node_count = var.windows-agents-count
+    min_node_count  = 0
+    max_node_count  = var.windows-agents-count
+    location_policy = "BALANCED"
   }
 }
 
