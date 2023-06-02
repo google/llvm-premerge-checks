@@ -79,4 +79,4 @@ spec:
         operator: "Equal"
         value: "windows"
         effect: "NoSchedule"
-      terminationGracePeriodSeconds: 3600
+      terminationGracePeriodSeconds: 60

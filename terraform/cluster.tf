@@ -145,7 +145,14 @@ resource "kubernetes_manifest" "buildkite_conduit_api_token_secret" {
 }
 
 resource "kubernetes_manifest" "buildkite_linux_agent" {
-  manifest   = yamldecode(templatefile("kubernetes/linux-agents.yaml", { project-id = var.project-id, gke-nodepool = google_container_node_pool.linux_agents_nodepool.name, build-queue = var.linux-agents-build-queue, cpu-request = var.linux-agents-cpu-request, mem-request = var.linux-agents-mem-request, replicas-count = var.linux-agents-count }))
+  manifest = yamldecode(templatefile("kubernetes/linux-agents.yaml", {
+    project-id     = var.project-id,
+    gke-nodepool   = google_container_node_pool.linux_agents_nodepool.name,
+    build-queue    = var.linux-agents-build-queue,
+    cpu-request    = var.linux-agents-cpu-request,
+    mem-request    = var.linux-agents-mem-request,
+    replicas-count = var.linux-agents-count,
+  }))
   depends_on = [kubernetes_manifest.buildkite_namespace]
   # wait {
   #   fields = {
@@ -155,7 +162,14 @@ resource "kubernetes_manifest" "buildkite_linux_agent" {
 }
 
 resource "kubernetes_manifest" "buildkite_windows_agent" {
-  manifest   = yamldecode(templatefile("kubernetes/windows-agents.yaml", { project-id = var.project-id, gke-nodepool = google_container_node_pool.windows_agents_nodepool.name, build-queue = var.windows-agents-build-queue, cpu-request = var.windows-agents-cpu-request, mem-request = var.windows-agents-mem-request, replicas-count = var.windows-agents-count }))
+  manifest = yamldecode(templatefile("kubernetes/windows-agents.yaml", {
+    project-id     = var.project-id,
+    gke-nodepool   = google_container_node_pool.windows_agents_nodepool.name,
+    build-queue    = var.windows-agents-build-queue,
+    cpu-request    = var.windows-agents-cpu-request,
+    mem-request    = var.windows-agents-mem-request,
+    replicas-count = var.windows-agents-count,
+  }))
   depends_on = [kubernetes_manifest.buildkite_namespace]
   # wait {
   #   fields = {

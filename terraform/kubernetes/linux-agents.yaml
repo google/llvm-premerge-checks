@@ -79,4 +79,4 @@ spec:
           emptyDir: {}
       nodeSelector:
         cloud.google.com/gke-nodepool: ${gke-nodepool}
-      terminationGracePeriodSeconds: 3600
+      terminationGracePeriodSeconds: 60
