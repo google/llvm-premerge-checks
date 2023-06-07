@@ -20,10 +20,7 @@ metadata:
 spec:
   replicas: ${replicas-count}
   strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 50%
-    type: RollingUpdate
+    type: Recreate
   selector:
     matchLabels:
       app: agent-premerge-windows

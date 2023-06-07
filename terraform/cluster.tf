@@ -103,7 +103,7 @@ resource "google_container_node_pool" "windows_agents_nodepool" {
   }
 
   autoscaling {
-    min_node_count  = 0
+    min_node_count  = 1
     max_node_count  = var.windows-agents-count
     location_policy = "BALANCED"
   }
