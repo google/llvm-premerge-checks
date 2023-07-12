@@ -26,7 +26,7 @@ from steps import generic_linux, generic_windows, from_shell_output, checkout_sc
 import yaml
 
 steps_generators = [
-    '${BUILDKITE_BUILD_CHECKOUT_PATH}/libcxx/utils/ci/buildkite-pipeline-premerge.sh',
+    '${BUILDKITE_BUILD_CHECKOUT_PATH}/.ci/generate-buildkite-pipeline-premerge',
 ]
 
 if __name__ == '__main__':
