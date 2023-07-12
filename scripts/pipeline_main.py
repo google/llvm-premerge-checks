@@ -24,7 +24,7 @@ import os
 import yaml
 
 steps_generators = [
-    '${BUILDKITE_BUILD_CHECKOUT_PATH}/libcxx/utils/ci/buildkite-pipeline-snapshot.sh',
+    '${BUILDKITE_BUILD_CHECKOUT_PATH}/.ci/generate-buildkite-pipeline-scheduled',
 ]
 
 if __name__ == '__main__':
