@@ -2,15 +2,18 @@ import os
 import json
 import argparse
 import requests
+import time
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Run sample build on buildkite.')
   parser.add_argument('--dryrun', action='store_true')
+  parser.add_argument('--commit')
+  pipeline='upstream-bazel-test'
   args = parser.parse_args()
-
+  time.sleep(2)
   d = json.dumps({
       'branch': 'main',
-      'commit': '43b38696aa038a83b12850aab25377650e301cde',
+      'commit': args.commit,
       'env': {
           'ph_log_level': 'DEBUG',
           #'ph_skip_linux': 'skip',
@@ -34,7 +37,7 @@ if __name__ == '__main__':
     exit(1)
 
   print(f"token {token}")
-  re = requests.post('https://api.buildkite.com/v2/organizations/llvm-project/pipelines/llvm-main/builds',
+  re = requests.post(f'https://api.buildkite.com/v2/organizations/llvm-project/pipelines/{pipeline}/builds',
     data=d,
     headers={'Authorization': f'Bearer {token}'})
   print(re.status_code)
