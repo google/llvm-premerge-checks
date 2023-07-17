@@ -8,8 +8,11 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Run sample build on buildkite.')
   parser.add_argument('--dryrun', action='store_true')
   parser.add_argument('--commit')
-  pipeline='upstream-bazel-test'
+  parser.add_argument('--pipeline', default='llvm-main')
+
   args = parser.parse_args()
+
+  pipeline=args.pipeline
   time.sleep(2)
   d = json.dumps({
       'branch': 'main',
@@ -17,7 +20,7 @@ if __name__ == '__main__':
       'env': {
           'ph_log_level': 'DEBUG',
           #'ph_skip_linux': 'skip',
-          'ph_linux_agents': '{"queue": "linux-google-test"}',
+          'ph_linux_agents': '{"queue": "linux-test-google"}',
           #'ph_linux_agents': '{"queue": "linux-test"}',
           # 'ph_linux_agents': '{"queue": "linux-clang15-test"}',
           'ph_skip_windows': 'skip',
@@ -35,8 +38,6 @@ if __name__ == '__main__':
   if token is None:
     print("'BUILDKITE_API_TOKEN' environment variable is not set")
     exit(1)
-
-  print(f"token {token}")
   re = requests.post(f'https://api.buildkite.com/v2/organizations/llvm-project/pipelines/{pipeline}/builds',
     data=d,
     headers={'Authorization': f'Bearer {token}'})
