@@ -18,11 +18,11 @@ metadata:
   name: linux-agents
   namespace: buildkite
 spec:
-  replicas: 0
+  replicas: 6
   strategy:
     rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 50%
+      maxUnavailable: 1
+      maxSurge: 0
     type: RollingUpdate
   selector:
     matchLabels:
@@ -79,4 +79,4 @@ spec:
           emptyDir: {}
       nodeSelector:
         cloud.google.com/gke-nodepool: linux-agents-2
-      terminationGracePeriodSeconds: 3600
+      terminationGracePeriodSeconds: 30
