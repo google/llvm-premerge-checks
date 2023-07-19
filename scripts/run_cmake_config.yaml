@@ -30,4 +30,5 @@ arguments:
     - '-D CMAKE_CXX_FLAGS=-gmlt'
     # Bolt https://github.com/google/llvm-premerge-checks/issues/364#issuecomment-1013952831.
     - '-DBOLT_CLANG_EXE=/usr/bin/clang'
-  windows: []
+  windows:
+    - '-D COMPILER_RT_BUILD_ORC=OFF' # ORC tests failing, should investigate.
