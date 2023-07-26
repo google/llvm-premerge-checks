@@ -81,7 +81,7 @@ excludedProjects:
     - openmp # TODO: check: kuhnel has trouble with the Perl installation
     - cross-project-tests # test failing
     - check-cxxabi
-    - compiler-rt  # tests taking too too long
+    - compiler-rt  # tests taking too long
   linux:
     - libcxx  # has custom pipeline
     - libcxxabi  # has custom pipeline
