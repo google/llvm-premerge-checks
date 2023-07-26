@@ -81,9 +81,10 @@ excludedProjects:
     - openmp # TODO: check: kuhnel has trouble with the Perl installation
     - cross-project-tests # test failing
     - check-cxxabi
+    - compiler-rt  # tests taking too too long
   linux:
-    - libcxx  # has custom checks
-    - libcxxabi  # has custom checks
+    - libcxx  # has custom pipeline
+    - libcxxabi  # has custom pipeline
     - cross-project-tests # tests failing
     - lldb # tests failing
     - openmp # https://github.com/google/llvm-premerge-checks/issues/410
