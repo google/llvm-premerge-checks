@@ -15,32 +15,33 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: linux-agents-test
+  name: buildkite-linux-agents-test
   namespace: buildkite
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 50%
+      maxUnavailable: 1
+      maxSurge: 0
+    type: RollingUpdate
   selector:
     matchLabels:
-      app: agent-premerge-debian
+      app: linux-agents-test
   template:
     metadata:
       labels:
-        app: agent-premerge-debian
+        app: linux-agents-test
     spec:
       containers:
-        - name: test-debian
-          image: gcr.io/llvm-premerge-checks/buildkite-premerge-debian:latest
+        - name: runner
+          image: gcr.io/llvm-premerge-checks/buildkite-linux:latest
           resources:
             limits:
-              cpu: 30
-              memory: 80Gi
+              cpu: 110
+              memory: 420Gi
             requests:
-              cpu: 30
-              memory: 80Gi
+              cpu: 110
+              memory: 420Gi
           volumeMounts:
             - name: github-ssh
               mountPath: /mnt/ssh
@@ -57,7 +58,7 @@ spec:
                 fieldRef:
                  fieldPath: metadata.name
             - name: BUILDKITE_AGENT_TAGS
-              value: "queue=linux-google-test,name=$(POD_NAME)"
+              value: "queue=linux-test,name=$(POD_NAME),cluster=google"
             - name: BUILDKITE_BUILD_PATH
               value: "/var/lib/buildkite-agent/builds"
             - name: CONDUIT_TOKEN
@@ -77,5 +78,5 @@ spec:
         - name: workdir
           emptyDir: {}
       nodeSelector:
-        cloud.google.com/gke-nodepool: linux-agents-2
-      terminationGracePeriodSeconds: 3600
+        cloud.google.com/gke-nodepool: linux-big
+      terminationGracePeriodSeconds: 30

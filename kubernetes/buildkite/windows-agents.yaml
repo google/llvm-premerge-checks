@@ -16,7 +16,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: test-windows-buildkite
-  namespace: buildkite
 spec:
   replicas: 1
   strategy:
@@ -39,6 +38,9 @@ spec:
             requests:
               cpu: 110
               memory: 420Gi
+          volumeMounts:
+            - name: workdir
+              mountPath: "C:\\ws"
           env:
             - name: buildkiteAgentToken
               valueFrom:
@@ -50,14 +52,20 @@ spec:
                 fieldRef:
                  fieldPath: metadata.name
             - name: BUILDKITE_AGENT_TAGS
-              value: "queue=windows-test-pr,name=$(POD_NAME),cluster=google"
+              value: "queue=windows-test,name=w,cluster=google"
+            - name: BUILDKITE_BUILD_CHECKOUT_PATH
+              # TODO: need to drop it if BUILDKITE_REPO is different.
+              value: "c:\\src"
             - name: BUILDKITE_API_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: buildkite-api-token-readonly
                   key: token
+      volumes:
+        - name: workdir
+          emptyDir: {}
       nodeSelector:
-        cloud.google.com/gke-nodepool: linux-big
+        cloud.google.com/gke-nodepool: windows
       tolerations:
       - key: "node.kubernetes.io/os"
         operator: "Equal"

@@ -15,21 +15,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: service-agents-test
+  name: buildkite-service-agents-test
   namespace: buildkite
 spec:
   replicas: 1
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
+    type: RollingUpdate
   selector:
     matchLabels:
-      app: agent-premerge-debian
+      app: buildkite-service-agents
   template:
     metadata:
       labels:
-        app: agent-premerge-debian
+        app: buildkite-service-agents
     spec:
       containers:
-        - name: buildkite-premerge-debian
-          image: gcr.io/llvm-premerge-checks/buildkite-premerge-debian:latest
+        - name: runner
+          image: gcr.io/llvm-premerge-checks/buildkite-linux:latest
           resources:
             limits:
               cpu: 2
@@ -70,4 +75,4 @@ spec:
             secretName: github-ssh
       nodeSelector:
         cloud.google.com/gke-nodepool: default-pool
-      terminationGracePeriodSeconds: 1200
+      terminationGracePeriodSeconds: 60
