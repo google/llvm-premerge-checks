@@ -97,7 +97,10 @@ RUN git config --system core.longpaths true & `
 
 # handle for debugging of files beeing locked by some processes.
 RUN choco install -y handle
-COPY start_agent.ps1 C:\scripts\
+COPY start_agent.ps1 c:\scripts\
+COPY pre-checkout.ps1 c:\scripts\
+COPY post-checkout.ps1 c:\scripts\
+COPY unlock_path.ps1 c:\scripts\
 COPY pre-checkout.bat c:\buildkite-agent\hooks\
 COPY post-checkout.bat c:\buildkite-agent\hooks\
 CMD ["powershell", "C:\\scripts\\start_agent.ps1"]
