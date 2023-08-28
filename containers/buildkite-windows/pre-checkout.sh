@@ -3,7 +3,7 @@
 echo "BUILDKITE_BUILD_CHECKOUT_PATH: $BUILDKITE_BUILD_CHECKOUT_PATH"
 echo "BUILDKITE_BUILD_PATH: $BUILDKITE_BUILD_PATH"
 echo "unlocking git"
-pkill -f git.exe
+taskkill -F -IM git.exe
 rm -f "$BUILDKITE_BUILD_CHECKOUT_PATH/.git/index.lock"
 echo 'running processes (before)'
 ps aux | grep "$BUILDKITE_BUILD_CHECKOUT_PATH"
@@ -22,5 +22,15 @@ if [ -d "$BUILDKITE_BUILD_CHECKOUT_PATH" ]; then
         echo "Remote URL does not match. Deleting and recreating the directory."
         cd /c/
         rm -rf "$BUILDKITE_BUILD_CHECKOUT_PATH"
+        rm /c/ws/git_gc_counter
+    else
+        # Run git gc from time to time to prevent repo from growing.
+        echo -n "x" >> /c/ws/git_gc_counter
+        echo "GC counter $(wc -c < /c/ws/git_gc_counter)/10"
+        if [ "$(wc -c < /c/ws/git_gc_counter)" -gt 10 ]; then
+            echo "Running 'git gc'..."
+            git gc
+            rm /c/ws/git_gc_counter
+        fi
     fi
 fi
