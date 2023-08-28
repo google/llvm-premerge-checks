@@ -1,10 +1,9 @@
-$env:BUILDKITE_BUILD_CHECKOUT_PATH="$env:BUILDKITE_BUILD_PATH/src"
-
+# $env:BUILDKITE_BUILD_CHECKOUT_PATH="$env:BUILDKITE_BUILD_PATH/src"
+echo "BUILDKITE_BUILD_CHECKOUT_PATH: $env:BUILDKITE_BUILD_CHECKOUT_PATH"
+echo "BUILDKITE_BUILD_PATH: $env:BUILDKITE_BUILD_PATH"
 echo "unlocking git"
 taskkill /F /IM git.exe
 rm -Force "$env:BUILDKITE_BUILD_CHECKOUT_PATH/.git/index.lock"
-echo "BUILDKITE_BUILD_CHECKOUT_PATH: $env:BUILDKITE_BUILD_CHECKOUT_PATH"
-echo "BUILDKITE_BUILD_PATH: $env:BUILDKITE_BUILD_PATH"
 echo 'running processes (before)'
 Get-Process | Where-Object {$_.Path -like "$env:BUILDKITE_BUILD_CHECKOUT_PATH*"} | Select-Object -ExpandProperty Path
 echo "unlocking $env:BUILDKITE_BUILD_CHECKOUT_PATH"
@@ -20,8 +19,8 @@ if (Test-Path -Path $env:BUILDKITE_BUILD_CHECKOUT_PATH) {
     echo "current remote URL: $remoteUrl"
     if ($remoteUrl -ne $env:BUILDKITE_REPO) {
         Write-Host "Remote URL does not match. Deleting and recreating the directory."
-        Set-Location -Path "C:\"
-        Remove-Item -Path $env:BUILDKITE_BUILD_CHECKOUT_PATH -Recurse -Force
+        Set-Location -Path "c:\"
+        Remove-Item -Recurse -Force -ErrorAction Ignore $env:BUILDKITE_BUILD_CHECKOUT_PATH
     }
 }
 
