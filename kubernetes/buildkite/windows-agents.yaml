@@ -29,8 +29,8 @@ spec:
         app: test-windows-buildkite
     spec:
       containers:
-        - name: buildkite-premerge-windows
-          image: gcr.io/llvm-premerge-checks/buildkite-premerge-windows:latest
+        - name: buildkite-windows
+          image: gcr.io/llvm-premerge-checks/buildkite-windows:latest
           resources:
             limits:
               cpu: 110
@@ -52,10 +52,7 @@ spec:
                 fieldRef:
                  fieldPath: metadata.name
             - name: BUILDKITE_AGENT_TAGS
-              value: "queue=windows-test,name=w,cluster=google"
-            - name: BUILDKITE_BUILD_CHECKOUT_PATH
-              # TODO: need to drop it if BUILDKITE_REPO is different.
-              value: "c:\\src"
+              value: "queue=windows-test,cluster=google"
             - name: BUILDKITE_API_TOKEN
               valueFrom:
                 secretKeyRef:
