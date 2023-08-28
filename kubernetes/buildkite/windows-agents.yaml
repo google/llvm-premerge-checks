@@ -58,6 +58,8 @@ spec:
                 secretKeyRef:
                   name: buildkite-api-token-readonly
                   key: token
+            # - name: BUILDKITE_BUILD_CHECKOUT_PATH
+            #   value: "c:\\ws\\src"
       volumes:
         - name: workdir
           emptyDir: {}

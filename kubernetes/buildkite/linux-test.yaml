@@ -15,7 +15,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: buildkite-service-agents-test
+  name: linux-test
   namespace: buildkite
 spec:
   replicas: 1
@@ -26,25 +26,27 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: buildkite-service-agents
+      app: linux-test
   template:
     metadata:
       labels:
-        app: buildkite-service-agents
+        app: linux-test
     spec:
       containers:
         - name: runner
           image: gcr.io/llvm-premerge-checks/buildkite-linux:latest
           resources:
             limits:
-              cpu: 2
-              memory: 5Gi
+              cpu: 30
+              memory: 80Gi
             requests:
-              cpu: 1.5
-              memory: 5Gi
+              cpu: 30
+              memory: 80Gi
           volumeMounts:
             - name: github-ssh
               mountPath: /mnt/ssh
+            - name: workdir
+              mountPath: /var/lib/buildkite-agent
           env:
             - name: BUILDKITE_AGENT_TOKEN
               valueFrom:
@@ -56,7 +58,7 @@ spec:
                 fieldRef:
                  fieldPath: metadata.name
             - name: BUILDKITE_AGENT_TAGS
-              value: "queue=service-test,name=$(POD_NAME)"
+              value: "queue=linux-test,name=$(POD_NAME),cluster=google"
             - name: BUILDKITE_BUILD_PATH
               value: "/var/lib/buildkite-agent/builds"
             - name: CONDUIT_TOKEN
@@ -73,6 +75,8 @@ spec:
         - name: github-ssh
           secret:
             secretName: github-ssh
+        - name: workdir
+          emptyDir: {}
       nodeSelector:
-        cloud.google.com/gke-nodepool: default-pool
-      terminationGracePeriodSeconds: 60
+        cloud.google.com/gke-nodepool: linux-agents-2
+      terminationGracePeriodSeconds: 30

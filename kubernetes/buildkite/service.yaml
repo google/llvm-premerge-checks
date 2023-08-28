@@ -1,4 +1,4 @@
-# Copyright 2021 Google LLC
+# Copyright 2019 Google LLC
 #
 # Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,10 +15,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: buildkite-linux-agents-test
+  name: service
   namespace: buildkite
 spec:
-  replicas: 1
+  replicas: 4
   strategy:
     rollingUpdate:
       maxUnavailable: 1
@@ -26,27 +26,25 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: linux-agents-test
+      app: service
   template:
     metadata:
       labels:
-        app: linux-agents-test
+        app: service
     spec:
       containers:
-        - name: runner
+        - name: buildkite-premerge-debian
           image: gcr.io/llvm-premerge-checks/buildkite-linux:latest
           resources:
             limits:
-              cpu: 110
-              memory: 420Gi
+              cpu: 2
+              memory: 5Gi
             requests:
-              cpu: 110
-              memory: 420Gi
+              cpu: 1.5
+              memory: 5Gi
           volumeMounts:
             - name: github-ssh
               mountPath: /mnt/ssh
-            - name: workdir
-              mountPath: /var/lib/buildkite-agent
           env:
             - name: BUILDKITE_AGENT_TOKEN
               valueFrom:
@@ -58,9 +56,7 @@ spec:
                 fieldRef:
                  fieldPath: metadata.name
             - name: BUILDKITE_AGENT_TAGS
-              value: "queue=linux-test,name=$(POD_NAME),cluster=google"
-            - name: BUILDKITE_BUILD_PATH
-              value: "/var/lib/buildkite-agent/builds"
+              value: "queue=service,name=$(POD_NAME),cluster=google"
             - name: CONDUIT_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -71,12 +67,12 @@ spec:
                 secretKeyRef:
                   name: buildkite-api-token-readonly
                   key: token
+            - name: BUILDKITE_BUILD_PATH
+              value: "/var/lib/buildkite-agent/builds"
       volumes:
         - name: github-ssh
           secret:
             secretName: github-ssh
-        - name: workdir
-          emptyDir: {}
       nodeSelector:
-        cloud.google.com/gke-nodepool: linux-big
+        cloud.google.com/gke-nodepool: default-pool
       terminationGracePeriodSeconds: 30

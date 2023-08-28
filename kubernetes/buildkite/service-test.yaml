@@ -1,4 +1,4 @@
-# Copyright 2019 Google LLC
+# Copyright 2021 Google LLC
 #
 # Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,26 +15,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: service-agents
+  name: service-test
   namespace: buildkite
 spec:
-  replicas: 4
+  replicas: 1
   strategy:
     rollingUpdate:
-      maxSurge: 50%
-      maxUnavailable: 50%
+      maxUnavailable: 1
+      maxSurge: 0
     type: RollingUpdate
   selector:
     matchLabels:
-      app: agent-premerge-debian
+      app: service-test
   template:
     metadata:
       labels:
-        app: agent-premerge-debian
+        app: service-test
     spec:
       containers:
-        - name: buildkite-premerge-debian
-          image: gcr.io/llvm-premerge-checks/buildkite-premerge-debian:stable
+        - name: runner
+          image: gcr.io/llvm-premerge-checks/buildkite-linux:latest
           resources:
             limits:
               cpu: 2
@@ -56,7 +56,9 @@ spec:
                 fieldRef:
                  fieldPath: metadata.name
             - name: BUILDKITE_AGENT_TAGS
-              value: "queue=service,name=$(POD_NAME)"
+              value: "queue=service-test,name=$(POD_NAME),cluster=google"
+            - name: BUILDKITE_BUILD_PATH
+              value: "/var/lib/buildkite-agent/builds"
             - name: CONDUIT_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -67,12 +69,10 @@ spec:
                 secretKeyRef:
                   name: buildkite-api-token-readonly
                   key: token
-            - name: BUILDKITE_BUILD_PATH
-              value: "/var/lib/buildkite-agent/builds"
       volumes:
         - name: github-ssh
           secret:
             secretName: github-ssh
       nodeSelector:
         cloud.google.com/gke-nodepool: default-pool
-      terminationGracePeriodSeconds: 30
+      terminationGracePeriodSeconds: 60

@@ -15,7 +15,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: test-linux-buildkite
+  name: linux-big
   namespace: buildkite
 spec:
   replicas: 1
@@ -26,11 +26,11 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: test-linux-buildkite
+      app: linux-test-big
   template:
     metadata:
       labels:
-        app: test-linux-buildkite
+        app: linux-test-big
     spec:
       containers:
         - name: buildkite-linux
@@ -58,7 +58,7 @@ spec:
                 fieldRef:
                  fieldPath: metadata.name
             - name: BUILDKITE_AGENT_TAGS
-              value: "queue=linux-test,name=$(POD_NAME),cluster=google"
+              value: "queue=linux-test-big,name=$(POD_NAME),cluster=google"
             - name: BUILDKITE_BUILD_PATH
               value: "/var/lib/buildkite-agent/builds"
             - name: BUILDKITE_API_TOKEN
