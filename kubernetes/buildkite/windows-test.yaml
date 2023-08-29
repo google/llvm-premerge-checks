@@ -58,8 +58,10 @@ spec:
                 secretKeyRef:
                   name: buildkite-api-token-readonly
                   key: token
-            # - name: BUILDKITE_BUILD_CHECKOUT_PATH
-            #   value: "c:\\ws\\src"
+            - name: BUILDKITE_BUILD_PATH
+              value: "c:/ws" # matching workdir
+      # Empty dir volume can use all disk space from VM. By default container
+      # disk will only be 20Gb and run out of space.
       volumes:
         - name: workdir
           emptyDir: {}
