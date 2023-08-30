@@ -15,18 +15,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: test-windows-buildkite
+  name: windows-test-112
 spec:
   replicas: 1
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      app: test-windows-buildkite
+      app: windows-test-112
   template:
     metadata:
       labels:
-        app: test-windows-buildkite
+        app: windows-test-112
     spec:
       containers:
         - name: buildkite-windows
@@ -52,7 +52,7 @@ spec:
                 fieldRef:
                  fieldPath: metadata.name
             - name: BUILDKITE_AGENT_TAGS
-              value: "queue=windows-test,cluster=google"
+              value: "queue=windows-test-112,cluster=google"
             - name: BUILDKITE_API_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -72,4 +72,4 @@ spec:
         operator: "Equal"
         value: "windows"
         effect: "NoSchedule"
-      terminationGracePeriodSeconds: 60
+      terminationGracePeriodSeconds: 30

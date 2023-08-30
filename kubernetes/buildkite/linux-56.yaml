@@ -15,10 +15,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: linux
+  name: linux-test-56
   namespace: buildkite
 spec:
-  replicas: 6
+  replicas: 1
   strategy:
     rollingUpdate:
       maxUnavailable: 1
@@ -26,22 +26,22 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: linux
+      app: linux-test-56
   template:
     metadata:
       labels:
-        app: linux
+        app: linux-test-56
     spec:
       containers:
         - name: runner
           image: gcr.io/llvm-premerge-checks/buildkite-linux:latest
           resources:
             limits:
-              cpu: 30
-              memory: 80Gi
+              cpu: 55
+              memory: 200Gi
             requests:
-              cpu: 30
-              memory: 80Gi
+              cpu: 55
+              memory: 200Gi
           volumeMounts:
             - name: github-ssh
               mountPath: /mnt/ssh
@@ -58,7 +58,7 @@ spec:
                 fieldRef:
                  fieldPath: metadata.name
             - name: BUILDKITE_AGENT_TAGS
-              value: "queue=linux,name=$(POD_NAME),cluster=google"
+              value: "queue=linux-test-56,name=$(POD_NAME),cluster=google"
             - name: BUILDKITE_BUILD_PATH
               value: "/var/lib/buildkite-agent/builds"
             - name: CONDUIT_TOKEN
@@ -78,5 +78,5 @@ spec:
         - name: workdir
           emptyDir: {}
       nodeSelector:
-        cloud.google.com/gke-nodepool: linux-agents-2
+        cloud.google.com/gke-nodepool: linux-56
       terminationGracePeriodSeconds: 30

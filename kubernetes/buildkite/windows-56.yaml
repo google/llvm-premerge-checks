@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,40 +15,34 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: linux-big
-  namespace: buildkite
+  name: windows-test-56
 spec:
   replicas: 1
   strategy:
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 0
-    type: RollingUpdate
+    type: Recreate
   selector:
     matchLabels:
-      app: linux-test-big
+      app: windows-test-56
   template:
     metadata:
       labels:
-        app: linux-test-big
+        app: windows-test-56
     spec:
       containers:
-        - name: buildkite-linux
-          image: gcr.io/llvm-premerge-checks/buildkite-linux:latest
+        - name: buildkite-windows
+          image: gcr.io/llvm-premerge-checks/buildkite-windows:latest
           resources:
             limits:
-              cpu: 110
-              memory: 420Gi
+              cpu: 55
+              memory: 200Gi
             requests:
-              cpu: 110
-              memory: 420Gi
+              cpu: 55
+              memory: 200Gi
           volumeMounts:
-            - name: github-ssh
-              mountPath: /mnt/ssh
             - name: workdir
-              mountPath: /var/lib/buildkite-agent
+              mountPath: "C:\\ws"
           env:
-            - name: BUILDKITE_AGENT_TOKEN
+            - name: buildkiteAgentToken
               valueFrom:
                 secretKeyRef:
                   name: buildkite-agent-token
@@ -58,20 +52,24 @@ spec:
                 fieldRef:
                  fieldPath: metadata.name
             - name: BUILDKITE_AGENT_TAGS
-              value: "queue=linux-test-big,name=$(POD_NAME),cluster=google"
-            - name: BUILDKITE_BUILD_PATH
-              value: "/var/lib/buildkite-agent/builds"
+              value: "queue=windows-test-56,cluster=google"
             - name: BUILDKITE_API_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: buildkite-api-token-readonly
                   key: token
+            - name: BUILDKITE_BUILD_PATH
+              value: "c:/ws" # matching workdir
+      # Empty dir volume can use all disk space from VM. By default container
+      # disk will only be 20Gb and run out of space.
       volumes:
-        - name: github-ssh
-          secret:
-            secretName: github-ssh
         - name: workdir
           emptyDir: {}
       nodeSelector:
-        cloud.google.com/gke-nodepool: linux-big
+        cloud.google.com/gke-nodepool: windows-56
+      tolerations:
+      - key: "node.kubernetes.io/os"
+        operator: "Equal"
+        value: "windows"
+        effect: "NoSchedule"
       terminationGracePeriodSeconds: 30

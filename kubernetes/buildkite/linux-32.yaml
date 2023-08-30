@@ -26,21 +26,21 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: linux-test
+      app: linux-test-32
   template:
     metadata:
       labels:
-        app: linux-test
+        app: linux-test-32
     spec:
       containers:
         - name: runner
           image: gcr.io/llvm-premerge-checks/buildkite-linux:latest
           resources:
             limits:
-              cpu: 30
+              cpu: 31
               memory: 80Gi
             requests:
-              cpu: 30
+              cpu: 31
               memory: 80Gi
           volumeMounts:
             - name: github-ssh
@@ -58,7 +58,7 @@ spec:
                 fieldRef:
                  fieldPath: metadata.name
             - name: BUILDKITE_AGENT_TAGS
-              value: "queue=linux-test,name=$(POD_NAME),cluster=google"
+              value: "queue=linux-test-32,name=$(POD_NAME),cluster=google"
             - name: BUILDKITE_BUILD_PATH
               value: "/var/lib/buildkite-agent/builds"
             - name: CONDUIT_TOKEN
@@ -78,5 +78,5 @@ spec:
         - name: workdir
           emptyDir: {}
       nodeSelector:
-        cloud.google.com/gke-nodepool: linux-agents-2
+        cloud.google.com/gke-nodepool: linux-32
       terminationGracePeriodSeconds: 30
