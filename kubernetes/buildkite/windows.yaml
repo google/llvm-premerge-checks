@@ -17,7 +17,7 @@ kind: Deployment
 metadata:
   name: windows-buildkite
 spec:
-  replicas: 2
+  replicas: 8
   strategy:
     type: Recreate
   selector:
@@ -52,7 +52,7 @@ spec:
                 fieldRef:
                  fieldPath: metadata.name
             - name: BUILDKITE_AGENT_TAGS
-              value: "queue=windows-test,cluster=google"
+              value: "queue=windows,cluster=google"
             - name: BUILDKITE_API_TOKEN
               valueFrom:
                 secretKeyRef:
