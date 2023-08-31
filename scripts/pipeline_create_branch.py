@@ -88,4 +88,14 @@ if __name__ == '__main__':
             },
         }
         steps.append(trigger_build_step)
+        steps.append({
+            'trigger': 'experimental-goncharov',
+            'label': ':rocket: build and test (test)',
+            'async': False,
+            'depends_on': 'create-branch',
+            'build': {
+                'branch': f'phab-diff-{diff_id}',
+                'env': env,
+            },
+        })
     print(yaml.dump({'steps': steps}))
