@@ -18,7 +18,7 @@ metadata:
   name: linux
   namespace: buildkite
 spec:
-  replicas: 6
+  replicas: 3
   strategy:
     rollingUpdate:
       maxUnavailable: 1
@@ -37,11 +37,11 @@ spec:
           image: gcr.io/llvm-premerge-checks/buildkite-linux:latest
           resources:
             limits:
-              cpu: 30
-              memory: 80Gi
+              cpu: 55
+              memory: 200Gi
             requests:
-              cpu: 30
-              memory: 80Gi
+              cpu: 55
+              memory: 200Gi
           volumeMounts:
             - name: github-ssh
               mountPath: /mnt/ssh
@@ -78,5 +78,5 @@ spec:
         - name: workdir
           emptyDir: {}
       nodeSelector:
-        cloud.google.com/gke-nodepool: linux-agents-2
+        cloud.google.com/gke-nodepool: linux-56
       terminationGracePeriodSeconds: 30
