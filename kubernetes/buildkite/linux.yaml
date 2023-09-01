@@ -18,7 +18,7 @@ metadata:
   name: linux
   namespace: buildkite
 spec:
-  replicas: 3
+  replicas: 2
   strategy:
     rollingUpdate:
       maxUnavailable: 1
@@ -37,11 +37,11 @@ spec:
           image: gcr.io/llvm-premerge-checks/buildkite-linux:latest
           resources:
             limits:
-              cpu: 55
-              memory: 200Gi
+              cpu: 30
+              memory: 80Gi
             requests:
-              cpu: 55
-              memory: 200Gi
+              cpu: 30
+              memory: 80Gi
           volumeMounts:
             - name: github-ssh
               mountPath: /mnt/ssh
@@ -58,7 +58,7 @@ spec:
                 fieldRef:
                  fieldPath: metadata.name
             - name: BUILDKITE_AGENT_TAGS
-              value: "queue=linux,name=$(POD_NAME),cluster=google"
+              value: "queue=linux,name=$(POD_NAME),cluster=google,node-pool=linux-agents-2"
             - name: BUILDKITE_BUILD_PATH
               value: "/var/lib/buildkite-agent/builds"
             - name: CONDUIT_TOKEN
@@ -78,5 +78,5 @@ spec:
         - name: workdir
           emptyDir: {}
       nodeSelector:
-        cloud.google.com/gke-nodepool: linux-56
+        cloud.google.com/gke-nodepool: linux-agents-2
       terminationGracePeriodSeconds: 30

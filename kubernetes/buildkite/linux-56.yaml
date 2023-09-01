@@ -15,10 +15,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: linux-test-56
+  name: linux-56
   namespace: buildkite
 spec:
-  replicas: 1
+  replicas: 3
   strategy:
     rollingUpdate:
       maxUnavailable: 1
@@ -26,11 +26,11 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: linux-test-56
+      app: linux-56
   template:
     metadata:
       labels:
-        app: linux-test-56
+        app: linux-56
     spec:
       containers:
         - name: runner
@@ -58,7 +58,7 @@ spec:
                 fieldRef:
                  fieldPath: metadata.name
             - name: BUILDKITE_AGENT_TAGS
-              value: "queue=linux-test-56,name=$(POD_NAME),cluster=google"
+              value: "queue=linux,name=$(POD_NAME),cluster=google,node-pool=linux-56"
             - name: BUILDKITE_BUILD_PATH
               value: "/var/lib/buildkite-agent/builds"
             - name: CONDUIT_TOKEN
