@@ -22,7 +22,7 @@ if [ -d "$BUILDKITE_BUILD_CHECKOUT_PATH" ]; then
         echo "Remote URL does not match. Deleting and recreating the directory."
         cd /c/
         rm -rf "$BUILDKITE_BUILD_CHECKOUT_PATH"
-        rm /c/ws/git_gc_counter
+        rm -rf /c/ws/git_gc_counter
     else
         # Run git gc from time to time to prevent repo from growing.
         echo -n "x" >> /c/ws/git_gc_counter
@@ -30,7 +30,7 @@ if [ -d "$BUILDKITE_BUILD_CHECKOUT_PATH" ]; then
         if [ "$(wc -c < /c/ws/git_gc_counter)" -gt 10 ]; then
             echo "Running 'git gc'..."
             git gc
-            rm /c/ws/git_gc_counter
+            rm -rf /c/ws/git_gc_counter
         fi
     fi
 fi
