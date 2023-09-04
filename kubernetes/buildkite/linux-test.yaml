@@ -26,11 +26,11 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: linux-test-32
+      app: linux-test
   template:
     metadata:
       labels:
-        app: linux-test-32
+        app: linux-test
     spec:
       containers:
         - name: runner
@@ -58,7 +58,7 @@ spec:
                 fieldRef:
                  fieldPath: metadata.name
             - name: BUILDKITE_AGENT_TAGS
-              value: "queue=linux-test-32,name=$(POD_NAME),cluster=google"
+              value: "queue=linux-test,name=$(POD_NAME),cluster=google,node-pool=linux-agents-2"
             - name: BUILDKITE_BUILD_PATH
               value: "/var/lib/buildkite-agent/builds"
             - name: CONDUIT_TOKEN
@@ -78,5 +78,5 @@ spec:
         - name: workdir
           emptyDir: {}
       nodeSelector:
-        cloud.google.com/gke-nodepool: linux-32
+        cloud.google.com/gke-nodepool: linux-agents-2
       terminationGracePeriodSeconds: 30

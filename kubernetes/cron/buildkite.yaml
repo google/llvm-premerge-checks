@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: buildkite-stats
@@ -60,4 +60,4 @@ spec:
               value: "main"
           restartPolicy: Never
           nodeSelector:
-            cloud.google.com/gke-nodepool: service
+            cloud.google.com/gke-nodepool: default-pool
