@@ -30,7 +30,7 @@ spec:
           containers:
           - name: collect-buildkite-stats
             image: gcr.io/llvm-premerge-checks/stats:latest
-            args: ["/root/llvm-premerge-checks/scripts/metrics/connect_db.sh python3 load_buildkite.py"]
+            args: ["/root/llvm-premerge-checks/scripts/metrics/connect_db.sh download_buildkite_builds_pg.sh"]
             env:
             - name: BUILDKITE_AGENT_TOKEN
               valueFrom:
