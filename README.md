@@ -1,6 +1,8 @@
-# Status
+This repo is holding VM configurations for machine cluster and scripts to run pre-merge tests triggered by http://reviews.llvm.org.
 
-No known issues :see_no_evil:
+As LLVM project has moved to Pull Requests and Phabricator will no longer trigger builds, this repository will likely be gone.
+
+[Pull request migration schedule](https://discourse.llvm.org/t/pull-request-migration-schedule/71595).
 
 # Overview
 
