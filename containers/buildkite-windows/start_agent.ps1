@@ -4,6 +4,9 @@ git clone https://github.com/google/llvm-premerge-checks.git c:\llvm-premerge-ch
 # short as many tools break on Windows with paths longer than 250.
 $env:BUILDKITE_BUILD_CHECKOUT_PATH = "$env:BUILDKITE_BUILD_PATH\src"
 
+# Exclude build path from Windows Defender.
+Add-MpPreference -ExclusionPath "$env:BUILDKITE_BUILD_PATH"
+
 # Install Buildkite agent.
 iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/buildkite/agent/master/install.ps1'))
 $env:SCCACHE_DIR="$env:BUILDKITE_BUILD_PATH\sccache"
