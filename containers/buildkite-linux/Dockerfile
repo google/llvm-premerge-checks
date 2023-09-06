@@ -78,7 +78,7 @@ RUN echo 'install buildkite' ;\
 COPY *.sh /usr/local/bin/
 RUN chmod og+rx /usr/local/bin/*.sh
 COPY --chown=buildkite-agent:buildkite-agent pre-checkout /etc/buildkite-agent/hooks
-COPY --chown=buildkite-agent:buildkite-agent post-checkout /etc/buildkite-agent/hooks
+# COPY --chown=buildkite-agent:buildkite-agent post-checkout /etc/buildkite-agent/hooks
 
 # buildkite working directory
 VOLUME /var/lib/buildkite-agent

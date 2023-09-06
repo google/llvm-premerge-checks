@@ -16,8 +16,37 @@
 # The `pre-checkout` hook will run just before your pipelines source code is
 # checked out from your SCM provider
 
-set -e
+set -eu
+set -o pipefail
 
 # Convert https://github.com/llvm-premerge-tests/llvm-project.git -> llvm-project
 # to use the same directory for fork and origin.
 BUILDKITE_BUILD_CHECKOUT_PATH="${BUILDKITE_BUILD_PATH}/$(echo $BUILDKITE_REPO | sed -E "s#.*/([^/]*)#\1#" | sed "s/.git$//")"
+gc_counter="$BUILDKITE_BUILD_PATH/git_gc_counter"
+echo "BUILDKITE_REPO: $BUILDKITE_REPO"
+if [ -d "$BUILDKITE_BUILD_CHECKOUT_PATH" ]; then
+    cd "$BUILDKITE_BUILD_CHECKOUT_PATH" || exit
+    remoteUrl=$(git remote get-url origin)
+    echo "current remote URL: $remoteUrl"
+    if [ "$remoteUrl" != "$BUILDKITE_REPO" ]; then
+        echo "Remote URL does not match. Deleting and recreating the directory."
+        cd /c/
+        rm -rf "$BUILDKITE_BUILD_CHECKOUT_PATH"
+        rm -rf "$gc_counter"
+    else
+        # Run git gc from time to time to prevent repo from growing.
+        echo -n "x" >> "$gc_counter"
+        echo "GC counter $(wc -c < "$gc_counter")/20"
+        if [ "$(wc -c < "$gc_counter")" -gt 20 ]; then
+            echo "Running 'git gc'..."
+            git gc
+            git prune
+            if [ -f ".git/gc.log" ]; then
+              echo ".git/gc.log exist"
+              cat ./.git/gc.log
+              rm -f ./.git/gc.log
+            fi
+            rm -rf "$gc_counter"
+        fi
+    fi
+fi
