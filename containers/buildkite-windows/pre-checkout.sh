@@ -16,7 +16,7 @@ ps aux | grep "$BUILDKITE_BUILD_CHECKOUT_PATH"
 echo "BUILDKITE_REPO: $BUILDKITE_REPO"
 if [ -d "$BUILDKITE_BUILD_CHECKOUT_PATH" ]; then
     cd "$BUILDKITE_BUILD_CHECKOUT_PATH" || exit
-    remoteUrl=$(git remote get-url origin)
+    remoteUrl=$(git remote get-url origin || echo "not a git repo")
     echo "current remote URL: $remoteUrl"
     if [ "$remoteUrl" != "$BUILDKITE_REPO" ]; then
         echo "Remote URL does not match. Deleting and recreating the directory."

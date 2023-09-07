@@ -32,7 +32,7 @@ rm -rf "$SCCACHE_DIR"
 mkdir -p "${SCCACHE_DIR}"
 chown -R ${USER}:${USER} "${SCCACHE_DIR}"
 chmod oug+rw "${SCCACHE_DIR}"
-gosu "$USER" bash -c 'env; whoami; SCCACHE_DIR="${SCCACHE_DIR}" SCCACHE_IDLE_TIMEOUT=0 SCCACHE_CACHE_SIZE=20G sccache --start-server'
+gosu "$USER" bash -c 'SCCACHE_DIR="${SCCACHE_DIR}" SCCACHE_IDLE_TIMEOUT=0 SCCACHE_CACHE_SIZE=20G sccache --start-server'
 
 # /mnt/ssh should contain known_hosts, id_rsa and id_rsa.pub .
 mkdir -p /var/lib/buildkite-agent/.ssh
