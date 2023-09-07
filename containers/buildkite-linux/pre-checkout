@@ -21,7 +21,7 @@ set -o pipefail
 
 # Convert https://github.com/llvm-premerge-tests/llvm-project.git -> llvm-project
 # to use the same directory for fork and origin.
-BUILDKITE_BUILD_CHECKOUT_PATH="${BUILDKITE_BUILD_PATH}/$(echo $BUILDKITE_REPO | sed -E "s#.*/([^/]*)#\1#" | sed "s/.git$//")"
+# BUILDKITE_BUILD_CHECKOUT_PATH="${BUILDKITE_BUILD_PATH}/$(echo $BUILDKITE_REPO | sed -E "s#.*/([^/]*)#\1#" | sed "s/.git$//")"
 gc_counter="$BUILDKITE_BUILD_PATH/git_gc_counter"
 echo "BUILDKITE_REPO: $BUILDKITE_REPO"
 if [ -d "$BUILDKITE_BUILD_CHECKOUT_PATH" ]; then
@@ -30,7 +30,7 @@ if [ -d "$BUILDKITE_BUILD_CHECKOUT_PATH" ]; then
     echo "current remote URL: $remoteUrl"
     if [ "$remoteUrl" != "$BUILDKITE_REPO" ]; then
         echo "Remote URL does not match. Deleting and recreating the directory."
-        cd /c/
+        cd $BUILDKITE_BUILD_PATH
         rm -rf "$BUILDKITE_BUILD_CHECKOUT_PATH"
         rm -rf "$gc_counter"
     else

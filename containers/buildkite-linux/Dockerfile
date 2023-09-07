@@ -84,4 +84,4 @@ COPY --chown=buildkite-agent:buildkite-agent pre-checkout /etc/buildkite-agent/h
 VOLUME /var/lib/buildkite-agent
 
 ENTRYPOINT ["entrypoint.sh"]
-CMD ["gosu", "buildkite-agent", "buildkite-agent", "start", "--no-color"]
+CMD ["gosu", "buildkite-agent", "buildkite-agent", "start", "--no-color", "--tags-from-gcp"]

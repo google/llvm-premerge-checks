@@ -58,7 +58,7 @@ spec:
                 fieldRef:
                  fieldPath: metadata.name
             - name: BUILDKITE_AGENT_TAGS
-              value: "queue=linux-test,name=$(POD_NAME),cluster=google,node-pool=linux-agents-2"
+              value: "queue=linux-test,pod-name=$(POD_NAME)"
             - name: BUILDKITE_BUILD_PATH
               value: "/var/lib/buildkite-agent/builds"
             - name: CONDUIT_TOKEN
