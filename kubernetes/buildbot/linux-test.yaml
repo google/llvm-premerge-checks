@@ -1,0 +1,57 @@
+# Copyright 2021 Google LLC
+#
+# Licensed under the the Apache License v2.0 with LLVM Exceptions (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://llvm.org/LICENSE.txt
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: buildbot-linux-test
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: buildbot-linux-test
+  template:
+    metadata:
+      labels:
+        app: buildbot-linux-test
+    spec:
+      containers:
+        - name: runner
+          image: gcr.io/llvm-premerge-checks/buildbot-linux:latest
+          resources:
+            limits:
+              cpu: 31
+              memory: 80Gi
+            requests:
+              cpu: 31
+              memory: 80Gi
+          volumeMounts:
+            - name: workdir
+              mountPath: /build
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                 fieldPath: metadata.name
+      volumes:
+        - name: workdir
+          emptyDir: {}
+      nodeSelector:
+        cloud.google.com/gke-nodepool: linux-agents-2
+      terminationGracePeriodSeconds: 30
