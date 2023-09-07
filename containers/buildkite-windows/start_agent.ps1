@@ -5,8 +5,8 @@ git clone https://github.com/google/llvm-premerge-checks.git c:\llvm-premerge-ch
 if ($null -eq $env:BUILDKITE_BUILD_PATH) { $env:BUILDKITE_BUILD_PATH = 'c:\ws' }
 $env:BUILDKITE_BUILD_CHECKOUT_PATH = "$env:BUILDKITE_BUILD_PATH\src"
 
-# Exclude build path from Windows Defender.
 Set-MpPreference -DisableRealtimeMonitoring $true
+Get-MpComputerStatus
 
 # Install Buildkite agent.
 iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/buildkite/agent/master/install.ps1'))
@@ -14,4 +14,4 @@ $env:SCCACHE_DIR="$env:BUILDKITE_BUILD_PATH\sccache"
 $env:SCCACHE_IDLE_TIMEOUT="0"
 Remove-Item -Recurse -Force -ErrorAction Ignore $env:SCCACHE_DIR
 sccache --start-server
-C:\buildkite-agent\bin\buildkite-agent.exe start
+C:\buildkite-agent\bin\buildkite-agent.exe start --no-color --tags-from-gcp
