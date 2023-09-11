@@ -1,11 +1,14 @@
 FROM ubuntu:latest
 
+# Make sure apt-get doesn't try to prompt for stuff like our time zone, etc.
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN echo 'intall packages'; \
     apt-get update; \
     apt-get upgrade; \
     apt-get install -y --no-install-recommends \
-        gosu \
-        locales openssh-client gnupg ca-certificates  \
+        gosu tini \
+        locales openssh-client gnupg ca-certificates apt-transport-https \
         zip wget curl git \
         gdb build-essential  \
         ninja-build \
@@ -15,12 +18,14 @@ RUN echo 'intall packages'; \
         python3 python3-psutil python3-pip python3-setuptools \
         lsb-release software-properties-common \
         swig python3-dev libedit-dev libncurses5-dev libxml2-dev liblzma-dev golang rsync jq \
+        # for libc++ tests that use the timezone database of the chrono header
+        tzdata \
         # for llvm installation script
         sudo \
         # build scripts
         nodejs ccache \
-	# shell users
-	less vim
+        # shell users
+        less vim
 
 # Install cmake 3.23+ from source.
 RUN wget --no-verbose -O /cmake.sh https://github.com/Kitware/CMake/releases/download/v3.23.3/cmake-3.23.3-linux-x86_64.sh; \
@@ -66,6 +71,8 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
+COPY *.sh /usr/local/bin/
+RUN chmod og+rx /usr/local/bin/*.sh
 
 RUN echo 'install buildkite' ;\
     apt-get install -y apt-transport-https gnupg;\
@@ -75,10 +82,8 @@ RUN echo 'install buildkite' ;\
     apt-get install -y buildkite-agent tini gosu; \
     apt-get clean;
 
-COPY *.sh /usr/local/bin/
-RUN chmod og+rx /usr/local/bin/*.sh
+
 COPY --chown=buildkite-agent:buildkite-agent pre-checkout /etc/buildkite-agent/hooks
-# COPY --chown=buildkite-agent:buildkite-agent post-checkout /etc/buildkite-agent/hooks
 
 # buildkite working directory
 VOLUME /var/lib/buildkite-agent
