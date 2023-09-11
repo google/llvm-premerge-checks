@@ -1,5 +1,8 @@
 FROM ubuntu:latest
 
+# Make sure apt-get doesn't try to prompt for stuff like our time zone, etc.
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN echo 'intall packages'; \
     apt-get update; \
     apt-get upgrade; \
@@ -15,6 +18,8 @@ RUN echo 'intall packages'; \
         python3 python3-psutil python3-pip python3-setuptools \
         lsb-release software-properties-common \
         swig python3-dev libedit-dev libncurses5-dev libxml2-dev liblzma-dev golang rsync jq \
+        # for libc++ tests that use the timezone database of the chrono header
+        tzdata \
         # for llvm installation script
         sudo \
         # build scripts
