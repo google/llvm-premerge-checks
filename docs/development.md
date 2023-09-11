@@ -1,14 +1,13 @@
 - [Overview](#overview)
+- [Buildkite agents](#buildkite-agents)
+- [Build steps](#build-steps)
 - [Phabricator integration](#phabricator-integration)
-- [Buildkite pipelines](#buildkite-pipelines)
-- [Life of a pre-merge check](#life-of-a-pre-merge-check)
-- [Cluster parts](#cluster-parts)
-  * [Ingress and public addresses](#ingress-and-public-addresses)
-  * [Linux agents](#linux-agents)
-  * [Windows agents](#windows-agents)
-- [Enabled projects and project detection](#enabled-projects-and-project-detection)
-- [Agent machines](#agent-machines)
-- [Compilation caching](#compilation-caching)
+  - [Life of a pre-merge check](#life-of-a-pre-merge-check)
+  - [Cluster parts](#cluster-parts)
+    - [Ingress and public addresses](#ingress-and-public-addresses)
+  - [Enabled projects and project detection](#enabled-projects-and-project-detection)
+  - [Agent machines](#agent-machines)
+  - [Compilation caching](#compilation-caching)
 - [Buildkite monitoring](#buildkite-monitoring)
 
 # Overview
@@ -27,7 +26,41 @@ llvm-project](https://github.com/llvm-premerge-tests/llvm-project).
 
 ![deployment diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/google/llvm-premerge-checks/main/docs/deployment.plantuml)
 
+# Buildkite agents
+
+Agents are deployed in two clusters `llvm-premerge-checks` and `windows-cluster`.
+The latter is for windows machines (as it is controlled on cluster level if
+machines can run windows containers).
+
+Container configurations are in ./containers and deployment configurations are
+in ./kubernetes. Most important ones are:
+
+- Windows agents: container `containers/buildkite-windows`, deployment `kubernetes/buildkite/windows.yaml`. TODO: at the moment Docker image is created and uploaded
+from a windows machine (e.g. win-dev). It would be great to setup a cloudbuild.
+
+- Linux agents: run tests for linux x86 config, container `containers/buildkite-linux`, deployment `kubernetes/buildkite/linux.yaml`.
+
+- Service agents: run low CPU build steps (e.g. generate pipeline steps) container `containers/buildkite-linux`, deployment `kubernetes/buildkite/service.yaml`.
+
+All deployments have a copy `..-test` to be used as a test playground to check
+container / deployment changes before modifying "prod" setup.
+
+# Build steps
+
+Buildkite allows [dynamically define pipelines as the output of a
+command](https://buildkite.com/docs/pipelines/defining-steps#dynamic-pipelines).
+And most of pipelines use this pattern of running a script and using the
+resulting yaml. E.g. script to run pull-request checks is llvm-project [.ci/generate-buildkite-pipeline-premerge](https://github.com/llvm/llvm-project/blob/main/.ci/generate-buildkite-pipeline-premerge). Thus any changes to steps to run should
+go into that script.
+
+We have a legacy set of scripts in `/scripts` in this repo but discourage new
+use and development of them - they are mostly kept to make Phabricator integration
+to function.
+
 # Phabricator integration
+
+Note: this section is about integrating with Phabricator that is now discouraged,
+some things might already be renamed or straight broken as we moving to Pull Requests.
 
 - [Harbormaster build plan](https://reviews.llvm.org/harbormaster/plan/5) the
 Phabricator side these things were configured
@@ -39,34 +72,7 @@ difference between beta and "normal" builds.
 - the [merge_guards_bot user](https://reviews.llvm.org/p/merge_guards_bot/)
 account for writing comments.
 
-# Buildkite pipelines
-
-Buildkite allows [dynamically define pipelines as the output of a
-command](https://buildkite.com/docs/pipelines/defining-steps#dynamic-pipelines).
-That gives us the flexibility to generate pipeline code using the code from a
-specific branch of pre-merge checks. Thus,
-[changes can be tested](./playbooks.md#testing-changes-before-merging)
-before affecting everyone.
-
-For example, "pre-merge" pipeline has a single "setup" step, that checks out this
-repo and runs a python script to generate further steps:
-
-```shell script
-export SRC="${BUILDKITE_BUILD_PATH}"/llvm-premerge-checks
-export SCRIPT_DIR="${SRC}"/scripts
-rm -rf "${SRC}"
-git clone --depth 1 https://github.com/google/llvm-premerge-checks.git "${SRC}"
-cd "${SRC}"
-git fetch origin "${ph_scripts_refspec:-main}":x
-git checkout x
-cd "$BUILDKITE_BUILD_CHECKOUT_PATH"
-${SCRIPT_DIR}/buildkite/build_branch_pipeline.py | tee /dev/tty | buildkite-agent pipeline upload
-```
-
-One typically edits corresponding script, instead of manually updating a pipeline
-in the Buildkite interface.
-
-# Life of a pre-merge check
+## Life of a pre-merge check
 
 When new diff arrives for review it triggers a Herald rule ("everyone" or "beta
 testers").
@@ -91,9 +97,9 @@ branches older than 30 days.
 builds and tests changes on Linux and Windows agents. Then it uploads a
 combined result to Phabricator.
 
-# Cluster parts
+## Cluster parts
 
-## Ingress and public addresses
+### Ingress and public addresses
 
 We use NGINX ingress for Kubernetes. Right now it's only used to provide basic
 HTTP authentication and forwards all requests from load balancer to
@@ -118,21 +124,7 @@ not used at the moment and should be removed if we decide to live with static IP
 HTTP auth is configured with k8s secret 'http-auth' in 'buildkite' namespace
 (see [how to update auth](playbooks.md#update-http-auth-credentials)).
 
-## Linux agents
-
-- docker image [buildkite-premerge-debian](../containers/buildkite-premerge-debian).
-
-- [Kubernetes manifests](../kubernetes/buildkite).
-
-## Windows agents
-
-- docker image [agent-windows-buildkite](../containers/agent-windows-buildkite).
-
-- VMs are manually managed and updated, use RDP to access.
-
-- there is an 'windows development' VM to do Windows-related development.
-
-# Enabled projects and project detection
+## Enabled projects and project detection
 
 To reduce build times and mask unrelated problems, we're only building and
 testing the projects that were modified by a patch.
@@ -149,7 +141,7 @@ dependency subtree.
 
 1. Remove all disabled projects.
 
-# Agent machines
+## Agent machines
 
 All build machines are running from Docker containers so that they can be
 debugged, updated, and scaled easily:
@@ -162,13 +154,16 @@ multiple individual VM instances.
 
 See [playbooks](playbooks.md) how to manage and set up machines.
 
-# Compilation caching
+## Compilation caching
 
 Each build is performed on a clean copy of the git repository. To speed up the
 builds [ccache](https://ccache.dev/) is used on Linux and
 [sccache](https://github.com/mozilla/sccache) on Windows.
 
 # Buildkite monitoring
+
+FIXME: does not work as of 2023-09-11. Those metrics could allow
+  us to setup auto-scaling of machines to the current demend.
 
 VM instance `buildkite-monitoring` exposes Buildkite metrics to GCP.
 To set up a new instance:
