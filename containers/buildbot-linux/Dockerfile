@@ -1,5 +1,8 @@
 FROM ubuntu:latest
 
+# Make sure apt-get doesn't try to prompt for stuff like our time zone, etc.
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN echo 'intall packages'; \
     apt-get update; \
     apt-get upgrade; \
@@ -15,6 +18,8 @@ RUN echo 'intall packages'; \
         python3 python3-psutil python3-pip python3-setuptools \
         lsb-release software-properties-common \
         swig python3-dev libedit-dev libncurses5-dev libxml2-dev liblzma-dev golang rsync jq \
+        # for libc++ tests that use the timezone database of the chrono header
+        tzdata \
         # for llvm installation script
         sudo \
         # build scripts
@@ -66,18 +71,19 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
+COPY *.sh /usr/local/bin/
+RUN chmod og+rx /usr/local/bin/*.sh
+
 RUN pip3 install buildbot-worker==2.8.4
 
 VOLUME /build
-# WORKDIR /build
 
 RUN groupadd -g 121 runner \
     && useradd -mr -d /home/runner -u 1001 -g 121 runner \
     && mkdir -p /build \
     && chown -R runner:runner /build;
 
-COPY *.sh /usr/local/bin/
-RUN chmod og+rx /usr/local/bin/*.sh
+
 
 ENTRYPOINT ["entrypoint.sh"]
 CMD ["gosu", "runner", "sleep", "infinity"]
