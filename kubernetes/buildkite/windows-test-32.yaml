@@ -52,7 +52,7 @@ spec:
                 fieldRef:
                  fieldPath: metadata.name
             - name: BUILDKITE_AGENT_TAGS
-              value: "queue=windows-test-32,pod-name=$(POD_NAME)"
+              value: "queue=windows-test,pod-name=$(POD_NAME)"
             - name: BUILDKITE_API_TOKEN
               valueFrom:
                 secretKeyRef:

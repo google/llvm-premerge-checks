@@ -82,7 +82,6 @@ RUN echo 'install buildkite' ;\
     apt-get install -y buildkite-agent tini gosu; \
     apt-get clean;
 
-
 COPY --chown=buildkite-agent:buildkite-agent pre-checkout /etc/buildkite-agent/hooks
 
 # buildkite working directory
