@@ -15,7 +15,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: buildbot-linux-test
+  name: buildbot-linux
 spec:
   replicas: 1
   strategy:
@@ -25,22 +25,22 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: buildbot-linux-test
+      app: buildbot-linux
   template:
     metadata:
       labels:
-        app: buildbot-linux-test
+        app: buildbot-linux
     spec:
       containers:
         - name: runner
           image: gcr.io/llvm-premerge-checks/buildbot-linux:latest
           resources:
             limits:
-              cpu: 31
-              memory: 80Gi
+              cpu: 55
+              memory: 200Gi
             requests:
-              cpu: 31
-              memory: 80Gi
+              cpu: 55
+              memory: 200Gi
           volumeMounts:
             - name: workdir
               mountPath: /build
@@ -49,9 +49,18 @@ spec:
               valueFrom:
                 fieldRef:
                  fieldPath: metadata.name
+            - name: BUILDBOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: buildbot-premerge-linux-1
+                  key: password
+            - name: BUILDBOT_NAME
+              value: premerge-linux-1
+            - name: BUILDBOT_ADDRESS
+              value: lab.llvm.org:9994
       volumes:
         - name: workdir
           emptyDir: {}
       nodeSelector:
-        cloud.google.com/gke-nodepool: linux-agents-2
+        cloud.google.com/gke-nodepool: linux-56
       terminationGracePeriodSeconds: 30

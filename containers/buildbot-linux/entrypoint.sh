@@ -33,5 +33,13 @@ chown -R ${USER}:${USER} "${SCCACHE_DIR}"
 chmod oug+rw "${SCCACHE_DIR}"
 gosu "$USER" bash -c 'SCCACHE_DIR="${SCCACHE_DIR}" SCCACHE_IDLE_TIMEOUT=0 SCCACHE_CACHE_SIZE=20G sccache --start-server'
 
+# configure buildbot
+mkdir -p /build/buildbot
+buildbot-worker create-worker /build/buildbot $BUILDBOT_ADDRESS $BUILDBOT_NAME $BUILDBOT_PASSWORD
+# TODO: update buildbot information.
+chown -R ${USER}:${USER} /build/buildbot
+
+gosu "$USER" bash -c 'CC=clang CXX=clang++ LD=LLD buildbot-worker start /build/buildbot'
+
 # Run with tini to correctly pass exit codes.
 exec /usr/bin/tini -g -- $@

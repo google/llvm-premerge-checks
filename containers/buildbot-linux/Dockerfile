@@ -83,8 +83,7 @@ RUN groupadd -g 121 runner \
     && mkdir -p /build \
     && chown -R runner:runner /build;
 
-
-
 ENTRYPOINT ["entrypoint.sh"]
-CMD ["gosu", "runner", "sleep", "infinity"]
-
+# Buildbot worker was started in the background by entrypoint, here we simply
+# wait to keep pod running.
+CMD ["sleep", "infinity"]

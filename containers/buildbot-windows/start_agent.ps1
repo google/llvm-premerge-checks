@@ -7,4 +7,4 @@ $env:SCCACHE_IDLE_TIMEOUT="0"
 Remove-Item -Recurse -Force -ErrorAction Ignore $env:SCCACHE_DIR
 sccache --start-server
 
-bash -c 'whoami && tail -f'
+bash -c 'whoami && sheep infinity'

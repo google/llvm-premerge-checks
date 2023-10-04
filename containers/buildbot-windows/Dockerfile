@@ -114,6 +114,7 @@ RUN choco install -y handle
 
 RUN pip3 install buildbot-worker==2.8.4
 
-COPY start_agent.ps1 c:\scripts\
+# COPY start_agent.ps1 c:\scripts\
 COPY start.sh c:\scripts\
+ENTRYPOINT ["bash", "entrypoint.sh"]
 CMD ["bash", "C:\\scripts\\start.sh"]
