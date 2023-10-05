@@ -3,7 +3,7 @@
 # This experimental Windows container is meant to be used in Terraform deployment.
 
 # Agent image for LLVM org cluster.
-# maybe mcr.microsoft.com/windows/servercore:ltsc2022?
+# .net 4.8 is required by chocolately package manager.
 FROM mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-ltsc2019
 
 # Restore the default Windows shell for correct batch processing.
@@ -11,6 +11,8 @@ SHELL ["cmd", "/S", "/C"]
 
 # Download the Build Tools bootstrapper.
 ADD https://aka.ms/vs/16/release/vs_buildtools.exe C:\TEMP\vs_buildtools.exe
+
+RUN powershell -Command Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
 # Download channel for fixed install.
 ARG CHANNEL_URL=https://aka.ms/vs/16/release/channel
@@ -35,13 +37,9 @@ RUN C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --nocache `
 # Register DIA dll (Debug Interface Access) so it can be used to symbolize
 # the stack traces. Register dll for 32 and 64 bit.
 # see https://developercommunity.visualstudio.com/content/problem/290674/msdia140dll-is-not-registered-on-vs2017-hosts.html
+
 RUN regsvr32 /S "C:\BuildTools\DIA SDK\bin\amd64\msdia140.dll" & `
     regsvr32 /S "C:\BuildTools\DIA SDK\bin\msdia140.dll"
-
-# install chocolately as package manager
-RUN powershell -NoProfile -InputFormat None -Command `
-    iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1')) ; `
-    choco feature disable --name showDownloadProgress
 
 # install tools as described in https://llvm.org/docs/GettingStartedVS.html
 # and a few more that were not documented...
@@ -112,9 +110,10 @@ RUN git config --system core.longpaths true & `
 # handle for debugging of files beeing locked by some processes.
 RUN choco install -y handle
 
-RUN pip3 install buildbot-worker==2.8.4
+RUN pip3 install pywin32 buildbot-worker==2.8.4
 
 # COPY start_agent.ps1 c:\scripts\
 COPY start.sh c:\scripts\
-ENTRYPOINT ["bash", "entrypoint.sh"]
+COPY entrypoint.sh c:\scripts\
+ENTRYPOINT ["bash", "c:\\scripts\\entrypoint.sh"]
 CMD ["bash", "C:\\scripts\\start.sh"]
