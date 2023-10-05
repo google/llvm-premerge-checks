@@ -15,18 +15,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: buildbot-windows-test
+  name: buildbot-windows
 spec:
   replicas: 1
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      app: buildbot-windows-test
+      app: buildbot-windows
   template:
     metadata:
       labels:
-        app: buildbot-windows-test
+        app: buildbot-windows
     spec:
       containers:
         - name: runner
@@ -44,6 +44,15 @@ spec:
           env:
             - name: WORKDIR
               value: "c:/ws" # matching workdir
+            - name: BUILDBOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: buildbot-premerge-windows-1
+                  key: password
+            - name: BUILDBOT_NAME
+              value: premerge-windows-1
+            - name: BUILDBOT_ADDRESS
+              value: lab.llvm.org:9994
       # Empty dir volume can use all disk space from VM. By default container
       # disk will only be 20Gb and run out of space.
       volumes:
