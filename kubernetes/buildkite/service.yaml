@@ -34,7 +34,7 @@ spec:
     spec:
       containers:
         - name: buildkite-premerge-debian
-          image: gcr.io/llvm-premerge-checks/buildkite-linux:latest
+          image: us-central1-docker.pkg.dev/llvm-premerge-checks/docker/buildkite-linux:latest
           resources:
             limits:
               cpu: 2
