@@ -83,7 +83,6 @@ RUN echo 'install buildkite' ;\
     apt-get clean;
 
 COPY --chown=buildkite-agent:buildkite-agent pre-checkout /etc/buildkite-agent/hooks
-COPY --chown=buildkite-agent:buildkite-agent post-checkout /etc/buildkite-agent/hooks
 
 # buildkite working directory
 VOLUME /var/lib/buildkite-agent
