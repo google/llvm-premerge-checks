@@ -15,7 +15,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: buildbot-linux
+  name: buildbot-linux-test
 spec:
   replicas: 1
   strategy:
@@ -25,11 +25,11 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: buildbot-linux
+      app: buildbot-linux-test
   template:
     metadata:
       labels:
-        app: buildbot-linux
+        app: buildbot-linux-test
     spec:
       containers:
         - name: runner
@@ -49,15 +49,8 @@ spec:
               valueFrom:
                 fieldRef:
                  fieldPath: metadata.name
-            - name: BUILDBOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: buildbot-premerge-linux-1
-                  key: password
-            - name: BUILDBOT_NAME
-              value: premerge-linux-1
-            - name: BUILDBOT_ADDRESS
-              value: lab.llvm.org:9994
+            # BUILDBOT_ADDRESS is not set so it will not start the buildbot
+            # see entrypoint of container.
       volumes:
         - name: workdir
           emptyDir: {}
