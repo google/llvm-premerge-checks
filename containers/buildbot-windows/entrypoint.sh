@@ -14,4 +14,7 @@ echo "configure buildbot"
 mkdir -p /c/ws/buildbbot
 buildbot-worker create-worker /c/ws/buildbot $BUILDBOT_ADDRESS $BUILDBOT_NAME $BUILDBOT_PASSWORD
 
+echo "llvm-premerge-buildbots <llvm-premerge-buildbots@google.com>" > /c/ws/buildbot/info/admin
+echo "Setup analogous to windows agent for to Pull Request checks" > /c/ws/buildbot/info/host
+
 $@
