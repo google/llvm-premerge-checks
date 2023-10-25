@@ -6,11 +6,13 @@
 steps:
   - name: 'gcr.io/${PROJECT_ID}/windows-builder'
     args: ['--image','windows-cloud/global/images/windows-server-2019-dc-core-for-containers-v20230113',
-          '--network', 'vpc-network',
-          '--subnetwork', 'subnetwork',
-          '--region', 'europe-west3',
-          '--zone', 'europe-west3-c',
-          '--machineType', "n2-standard-16",
-          '--diskType', 'pd-ssd',
-          '--command', 'gcloud auth configure-docker --quiet && docker build -t gcr.io/${PROJECT_ID}/buildkite-premerge-windows:latest . && docker push gcr.io/${PROJECT_ID}/buildkite-premerge-windows:latest']
+          # '--network', 'vpc-network',
+          # '--subnetwork', 'subnetwork',
+          # '--region', 'europe-west3',
+          # '--zone', 'europe-west3-c',
+          # '--machineType', "n2-standard-16",
+          # '--diskType', 'pd-ssd',
+          '--command', 'gcloud auth configure-docker --quiet && docker build -t us-central1-docker.pkg.dev/llvm-premerge-checks/docker/buildkite-windows:latest . && docker push us-central1-docker.pkg.dev/llvm-premerge-checks/docker/buildkite-windows:latest'
+           # '--command', 'echo hi'
+          ]
 timeout: 7200s

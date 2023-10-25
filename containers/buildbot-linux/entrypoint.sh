@@ -35,11 +35,15 @@ gosu "$USER" bash -c 'SCCACHE_DIR="${SCCACHE_DIR}" SCCACHE_IDLE_TIMEOUT=0 SCCACH
 
 # configure buildbot
 mkdir -p /build/buildbot
-buildbot-worker create-worker /build/buildbot $BUILDBOT_ADDRESS $BUILDBOT_NAME $BUILDBOT_PASSWORD
-# TODO: update buildbot information.
-chown -R ${USER}:${USER} /build/buildbot
-
-gosu "$USER" bash -c 'CC=clang CXX=clang++ LD=LLD buildbot-worker start /build/buildbot'
+if [[ -z "${BUILDBOT_ADDRESS+x}" ]]; then
+  echo "Not starting buildbot as BUILDBOT_ADDRESS is not set"
+else
+  buildbot-worker create-worker /build/buildbot $BUILDBOT_ADDRESS $BUILDBOT_NAME $BUILDBOT_PASSWORD
+  echo "llvm-premerge-buildbots <llvm-premerge-buildbots@google.com>" > /build/buildbot/info/admin
+  echo "Setup analogous to linux agent for to Pull Request checks" > /build/buildbot/info/host
+  chown -R ${USER}:${USER} /build/buildbot
+  gosu "$USER" bash -c 'CC=clang CXX=clang++ LD=LLD buildbot-worker start /build/buildbot'
+fi
 
 # Run with tini to correctly pass exit codes.
 exec /usr/bin/tini -g -- $@
