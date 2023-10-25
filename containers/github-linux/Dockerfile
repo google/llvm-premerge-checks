@@ -77,8 +77,8 @@ RUN groupadd -g 121 runner \
     && mkdir -p /_work \
     && chown -R runner:runner /_work /actions-runner;
 
-COPY entrypoint.sh /
-RUN chmod +x /entrypoint.sh
+COPY entrypoint.sh token.sh /
+RUN chmod +x /entrypoint.sh /token.sh
 # try: USER runner instead of gosu
 ENTRYPOINT ["/entrypoint.sh"]
 
