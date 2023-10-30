@@ -41,8 +41,8 @@ else
   buildbot-worker create-worker /build/buildbot $BUILDBOT_ADDRESS $BUILDBOT_NAME $BUILDBOT_PASSWORD
   echo "llvm-premerge-buildbots <llvm-premerge-buildbots@google.com>" > /build/buildbot/info/admin
   echo "Setup analogous to linux agent for Pull Request checks" >> /build/buildbot/info/host
-  echo "Ubuntu 20, cmake-3.23.3, LLVM 16" >> /c/ws/buildbot/info/host
-  echo "https://github.com/google/llvm-premerge-checks/blob/main/containers/buildbot-linux/Dockerfile"  >> /c/ws/buildbot/info/host
+  echo "Ubuntu 20, cmake-3.23.3, LLVM 16" >> /build/buildbot/info/host
+  echo "https://github.com/google/llvm-premerge-checks/blob/main/containers/buildbot-linux/Dockerfile" >> /build/buildbot/info/host
   echo "lsb_release -a" >> /build/buildbot/info/host
   lsb_release -a >> /build/buildbot/info/host
   echo "lscpu" >> /build/buildbot/info/host
