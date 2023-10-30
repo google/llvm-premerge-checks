@@ -20,15 +20,7 @@ param(
 $ROOT_DIR=(Get-Item $PSScriptRoot).Parent.FullName
 . ${ROOT_DIR}\scripts\common.ps1
 
-# get config options
-Get-Content "${ROOT_DIR}\k8s_config" | Foreach-Object{
-    if (! $_.StartsWith('#') ){
-        $var = $_.Split('=')
-        New-Variable -Name $var[0] -Value $var[1]
-    }
-}
-
-$QUALIFIED_NAME="${GCR_HOSTNAME}/${GCP_PROJECT}/${IMAGE_NAME}"
+$QUALIFIED_NAME="gcr.io/llvm-premerge-checks/${IMAGE_NAME}"
 
 Push-Location "$PSScriptRoot\$IMAGE_NAME"
 
@@ -36,7 +28,7 @@ Write-Host "Building ${IMAGE_NAME}..."
 
 Invoke-Call -ScriptBlock {
     docker build . -t ${IMAGE_NAME}:latest
-    }
+}
 Invoke-Call -ScriptBlock {
     docker tag ${IMAGE_NAME}:latest ${QUALIFIED_NAME}:latest
 }
