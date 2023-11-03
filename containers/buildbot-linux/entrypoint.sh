@@ -39,16 +39,14 @@ if [[ -z "${BUILDBOT_ADDRESS+x}" ]]; then
   echo "Not starting buildbot as BUILDBOT_ADDRESS is not set"
 else
   buildbot-worker create-worker /build/buildbot $BUILDBOT_ADDRESS $BUILDBOT_NAME $BUILDBOT_PASSWORD
-  echo "llvm-premerge-buildbots <llvm-premerge-buildbots@google.com>" > /build/buildbot/info/admin
-  echo "Setup analogous to linux agent for Pull Request checks" > /build/buildbot/info/host
-  echo "Ubuntu 20, cmake-3.23.3, LLVM 16" >> /build/buildbot/info/host
+  unset BUILDBOT_ADDRESS
+  unset BUILDBOT_NAME
+  unset BUILDBOT_PASSWORD
+  echo "llvm-premerge-buildbots <llvm-premerge-buildbots@google.com>, Mikhail Goncharov<goncharov.mikhail@gmail.com>" > /build/buildbot/info/admin
+  echo "Setup analogous to linux agent for Pull Request checks:" > /build/buildbot/info/host
+  echo "GCP machine c2d-standard-56 56vCPU 224Gb" >> /build/buildbot/info/host
+  echo "Ubuntu 20 cmake-3.23.3 python-3.10 ninja-1.10.1 LLVM-16" >> /build/buildbot/info/host
   echo "https://github.com/google/llvm-premerge-checks/blob/main/containers/buildbot-linux/Dockerfile" >> /build/buildbot/info/host
-  echo "lsb_release -a" >> /build/buildbot/info/host
-  lsb_release -a >> /build/buildbot/info/host
-  echo "lscpu" >> /build/buildbot/info/host
-  lscpu >> /build/buildbot/info/host
-  echo "dpkg -l" >> /build/buildbot/info/host
-  dpkg -l >> /build/buildbot/info/host
   chown -R ${USER}:${USER} /build/buildbot
   gosu "$USER" bash -c 'CC=clang CXX=clang++ LD=LLD buildbot-worker start /build/buildbot'
 fi
