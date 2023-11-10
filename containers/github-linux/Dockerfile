@@ -6,7 +6,7 @@ RUN echo 'intall packages'; \
     apt-get install -y --no-install-recommends \
         gosu \
         locales openssh-client gnupg ca-certificates  \
-        zip wget curl git \
+        zip unzip wget curl git \
         gdb build-essential  \
         ninja-build \
         libelf-dev libffi-dev gcc-multilib libmpfr-dev libpfm4-dev \
@@ -65,21 +65,41 @@ RUN curl -o sccache-v0.5.4-x86_64-unknown-linux-musl.tar.gz -L https://github.co
     && ls -la /usr/bin/sccache \
     && sccache --version
 
-WORKDIR /actions-runner
-
-RUN cd /actions-runner \
-    && curl -o actions-runner-linux-x64-2.308.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.308.0/actions-runner-linux-x64-2.308.0.tar.gz \
-    && echo "9f994158d49c5af39f57a65bf1438cbae4968aec1e4fec132dd7992ad57c74fa  actions-runner-linux-x64-2.308.0.tar.gz" | shasum -a 256 -c \
-    && tar xzf ./actions-runner-linux-x64-2.308.0.tar.gz
-
 RUN groupadd -g 121 runner \
     && useradd -mr -d /home/runner -u 1001 -g 121 runner \
-    && mkdir -p /_work \
-    && chown -R runner:runner /_work /actions-runner;
+    && mkdir -p /home/runner/_work
 
-COPY entrypoint.sh token.sh /
-RUN chmod +x /entrypoint.sh /token.sh
-# try: USER runner instead of gosu
-ENTRYPOINT ["/entrypoint.sh"]
+WORKDIR /home/runner
 
-CMD ["./bin/Runner.Listener", "run", "--startuptype", "service"]
+# https://github.com/actions/runner/releases
+ARG RUNNER_VERSION="2.311.0"
+ARG RUNNER_ARCH="x64"
+
+RUN curl -f -L -o runner.tar.gz https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-${RUNNER_ARCH}-${RUNNER_VERSION}.tar.gz \
+    && tar xzf ./runner.tar.gz \
+    && rm runner.tar.gz
+
+# https://github.com/actions/runner-container-hooks/releases
+ARG RUNNER_CONTAINER_HOOKS_VERSION="0.4.0"
+RUN curl -f -L -o runner-container-hooks.zip https://github.com/actions/runner-container-hooks/releases/download/v${RUNNER_CONTAINER_HOOKS_VERSION}/actions-runner-hooks-k8s-${RUNNER_CONTAINER_HOOKS_VERSION}.zip \
+    && unzip ./runner-container-hooks.zip -d ./k8s \
+    && rm runner-container-hooks.zip
+
+RUN chown -R runner:runner /home/runner
+
+# Copy entrypoint but script. There is no point of adding
+# `ENTRYPOINT ["/entrypoint.sh"]` as k8s runs it with explicit command and
+# entrypoint is ignored.
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+# USER runner
+
+# We don't need entry point and token logic as it's all orchestrated by action runner controller.
+# BUT we need to start server etc
+
+
+# RUN chmod +x /entrypoint.sh /token.sh
+# # try: USER runner instead of gosu
+# ENTRYPOINT ["/entrypoint.sh"]
+# CMD ["sleep", "infinity"]
+# CMD ["./bin/Runner.Listener", "run", "--startuptype", "service"]

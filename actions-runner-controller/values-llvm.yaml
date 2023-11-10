@@ -1,0 +1,46 @@
+# See full list settings doc in https://github.com/actions/actions-runner-controller/tree/master/charts/actions-runner-controller.
+
+githubConfigUrl: "https://github.com/llvm/llvm-project"
+
+# Created by first installation.
+githubConfigSecret: arc-runner-set-gha-rs-github-secret
+
+minRunners: 1
+maxRunners: 3
+
+runnerGroup: "generic-google-cloud"
+
+## template for each runner Pod
+template:
+  spec:
+    containers:
+    - name: runner
+      image: us-central1-docker.pkg.dev/llvm-premerge-checks/docker/github-linux:latest
+      command: ["/bin/bash"]
+      args: ["-c", "/entrypoint.sh /home/runner/run.sh"]
+      env:
+        - name: ACTIONS_RUNNER_CONTAINER_HOOKS
+          value: /home/runner/k8s/index.js
+        - name: ACTIONS_RUNNER_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: ACTIONS_RUNNER_REQUIRE_JOB_CONTAINER
+          value: "false"
+        - name: WORKDIR
+          value: "/home/runner/_work"
+      resources:
+        limits:
+          cpu: 31
+          memory: 80Gi
+        requests:
+          cpu: 31
+          memory: 80Gi
+      volumeMounts:
+        - name: work
+          mountPath: /home/runner/_work
+    volumes:
+      - name: work
+        emptyDir: {}
+    nodeSelector:
+        cloud.google.com/gke-nodepool: linux-agents-2
