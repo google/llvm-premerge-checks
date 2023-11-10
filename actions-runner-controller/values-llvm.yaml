@@ -8,7 +8,7 @@ githubConfigSecret: arc-runner-set-gha-rs-github-secret
 minRunners: 1
 maxRunners: 3
 
-runnerGroup: "generic-google-cloud"
+# runnerGroup: "generic-google-cloud"
 
 ## template for each runner Pod
 template:
