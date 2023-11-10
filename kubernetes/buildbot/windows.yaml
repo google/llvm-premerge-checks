@@ -52,7 +52,7 @@ spec:
             - name: BUILDBOT_NAME
               value: premerge-windows-1
             - name: BUILDBOT_ADDRESS
-              value: lab.llvm.org:9994
+              value: lab.llvm.org:9990
       # Empty dir volume can use all disk space from VM. By default container
       # disk will only be 20Gb and run out of space.
       volumes:

@@ -57,7 +57,7 @@ spec:
             - name: BUILDBOT_NAME
               value: premerge-linux-1
             - name: BUILDBOT_ADDRESS
-              value: lab.llvm.org:9994
+              value: lab.llvm.org:9990
       volumes:
         - name: workdir
           emptyDir: {}
