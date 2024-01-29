@@ -77,7 +77,7 @@ def download_job_artifacts(conn):
         c.execute(f"""
 select ja.meta from
 (select j.key,j.id job_id, a->>'id' aid, a as meta from jobs j, json_array_elements(j.meta->'artifacts') as a) as ja
-left join artifacts a on a.job_id = ja.job_id and a.id=ja.aid 
+left join artifacts a on a.job_id = ja.job_id and a.id=ja.aid
 where a.id IS NULL""")
         total = c.rowcount
         logging.info(f'will download {total} artifacts')
@@ -207,7 +207,7 @@ def download_job_artifacts_list(conn):
     logging.info('download jobs artifact lsits')
     with conn.cursor() as c:
         c.execute("""
-SELECT key, raw->>'artifacts_url', meta 
+SELECT key, raw->>'artifacts_url', meta
 FROM jobs
 WHERE (meta->>'artifacts' IS NULL) AND (raw->>'artifacts_url' IS NOT NULL)""")
         cnt = 0
@@ -283,10 +283,10 @@ if __name__ == '__main__':
     logging.basicConfig(level='INFO', format='%(levelname)-7s %(message)s')
     cn = connect()
     logging.info('downloading buildkite data')
-    #insert_all_builds(cn)
-    insert_new_builds(cn)
-    update_running_builds(cn)
-    insert_new_jobs(cn)
-    download_job_artifacts_list(cn)
-    download_job_artifacts(cn)
-    download_job_logs(cn)
+    # insert_all_builds(cn)
+    # insert_new_builds(cn)
+    # update_running_builds(cn)
+    # insert_new_jobs(cn)
+    # download_job_artifacts_list(cn)
+    # download_job_artifacts(cn)
+    # download_job_logs(cn)
