@@ -17,7 +17,7 @@ kind: Deployment
 metadata:
   name: windows-buildkite
 spec:
-  replicas: 6
+  replicas: 7
   strategy:
     type: Recreate
   selector:

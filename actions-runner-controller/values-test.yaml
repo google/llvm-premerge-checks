@@ -32,7 +32,7 @@ githubConfigSecret: arc-runner-set-gha-rs-github-secret
 maxRunners: 3
 
 ## minRunners is the min number of runners the autoscaling runner set will scale down to.
-minRunners: 1
+minRunners: 0
 
 # runnerGroup: "default"
 
