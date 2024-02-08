@@ -108,6 +108,10 @@ RUN powershell -Command `
     + ';C:\Windows\Microsoft.NET\Framework64\v4.0.30319' `
     ,'machine')
 
+# Disable AV Scanning in the build directory, as it is sometimes breaking the build.
+# Context: https://discourse.llvm.org/t/rfc-future-of-windows-pre-commit-ci/76840
+RUN powershell -Command Set-MpPreference -ExclusionPath C:\ws
+
 # support long file names during git checkout
 RUN git config --system core.longpaths true & `
     git config --global core.autocrlf false
