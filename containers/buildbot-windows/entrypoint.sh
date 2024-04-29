@@ -16,7 +16,7 @@ buildbot-worker create-worker /c/ws/buildbot $BUILDBOT_ADDRESS $BUILDBOT_NAME $B
 unset BUILDBOT_ADDRESS
 unset BUILDBOT_NAME
 unset BUILDBOT_PASSWORD
-echo "llvm-premerge-buildbots <llvm-premerge-buildbots@google.com>, Mikhail Goncharov<goncharov.mikhail@gmail.com>" > /c/ws/buildbot/info/admin
+echo "llvm-premerge-buildbots <llvm-premerge-buildbots@google.com>" > /c/ws/buildbot/info/admin
 echo "Setup analogous to windows agent for Pull Request checks:" > /c/ws/buildbot/info/host
 echo "GCP machine c2d-standard-32 AMD2 32vCPU 128Gb" >> /c/ws/buildbot/info/host
 echo "Windows ltsc2019 vs-2019 LLVM-16+ python 3.9.7 cmake" >> /c/ws/buildbot/info/host
