@@ -42,7 +42,7 @@ else
   unset BUILDBOT_ADDRESS
   unset BUILDBOT_NAME
   unset BUILDBOT_PASSWORD
-  echo "llvm-premerge-buildbots <llvm-premerge-buildbots@google.com>, Mikhail Goncharov<goncharov.mikhail@gmail.com>" > /build/buildbot/info/admin
+  echo "llvm-premerge-buildbots <llvm-premerge-buildbots@google.com>" > /build/buildbot/info/admin
   echo "Setup analogous to linux agent for Pull Request checks:" > /build/buildbot/info/host
   echo "GCP machine c2d-standard-56 56vCPU 224Gb" >> /build/buildbot/info/host
   echo "Ubuntu 20 cmake-3.23.3 python-3.10 ninja-1.10.1 LLVM-16" >> /build/buildbot/info/host

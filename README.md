@@ -37,20 +37,6 @@ for the LLVM project.
 If you notice issues or have an idea on how to improve pre-merge checks, please
 create a [new issue](https://github.com/google/llvm-premerge-checks/issues/new)
 or give a :heart: to an existing one.
- 
-## Sign up for beta-test
-
-To get the latest features and help us developing the project, sign up for the
-pre-merge beta testing by adding yourself to the ["pre-merge beta testing"
-project](https://reviews.llvm.org/project/members/78/) on Phabricator.
-
-## Opt-out
-
-In case you want to opt-out entirely of pre-merge testing, add yourself to the
-[OPT OUT project](https://reviews.llvm.org/project/view/83/).
-
-If you decide to opt-out, please let us know why, so we might be able to improve
-in the future.
 
 # Requirements
 
@@ -69,19 +55,6 @@ please make sure that either:
 Only then can the build server apply the patch locally and run the builds and
 tests.
 
-# Accessing results on Phabricator 
-
-Phabricator will automatically trigger a build for every new patch you upload or
-modify. Phabricator shows the build results at the top of the entry: ![build
-status](docs/images/diff_detail.png)
-
-The CI will compile and run tests, run clang-format and
-[clang-tidy](docs/clang_tidy.md) on lines changed.
-
-If a unit test failed, this is shown below the build status. You can also expand
-the unit test to see the details: ![unit test
-results](docs/images/unit_tests.png).
-
 # Contributing
 
 We're happy to get help on improving the infrastructure and workflows!
@@ -93,9 +66,6 @@ interact together.
 
 [Playbooks](docs/playbooks.md) shows concrete examples how to, for example,
 build and run agents locally.
-
-If you have any questions please contact by [mail](mailto:goncahrov@google.com)
-or find user "goncharov" on [LLVM Discord](https://discord.gg/xS7Z362).
 
 # Additional Information
 
