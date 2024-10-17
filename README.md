@@ -82,6 +82,32 @@ If a unit test failed, this is shown below the build status. You can also expand
 the unit test to see the details: ![unit test
 results](docs/images/unit_tests.png).
 
+# Restarting Buildbots
+
+Restarting the buildbots can be accomplished be deleting the pods running the
+buildbots. Kubernetes will automatically recreate the pod, essentially
+performing a restart.
+
+To find the name of the buildbot pod, first make sure you are using the correct
+cluster configuration with `kubectl` as the windows and linux builders are on
+separate clusters.
+
+Then, find the name of the buildbot pod:
+
+```bash
+kubectl get pods | grep buildbot
+```
+
+Once you have the name of the pod, you can run the following command:
+
+```bash
+kubectl delete pod <pod name from previous step>
+```
+
+This command might take a couple minutes to execute as kubernetes stops
+the running processes/container. The new pod will then spin up and
+everything will hopefully work after the restart.
+
 # Contributing
 
 We're happy to get help on improving the infrastructure and workflows!
