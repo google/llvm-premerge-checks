@@ -1,5 +1,3 @@
-# TODO: remove after migrating scripts to LLVM repo.
-git clone https://github.com/google/llvm-premerge-checks.git c:\llvm-premerge-checks
 # Checkout path is set to a fixed short value (e.g. c:\ws\src) to keep paths
 # short as many tools break on Windows with paths longer than 250.
 if ($null -eq $env:BUILDKITE_BUILD_PATH) { $env:BUILDKITE_BUILD_PATH = 'c:\ws' }
