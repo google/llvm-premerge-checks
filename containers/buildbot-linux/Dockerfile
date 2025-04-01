@@ -20,6 +20,8 @@ RUN echo 'intall packages'; \
         swig python3-dev libedit-dev libncurses5-dev libxml2-dev liblzma-dev golang rsync jq \
         # for libc++ tests that use the timezone database of the chrono header
         tzdata \
+        # for getservent_r tests using /etc/services
+        netbase \
         # for llvm installation script
         sudo \
         # build scripts
