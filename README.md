@@ -1,3 +1,12 @@
+# This Repository is Deprecated
+
+> [!IMPORTANT]
+> LLVM now uses Github Actions natively and the infrastructure definitions have
+> moved. The infrastructure is now available in https://github.com/llvm/llvm-zorg
+> under the `premerge` folder with associated scripts in
+> https://github.com/llvm/llvm-project under the `.ci` folder. The github workflow
+> definitions are under the `.github/workflows` folder.
+
 This repo is holding VM configurations for machine cluster and scripts to run pre-merge tests triggered by http://reviews.llvm.org.
 
 As LLVM project has moved to Pull Requests and Phabricator will no longer trigger builds, this repository will likely be gone.
